@@ -30,6 +30,11 @@ app.use(cors({
   credentials: true
 }));
 
+// Raw body for webhook HMAC verification — MUST be before express.json()
+// express.raw() sets req._body=true so the global express.json() below skips these routes
+app.use('/api/payments/razorpay/webhook', express.raw({ type: '*/*' }));
+app.use('/api/payments/paypal/webhook', express.raw({ type: '*/*' }));
+
 // Body parsers
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
