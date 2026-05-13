@@ -191,6 +191,40 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
         border-bottom: 1px solid #000000;
       }
     </style>
+<script>
+/* RAEN Analytics — session tracking and cart event telemetry */
+(function () {
+  var sid = localStorage.getItem('raen_session');
+  if (!sid) {
+    sid = 'sess_' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    localStorage.setItem('raen_session', sid);
+  }
+  var base = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:5000' : '';
+  var path = window.location.pathname + window.location.search;
+  var productId = new URLSearchParams(window.location.search).get('slug') || null;
+  fetch(base + '/api/analytics/pageview', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: path, sessionId: sid, productId: productId }),
+    keepalive: true
+  }).catch(function () {});
+  window.__raenSession = sid;
+  window.__trackCart = function (event, productId, orderId) {
+    fetch(base + '/api/analytics/cart-event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event: event,
+        sessionId: sid,
+        productId: productId || null,
+        orderId: orderId || null
+      }),
+      keepalive: true
+    }).catch(function () {});
+  };
+})();
+</script>
 </head>
 <body class="bg-surface text-on-surface font-body selection:bg-primary selection:text-white">
 <!-- TopNavBar (Rendered from JSON) -->
@@ -542,6 +576,7 @@ Secure Acquisition
                         });
                         
                         showToast('Payment successful!', 'success');
+                        if (window.__trackCart) window.__trackCart('checkout_completed', null, orderData.orderNumber);
                         setTimeout(() => {
                             window.location.href = `order-confirmation.html?orderNumber=${orderData.orderNumber}`;
                         }, 1000);
@@ -631,7 +666,8 @@ Secure Acquisition
         
         try {
             setLoadingState(placeOrderBtn, true, 'Creating Order...');
-            
+            if (window.__trackCart) window.__trackCart('checkout_started', null, null);
+
             // Create order
             const response = await apiPost('/checkout', {
                 email,
