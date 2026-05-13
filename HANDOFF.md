@@ -1,5 +1,6 @@
 # RAEN Phase 1 — Session Handoff Document
 **Written:** 2026-05-14  
+**Last updated:** 2026-05-14 (Task 5 complete)  
 **Reason:** Context limit approaching (~80% used). Continue in a fresh session.  
 **Safety repo:** https://github.com/srinath1505/RAEN_phase_1  
 **Local path:** `C:\Users\Srinath\Downloads\RAEN_v1`
@@ -23,24 +24,24 @@ Building Phase 1 of **RAEN** — a luxury fashion e-commerce platform — by com
 
 ### Git commits on `main` (phase1 remote is in sync):
 ```
+a24fe4f  feat(api): Task 5 complete — payment webhooks with DB transactions
+05b2162  docs: add session handoff document for context continuity
 91cf328  fix(frontend): Task 4 complete — product links fixed, redirect stubs...
 3d3a130  feat(frontend): Task 3 complete — analytics tracking script...
 9cb2aee  feat(api): Task 2 complete — analytics tracking endpoints...
 75cf62f  feat(db): Task 1 complete — add salePrice/discountPercent, PageView, CartEvent
-52a62d4  Add comprehensive Claude execution prompt for Phase 1
-4cb2e30  Add proposal PDFs
-04d5ae8  Initial commit
 ```
 
-### Tasks 1–4: COMPLETE ✅
+### Tasks 1–5: COMPLETE ✅
 | Task | What was done |
 |------|--------------|
 | 1 | Added `salePrice Float?` + `discountPercent Int?` to Product model. Added `PageView` and `CartEvent` analytics models. Migration: `20260513120000_add_discount_analytics`. Prisma client regenerated. |
 | 2 | Created `analyticsController.js` (trackPageView + trackCartEvent). Created `analyticsRoutes.js`. Registered `POST /api/analytics/pageview` and `POST /api/analytics/cart-event` in `app.js`. |
 | 3 | Injected analytics tracking IIFE into `<head>` of all 31 HTML files in `stitch/`. Wired `window.__trackCart('add_to_cart')` in `product-detail.html`, `checkout_started` and `checkout_completed` in `checkout.html`. |
 | 4 | Fixed all 12 product href links in `collections.html`, `index.html`, `product-detail.html` to use `product-detail.html?slug=X`. Replaced 12 old static product pages with redirect stubs (meta refresh + JS replace). Fixed 10/12 wrong DB prices, all 12 images (3→5 each), taupe-wrap name. Fixed 2 critical bugs in `product-detail.html` (see Section 4). |
+| 5 | Registered `express.raw()` before `express.json()` in `app.js` (G7 fix — raw body for HMAC). Replaced both webhook stubs in `paymentController.js` with full implementations: HMAC verify → `$transaction` (Payment + Order + Inventory + AuditLog) → non-blocking email. Added idempotency guard (`payment.status === 'SUCCESS'` exits early). Fixed G6 (AdminAuditLog FK). 13/13 tests passed. |
 
-### Tasks 5–11: NOT STARTED ⏳
+### Tasks 6–11: NOT STARTED ⏳
 
 ### Running servers (need to be started in new session):
 ```bash
@@ -70,14 +71,14 @@ All 12 products seeded, correct prices and images. All 4 inventory sizes (XS/S/M
 | `stitch/collections.html` | Task 4 | ✅ Complete |
 | `stitch/index.html` | Task 4 | ✅ Complete |
 | `stitch/[12 product stubs].html` | Task 4 | ✅ Redirect stubs written |
-| `backend/src/app.js` | Task 2 | ✅ Complete (analytics route registered) |
+| `backend/src/app.js` | Task 5 | ✅ Complete (raw body middleware + analytics route) |
+| `backend/src/controllers/paymentController.js` | Task 5 | ✅ Complete (full webhook handlers) |
 | `backend/src/controllers/analyticsController.js` | Task 2 | ✅ Complete |
 | `backend/src/routes/analyticsRoutes.js` | Task 2 | ✅ Complete |
 | `backend/src/prisma/schema.prisma` | Task 1 | ✅ Complete |
 
-### Next file to edit (Task 5):
-- `backend/src/controllers/paymentController.js` — lines 102–118 (webhook stubs)
-- `backend/src/app.js` — needs raw body middleware for Razorpay HMAC (CRITICAL — see Section 5)
+### Next file to edit (Task 6):
+- `stitch/contact.html` — add submit handler + wire to `POST /api/contact`
 
 ---
 
@@ -146,49 +147,39 @@ const expected = crypto.createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET
 
 ---
 
-## 5. The Exact Next Step — Task 5
+## 5. The Exact Next Step — Task 6
 
-### Task 5: Payment Webhooks with Database Transactions
+### Task 6: Contact Form Integration
 
-**Two files to edit:**
+**One file to edit:** `stitch/contact.html`
 
-**Step 1 — `backend/src/app.js`** (MUST be done first):
-Add raw body middleware for webhook routes BEFORE the global `express.json()` line:
-```javascript
-// Add before: app.use(express.json({ limit: '10mb' }));
-app.use('/api/payments/razorpay/webhook', express.raw({ type: '*/*' }));
-app.use('/api/payments/paypal/webhook', express.raw({ type: '*/*' }));
+**What to do:**
+1. Verify `<script src="public/js/api.js"></script>` is present before `</body>` (it should already be there from Task 3)
+2. Find the `<form>` element — it already has `name`, `email`, `subject`, `message` fields
+3. Add a `DOMContentLoaded` submit handler that calls `apiPost('/contact', data)` and on success replaces form with a confirmation message
+
+**The full handler code is in `CLAUDE_PHASE1_PROMPT.md` lines 395–421.** It is straightforward — no gotchas expected.
+
+**First verify the backend endpoint exists:**
+```bash
+curl -s -X POST http://localhost:5000/api/contact \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test","email":"test@test.com","subject":"Hello","message":"Test message"}'
 ```
+Should return `{ success: true }` or similar. If it returns 404, check `contactController.js` and `contactRoutes.js`.
 
-**Step 2 — `backend/src/controllers/paymentController.js`** (lines 102–118):
-Replace both webhook stubs with the full implementation from `CLAUDE_PHASE1_PROMPT.md` lines 255–383.
-
-**Key points for the implementation:**
-1. Use `req.body.toString()` for HMAC, `JSON.parse(req.body.toString())` for event parsing
-2. Fix the `adminUserId: payment.orderId` bug — use `prisma.user.findFirst({ where: { role: 'ADMIN' } })` instead
-3. `razorpayService.refundPayment` does NOT exist yet (confirmed by grep) — remove that call from `cancelOrder` or add a stub
-4. Both webhook handlers should return 200 even on processing errors (Razorpay/PayPal will retry on non-200)
-5. `emailService.sendOrderConfirmation` exists — safe to call non-blocking
-
-**Webhook routes already registered** (confirmed in `paymentRoutes.js`):
-- `POST /api/payments/razorpay/webhook` → `paymentController.razorpayWebhook`
-- `POST /api/payments/paypal/webhook` → `paymentController.paypalWebhook`
-
-**Test approach for Task 5:**
-Since real Razorpay/PayPal credentials are placeholders, test by:
-1. Computing correct HMAC locally with the test `RAZORPAY_WEBHOOK_SECRET` from `.env`
-2. Sending a simulated `payment.captured` event body with the computed signature
-3. Verifying the DB updates (Order status, Payment status, Inventory decrement, AuditLog)
-4. Testing invalid signature → 400 response
+**Test after Task 6:**
+- Open `http://localhost:4173/contact.html`
+- Submit the form — confirm confirmation message appears
+- Check DB via Prisma Studio: `ContactMessage` table should have a new row
 
 ---
 
-## 6. Remaining Tasks (5–11 Summary)
+## 6. Remaining Tasks (6–11 Summary)
 
 | # | Task | Key files | Notes |
 |---|------|-----------|-------|
-| 5 | Payment webhooks | `paymentController.js`, `app.js` | See Section 5 — raw body critical |
-| 6 | Contact form integration | `stitch/contact.html` | `api.js` already loaded; just add submit handler |
+| 6 | Contact form integration | `stitch/contact.html` | `api.js` already loaded; just add submit handler. See Section 5. |
 | 7 | Admin backend endpoints | `adminController.js`, `adminRoutes.js` | Add: getAnalytics, getDashboardExtended, createProduct(improved), updateProduct(improved), deleteProduct(soft), getProductStats, cancelOrder. Add input validation: `salePrice >= 0`, `0 <= discountPercent <= 100` |
 | 8 | Admin UI — 8 pages | `stitch/admin/` (new folder) | Create: index, orders, products, inventory, payments, customers, analytics, messages. Use `../public/js/api.js`. Chart.js CDN for charts. Auth gate on every page. |
 | 9 | Customer auth modal | `stitch/index.html`, collections, product-detail, shopping-bag, checkout | Add ACCOUNT nav link + modal HTML + login/register JS to 5 pages |
@@ -211,7 +202,7 @@ RAEN_v1/
 │   │   │   ├── razorpay.js           ← Razorpay SDK instance
 │   │   │   └── paypal.js             ← PayPal SDK config
 │   │   ├── controllers/
-│   │   │   ├── paymentController.js  ← Task 5: edit webhook stubs lines 102-118
+│   │   │   ├── paymentController.js  ← Task 5: DONE — full webhook handlers implemented
 │   │   │   ├── adminController.js    ← Task 7: add 7 new methods
 │   │   │   ├── analyticsController.js← Task 2: DONE
 │   │   │   └── contactController.js  ← Task 6: verify /contact endpoint exists
