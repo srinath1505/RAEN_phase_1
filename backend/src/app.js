@@ -17,6 +17,7 @@ const newsletterRoutes = require('./routes/newsletterRoutes');
 const earlyAccessRoutes = require('./routes/earlyAccessRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 
 const app = express();
 
@@ -56,7 +57,8 @@ app.get('/', (req, res) => {
       newsletter: '/api/newsletter',
       earlyAccess: '/api/early-access',
       contact: '/api/contact',
-      admin: '/api/admin'
+      admin: '/api/admin',
+      analytics: '/api/analytics'
     }
   });
 });
@@ -78,6 +80,7 @@ app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/early-access', earlyAccessRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // 404 handler
 app.use((req, res) => {
