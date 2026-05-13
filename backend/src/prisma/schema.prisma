@@ -103,19 +103,21 @@ model Address {
 }
 
 model Product {
-  id          String        @id @default(uuid())
-  slug        String        @unique
-  name        String
-  description String        @db.Text
-  category    String
-  price       Float
-  currency    String        @default("EUR")
-  status      ProductStatus @default(ACTIVE)
-  images      Json          // Array of image paths
-  sizes       Json          // Array of available sizes
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  
+  id              String        @id @default(uuid())
+  slug            String        @unique
+  name            String
+  description     String        @db.Text
+  category        String
+  price           Float
+  salePrice       Float?
+  discountPercent Int?
+  currency        String        @default("EUR")
+  status          ProductStatus @default(ACTIVE)
+  images          Json          // Array of image paths
+  sizes           Json          // Array of available sizes
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
   inventory   Inventory[]
   cartItems   CartItem[]
   orderItems  OrderItem[]
@@ -273,6 +275,33 @@ model AdminAuditLog {
   entityId    String?
   metadata    Json?
   createdAt   DateTime @default(now())
-  
+
   admin       User     @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+}
+
+model PageView {
+  id        String   @id @default(uuid())
+  path      String
+  productId String?
+  sessionId String
+  userAgent String?
+  referer   String?
+  createdAt DateTime @default(now())
+
+  @@index([path])
+  @@index([productId])
+  @@index([createdAt])
+}
+
+model CartEvent {
+  id        String   @id @default(uuid())
+  event     String
+  sessionId String
+  productId String?
+  orderId   String?
+  createdAt DateTime @default(now())
+
+  @@index([event])
+  @@index([productId])
+  @@index([createdAt])
 }
