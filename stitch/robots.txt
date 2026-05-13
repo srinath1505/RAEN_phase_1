@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Disallow: /shopping-bag.html
+Disallow: /checkout.html
+Disallow: /order-confirmation.html
+
+Sitemap: https://raen.design/sitemap.xml

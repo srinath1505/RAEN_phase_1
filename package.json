@@ -1,0 +1,25 @@
+{
+  "name": "raen-ecommerce",
+  "version": "1.0.0",
+  "description": "RAEN Luxury Fashion E-commerce Platform",
+  "scripts": {
+    "install": "cd backend && npm install",
+    "backend": "cd backend && npm run dev",
+    "frontend": "node serve-stitch.js",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "prisma:migrate": "cd backend && npm run prisma:migrate",
+    "prisma:seed": "cd backend && npm run prisma:seed",
+    "prisma:studio": "cd backend && npm run prisma:studio"
+  },
+  "keywords": [
+    "ecommerce",
+    "fashion",
+    "luxury",
+    "raen"
+  ],
+  "author": "RAEN",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,278 @@
+// Prisma schema for RAEN e-commerce platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PENDING_VERIFICATION
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentProvider {
+  RAZORPAY
+  PAYPAL
+  UPI_MANUAL
+}
+
+enum PaymentStatusEnum {
+  CREATED
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+  REFUNDED
+  VERIFICATION_REQUIRED
+}
+
+enum ProductStatus {
+  ACTIVE
+  DRAFT
+  ARCHIVED
+}
+
+enum EarlyAccessStatus {
+  NEW
+  REVIEWED
+  APPROVED
+  REJECTED
+}
+
+enum ContactStatus {
+  NEW
+  READ
+  REPLIED
+}
+
+model User {
+  id           String    @id @default(uuid())
+  firstName    String
+  lastName     String
+  email        String    @unique
+  passwordHash String
+  phone        String?
+  role         UserRole  @default(CUSTOMER)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  addresses    Address[]
+  carts        Cart[]
+  orders       Order[]
+  auditLogs    AdminAuditLog[]
+}
+
+model Address {
+  id           String   @id @default(uuid())
+  userId       String
+  fullName     String
+  phone        String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  postalCode   String
+  country      String   @default("India")
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Product {
+  id          String        @id @default(uuid())
+  slug        String        @unique
+  name        String
+  description String        @db.Text
+  category    String
+  price       Float
+  currency    String        @default("EUR")
+  status      ProductStatus @default(ACTIVE)
+  images      Json          // Array of image paths
+  sizes       Json          // Array of available sizes
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  inventory   Inventory[]
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+}
+
+model Inventory {
+  id            String   @id @default(uuid())
+  productId     String
+  size          String
+  stock         Int      @default(0)
+  reservedStock Int      @default(0)
+  sku           String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@unique([productId, size])
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String?
+  sessionId String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  
+  @@index([userId])
+  @@index([sessionId])
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  productId String
+  size      String
+  quantity  Int      @default(1)
+  unitPrice Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@unique([cartId, productId, size])
+}
+
+model Order {
+  id              String        @id @default(uuid())
+  orderNumber     String        @unique
+  userId          String?
+  email           String
+  phone           String
+  status          OrderStatus   @default(PENDING)
+  paymentStatus   PaymentStatus @default(UNPAID)
+  subtotal        Float
+  tax             Float
+  shipping        Float
+  total           Float
+  currency        String        @default("EUR")
+  shippingAddress Json
+  billingAddress  Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items           OrderItem[]
+  payments        Payment[]
+  
+  @@index([orderNumber])
+  @@index([userId])
+  @@index([email])
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  productId   String
+  productName String
+  productSlug String
+  size        String
+  quantity    Int
+  unitPrice   Float
+  lineTotal   Float
+  image       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+}
+
+model Payment {
+  id                  String             @id @default(uuid())
+  orderId             String
+  provider            PaymentProvider
+  providerOrderId     String?
+  providerPaymentId   String?
+  providerSignature   String?
+  upiReferenceId      String?
+  amount              Float
+  currency            String             @default("EUR")
+  status              PaymentStatusEnum  @default(CREATED)
+  rawResponse         Json?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  
+  order               Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@index([providerOrderId])
+  @@index([providerPaymentId])
+  @@index([upiReferenceId])
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  source    String?
+  createdAt DateTime @default(now())
+}
+
+model EarlyAccessRequest {
+  id                String             @id @default(uuid())
+  firstName         String
+  lastName          String
+  email             String
+  phone             String?
+  city              String?
+  interest          String?
+  budgetOrPreference String?
+  acceptedPrivacy   Boolean            @default(false)
+  wantsUpdates      Boolean            @default(false)
+  status            EarlyAccessStatus  @default(NEW)
+  createdAt         DateTime           @default(now())
+}
+
+model ContactMessage {
+  id        String        @id @default(uuid())
+  name      String
+  email     String
+  subject   String
+  message   String        @db.Text
+  status    ContactStatus @default(NEW)
+  createdAt DateTime      @default(now())
+}
+
+model AdminAuditLog {
+  id          String   @id @default(uuid())
+  adminUserId String
+  action      String
+  entityType  String
+  entityId    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  
+  admin       User     @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+}
