@@ -1,6 +1,6 @@
 # RAEN Phase 1 — Session Handoff Document
 **Written:** 2026-05-14  
-**Last updated:** 2026-05-14 (Task 5 complete)  
+**Last updated:** 2026-05-14 (Task 6 complete)  
 **Reason:** Context limit approaching (~80% used). Continue in a fresh session.  
 **Safety repo:** https://github.com/srinath1505/RAEN_phase_1  
 **Local path:** `C:\Users\Srinath\Downloads\RAEN_v1`
@@ -24,6 +24,7 @@ Building Phase 1 of **RAEN** — a luxury fashion e-commerce platform — by com
 
 ### Git commits on `main` (phase1 remote is in sync):
 ```
+52d3637  feat(frontend): Task 6 complete — contact form integrated
 a24fe4f  feat(api): Task 5 complete — payment webhooks with DB transactions
 05b2162  docs: add session handoff document for context continuity
 91cf328  fix(frontend): Task 4 complete — product links fixed, redirect stubs...
@@ -32,7 +33,7 @@ a24fe4f  feat(api): Task 5 complete — payment webhooks with DB transactions
 75cf62f  feat(db): Task 1 complete — add salePrice/discountPercent, PageView, CartEvent
 ```
 
-### Tasks 1–5: COMPLETE ✅
+### Tasks 1–6: COMPLETE ✅
 | Task | What was done |
 |------|--------------|
 | 1 | Added `salePrice Float?` + `discountPercent Int?` to Product model. Added `PageView` and `CartEvent` analytics models. Migration: `20260513120000_add_discount_analytics`. Prisma client regenerated. |
@@ -40,8 +41,9 @@ a24fe4f  feat(api): Task 5 complete — payment webhooks with DB transactions
 | 3 | Injected analytics tracking IIFE into `<head>` of all 31 HTML files in `stitch/`. Wired `window.__trackCart('add_to_cart')` in `product-detail.html`, `checkout_started` and `checkout_completed` in `checkout.html`. |
 | 4 | Fixed all 12 product href links in `collections.html`, `index.html`, `product-detail.html` to use `product-detail.html?slug=X`. Replaced 12 old static product pages with redirect stubs (meta refresh + JS replace). Fixed 10/12 wrong DB prices, all 12 images (3→5 each), taupe-wrap name. Fixed 2 critical bugs in `product-detail.html` (see Section 4). |
 | 5 | Registered `express.raw()` before `express.json()` in `app.js` (G7 fix — raw body for HMAC). Replaced both webhook stubs in `paymentController.js` with full implementations: HMAC verify → `$transaction` (Payment + Order + Inventory + AuditLog) → non-blocking email. Added idempotency guard (`payment.status === 'SUCCESS'` exits early). Fixed G6 (AdminAuditLog FK). 13/13 tests passed. |
+| 6 | Contact page had no form — only a `mailto:` link. Built form from scratch (Name, Email, Message). Subject auto-fills as `'Customer Enquiry'`. `api.js` added. Success state uses `form.outerHTML` (16px bold Work Sans, letter-spaced). SMTP failure non-blocking. 8/8 tests passed, DB write confirmed. |
 
-### Tasks 6–11: NOT STARTED ⏳
+### Tasks 7–11: NOT STARTED ⏳
 
 ### Running servers (need to be started in new session):
 ```bash
@@ -77,8 +79,9 @@ All 12 products seeded, correct prices and images. All 4 inventory sizes (XS/S/M
 | `backend/src/routes/analyticsRoutes.js` | Task 2 | ✅ Complete |
 | `backend/src/prisma/schema.prisma` | Task 1 | ✅ Complete |
 
-### Next file to edit (Task 6):
-- `stitch/contact.html` — add submit handler + wire to `POST /api/contact`
+### Next file to edit (Task 7):
+- `backend/src/controllers/adminController.js` — add 7 new methods (see Section 5)
+- `backend/src/routes/adminRoutes.js` — register 7 new routes
 
 ---
 
@@ -147,39 +150,56 @@ const expected = crypto.createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET
 
 ---
 
-## 5. The Exact Next Step — Task 6
+## 5. The Exact Next Step — Task 7
 
-### Task 6: Contact Form Integration
+### Task 7: Expanded Admin Backend Endpoints
 
-**One file to edit:** `stitch/contact.html`
+**Two files to edit:**
 
-**What to do:**
-1. Verify `<script src="public/js/api.js"></script>` is present before `</body>` (it should already be there from Task 3)
-2. Find the `<form>` element — it already has `name`, `email`, `subject`, `message` fields
-3. Add a `DOMContentLoaded` submit handler that calls `apiPost('/contact', data)` and on success replaces form with a confirmation message
+**`backend/src/controllers/adminController.js`** — add these 7 methods (full code in `CLAUDE_PHASE1_PROMPT.md` lines 431–660):
+1. `getAnalytics` — page views, sessions, funnel, revenue by day/method, top products
+2. `getDashboardExtended` — revenue today/week/month/all-time, order counts, low stock, recent orders, top products, customer stats
+3. `createProduct` — with `salePrice`, `discountPercent`, auto-creates Inventory rows
+4. `updateProduct` — partial update, handles null salePrice/discountPercent correctly
+5. `deleteProduct` — soft delete (sets `status: 'ARCHIVED'`)
+6. `getProductStats` — per-product revenue, units sold, page views, cart adds, conversion rate
+7. `cancelOrder` — `$transaction`: cancel order, restore inventory, mark payment REFUNDED. Non-blocking Razorpay refund attempt via `razorpayService.refundPayment &&` guard.
 
-**The full handler code is in `CLAUDE_PHASE1_PROMPT.md` lines 395–421.** It is straightforward — no gotchas expected.
-
-**First verify the backend endpoint exists:**
-```bash
-curl -s -X POST http://localhost:5000/api/contact \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Test","email":"test@test.com","subject":"Hello","message":"Test message"}'
+**`backend/src/routes/adminRoutes.js`** — add these 7 routes (all behind `adminMiddleware`):
+```javascript
+router.get('/dashboard-extended', adminMiddleware, adminController.getDashboardExtended);
+router.get('/analytics', adminMiddleware, adminController.getAnalytics);
+router.post('/products', adminMiddleware, adminController.createProduct);
+router.put('/products/:id', adminMiddleware, adminController.updateProduct);
+router.delete('/products/:id', adminMiddleware, adminController.deleteProduct);
+router.get('/products/:id/stats', adminMiddleware, adminController.getProductStats);
+router.post('/orders/:id/cancel', adminMiddleware, adminController.cancelOrder);
 ```
-Should return `{ success: true }` or similar. If it returns 404, check `contactController.js` and `contactRoutes.js`.
 
-**Test after Task 6:**
-- Open `http://localhost:4173/contact.html`
-- Submit the form — confirm confirmation message appears
-- Check DB via Prisma Studio: `ContactMessage` table should have a new row
+**Key gotchas for Task 7:**
+- G6 applies here too: `cancelOrder` uses `req.user.id` (from `adminMiddleware`) for `adminUserId` — this is correct since it's an authenticated admin action
+- `razorpayService.refundPayment` does not exist — guard with `razorpayService.refundPayment &&` (already shown in spec's `cancelOrder` code)
+- Add input validation for `createProduct`/`updateProduct`: `salePrice >= 0`, `0 <= discountPercent <= 100`
+- `getAnalytics` uses `prisma.pageView.groupBy` — this requires Prisma v4.16+ which we have (v5.22.0) ✅
+
+**Test after Task 7:**
+```bash
+# Get admin JWT first
+TOKEN=$(curl -s -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@raen.design","password":"RaenAdmin2024!"}' | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).data.token))")
+
+curl -s http://localhost:5000/api/admin/dashboard-extended \
+  -H "Authorization: Bearer $TOKEN"
+```
 
 ---
 
-## 6. Remaining Tasks (6–11 Summary)
+## 6. Remaining Tasks (7–11 Summary)
 
 | # | Task | Key files | Notes |
 |---|------|-----------|-------|
-| 6 | Contact form integration | `stitch/contact.html` | `api.js` already loaded; just add submit handler. See Section 5. |
+| 7 | Admin backend endpoints | `adminController.js`, `adminRoutes.js` | See Section 5. 7 methods + 7 routes. G6 applies (req.user.id available here). |
 | 7 | Admin backend endpoints | `adminController.js`, `adminRoutes.js` | Add: getAnalytics, getDashboardExtended, createProduct(improved), updateProduct(improved), deleteProduct(soft), getProductStats, cancelOrder. Add input validation: `salePrice >= 0`, `0 <= discountPercent <= 100` |
 | 8 | Admin UI — 8 pages | `stitch/admin/` (new folder) | Create: index, orders, products, inventory, payments, customers, analytics, messages. Use `../public/js/api.js`. Chart.js CDN for charts. Auth gate on every page. |
 | 9 | Customer auth modal | `stitch/index.html`, collections, product-detail, shopping-bag, checkout | Add ACCOUNT nav link + modal HTML + login/register JS to 5 pages |
@@ -230,7 +250,7 @@ RAEN_v1/
 │   ├── product-detail.html           ← Task 4: DONE (bugs fixed)
 │   ├── collections.html              ← Task 4: DONE (links fixed)
 │   ├── checkout.html                 ← Task 3: DONE (checkout_started/completed tracking)
-│   ├── contact.html                  ← Task 6: next frontend task
+│   ├── contact.html                  ← Task 6: DONE — form + submit handler wired
 │   ├── [12 product stubs].html       ← Task 4: DONE (redirect stubs)
 │   └── admin/                        ← Task 8: DOES NOT EXIST YET
 ├── task-reports/                     ← TASK_01 through TASK_04 reports
