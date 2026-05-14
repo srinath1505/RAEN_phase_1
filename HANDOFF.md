@@ -1,6 +1,6 @@
 # RAEN Phase 1 — Session Handoff Document
 **Written:** 2026-05-14  
-**Last updated:** 2026-05-14 (Task 6 complete)  
+**Last updated:** 2026-05-14 (Task 7 complete)  
 **Reason:** Context limit approaching (~80% used). Continue in a fresh session.  
 **Safety repo:** https://github.com/srinath1505/RAEN_phase_1  
 **Local path:** `C:\Users\Srinath\Downloads\RAEN_v1`
@@ -24,6 +24,7 @@ Building Phase 1 of **RAEN** — a luxury fashion e-commerce platform — by com
 
 ### Git commits on `main` (phase1 remote is in sync):
 ```
+c7bfc03  feat(api): Task 7 complete — expanded admin backend endpoints
 52d3637  feat(frontend): Task 6 complete — contact form integrated
 a24fe4f  feat(api): Task 5 complete — payment webhooks with DB transactions
 05b2162  docs: add session handoff document for context continuity
@@ -33,7 +34,7 @@ a24fe4f  feat(api): Task 5 complete — payment webhooks with DB transactions
 75cf62f  feat(db): Task 1 complete — add salePrice/discountPercent, PageView, CartEvent
 ```
 
-### Tasks 1–6: COMPLETE ✅
+### Tasks 1–7: COMPLETE ✅
 | Task | What was done |
 |------|--------------|
 | 1 | Added `salePrice Float?` + `discountPercent Int?` to Product model. Added `PageView` and `CartEvent` analytics models. Migration: `20260513120000_add_discount_analytics`. Prisma client regenerated. |
@@ -42,8 +43,9 @@ a24fe4f  feat(api): Task 5 complete — payment webhooks with DB transactions
 | 4 | Fixed all 12 product href links in `collections.html`, `index.html`, `product-detail.html` to use `product-detail.html?slug=X`. Replaced 12 old static product pages with redirect stubs (meta refresh + JS replace). Fixed 10/12 wrong DB prices, all 12 images (3→5 each), taupe-wrap name. Fixed 2 critical bugs in `product-detail.html` (see Section 4). |
 | 5 | Registered `express.raw()` before `express.json()` in `app.js` (G7 fix — raw body for HMAC). Replaced both webhook stubs in `paymentController.js` with full implementations: HMAC verify → `$transaction` (Payment + Order + Inventory + AuditLog) → non-blocking email. Added idempotency guard (`payment.status === 'SUCCESS'` exits early). Fixed G6 (AdminAuditLog FK). 13/13 tests passed. |
 | 6 | Contact page had no form — only a `mailto:` link. Built form from scratch (Name, Email, Message). Subject auto-fills as `'Customer Enquiry'`. `api.js` added. Success state uses `form.outerHTML` (16px bold Work Sans, letter-spaced). SMTP failure non-blocking. 8/8 tests passed, DB write confirmed. |
+| 7 | Replaced 3 stub methods, added 5 new in `adminController.js`. Rewrote `adminRoutes.js` with correct route order (`/stats` before `/:id`), validation, 5 new routes. UTC midnight revenue, low stock lte:5, slug auto-gen, inventory upsert, 48h cancel window, Prisma v5 groupBy syntax fixes. 84/84 tests passed. |
 
-### Tasks 7–11: NOT STARTED ⏳
+### Tasks 8–11: NOT STARTED ⏳
 
 ### Running servers (need to be started in new session):
 ```bash
@@ -79,9 +81,9 @@ All 12 products seeded, correct prices and images. All 4 inventory sizes (XS/S/M
 | `backend/src/routes/analyticsRoutes.js` | Task 2 | ✅ Complete |
 | `backend/src/prisma/schema.prisma` | Task 1 | ✅ Complete |
 
-### Next file to edit (Task 7):
-- `backend/src/controllers/adminController.js` — add 7 new methods (see Section 5)
-- `backend/src/routes/adminRoutes.js` — register 7 new routes
+### Next files to create (Task 8):
+- `stitch/admin/` folder — 8 new HTML pages (does not exist yet)
+- Pages: `index.html`, `orders.html`, `products.html`, `inventory.html`, `payments.html`, `customers.html`, `analytics.html`, `messages.html`
 
 ---
 
@@ -150,56 +152,48 @@ const expected = crypto.createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET
 
 ---
 
-## 5. The Exact Next Step — Task 7
+## 5. The Exact Next Step — Task 8
 
-### Task 7: Expanded Admin Backend Endpoints
+### Task 8: Admin Dashboard UI — 8 Pages
 
-**Two files to edit:**
+**Create folder `stitch/admin/`** (does not exist). Build all 8 pages below. Full spec in `CLAUDE_PHASE1_PROMPT.md` lines 676–958.
 
-**`backend/src/controllers/adminController.js`** — add these 7 methods (full code in `CLAUDE_PHASE1_PROMPT.md` lines 431–660):
-1. `getAnalytics` — page views, sessions, funnel, revenue by day/method, top products
-2. `getDashboardExtended` — revenue today/week/month/all-time, order counts, low stock, recent orders, top products, customer stats
-3. `createProduct` — with `salePrice`, `discountPercent`, auto-creates Inventory rows
-4. `updateProduct` — partial update, handles null salePrice/discountPercent correctly
-5. `deleteProduct` — soft delete (sets `status: 'ARCHIVED'`)
-6. `getProductStats` — per-product revenue, units sold, page views, cart adds, conversion rate
-7. `cancelOrder` — `$transaction`: cancel order, restore inventory, mark payment REFUNDED. Non-blocking Razorpay refund attempt via `razorpayService.refundPayment &&` guard.
+**Every admin page must:**
+1. Auth gate at top of `<script>` — redirect to `../index.html` if no `raen_auth_token` in localStorage
+2. Shared sidebar HTML (exact code in spec lines 686–753)
+3. Chart.js from CDN: `<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`
+4. API calls via `../public/js/api.js`
 
-**`backend/src/routes/adminRoutes.js`** — add these 7 routes (all behind `adminMiddleware`):
-```javascript
-router.get('/dashboard-extended', adminMiddleware, adminController.getDashboardExtended);
-router.get('/analytics', adminMiddleware, adminController.getAnalytics);
-router.post('/products', adminMiddleware, adminController.createProduct);
-router.put('/products/:id', adminMiddleware, adminController.updateProduct);
-router.delete('/products/:id', adminMiddleware, adminController.deleteProduct);
-router.get('/products/:id/stats', adminMiddleware, adminController.getProductStats);
-router.post('/orders/:id/cancel', adminMiddleware, adminController.cancelOrder);
-```
+**Pages and their primary endpoints:**
+| Page | Endpoint(s) |
+|------|------------|
+| `index.html` | `GET /api/admin/dashboard-extended`, `GET /api/admin/analytics?period=30` |
+| `orders.html` | `GET /api/admin/orders`, `PATCH /api/admin/orders/:id/status`, `POST /api/admin/orders/:id/cancel` |
+| `products.html` | `GET /api/admin/products`, `GET /api/admin/products/:id/stats`, `POST /api/admin/products`, `PATCH /api/admin/products/:id`, `DELETE /api/admin/products/:id` |
+| `inventory.html` | `GET /api/admin/inventory`, `PATCH /api/admin/inventory/:id` |
+| `payments.html` | `GET /api/admin/payments`, `GET /api/admin/payments/pending-verification`, `PATCH /api/admin/payments/:id/approve`, `PATCH /api/admin/payments/:id/reject` |
+| `customers.html` | `GET /api/admin/customers` |
+| `analytics.html` | `GET /api/admin/analytics?period=N` |
+| `messages.html` | `GET /api/admin/contact-messages`, `GET /api/admin/early-access`, `PATCH /api/admin/contact-messages/:id/status`, `PATCH /api/admin/early-access/:id/status` |
 
-**Key gotchas for Task 7:**
-- G6 applies here too: `cancelOrder` uses `req.user.id` (from `adminMiddleware`) for `adminUserId` — this is correct since it's an authenticated admin action
-- `razorpayService.refundPayment` does not exist — guard with `razorpayService.refundPayment &&` (already shown in spec's `cancelOrder` code)
-- Add input validation for `createProduct`/`updateProduct`: `salePrice >= 0`, `0 <= discountPercent <= 100`
-- `getAnalytics` uses `prisma.pageView.groupBy` — this requires Prisma v4.16+ which we have (v5.22.0) ✅
+**Key gotchas for Task 8:**
+- `api.js` path is `../public/js/api.js` (one level up from `admin/`)
+- `apiGet`/`apiPost` etc. call `http://localhost:5000` in dev — already handled in `api.js` via `BASE_URL`
+- Chart.js CDN: gold line `#b8960c`, dark background `#1a1a1a` for sidebar
+- Auth token stored as `raen_auth_token` in localStorage — same key `api.js` uses via `setAuthToken()`
+- `authLimiter` is `max: 5 / 15 min` in-memory — don't hammer login in tests
+- Low stock threshold is `lte: 5` (set in Task 7) — UI alert banner should match
 
-**Test after Task 7:**
-```bash
-# Get admin JWT first
-TOKEN=$(curl -s -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@raen.design","password":"RaenAdmin2024!"}' | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).data.token))")
-
-curl -s http://localhost:5000/api/admin/dashboard-extended \
-  -H "Authorization: Bearer $TOKEN"
-```
+**Test after Task 8:**
+Open `http://localhost:4173/admin/index.html` — dashboard must load with real data from the DB.
 
 ---
 
-## 6. Remaining Tasks (7–11 Summary)
+## 6. Remaining Tasks (8–11 Summary)
 
 | # | Task | Key files | Notes |
 |---|------|-----------|-------|
-| 7 | Admin backend endpoints | `adminController.js`, `adminRoutes.js` | See Section 5. 7 methods + 7 routes. G6 applies (req.user.id available here). |
+| 8 | Admin dashboard UI | `stitch/admin/` (8 new pages) | See Section 5. Auth gate, sidebar, Chart.js, all 8 pages. api.js path is `../public/js/api.js`. |
 | 7 | Admin backend endpoints | `adminController.js`, `adminRoutes.js` | Add: getAnalytics, getDashboardExtended, createProduct(improved), updateProduct(improved), deleteProduct(soft), getProductStats, cancelOrder. Add input validation: `salePrice >= 0`, `0 <= discountPercent <= 100` |
 | 8 | Admin UI — 8 pages | `stitch/admin/` (new folder) | Create: index, orders, products, inventory, payments, customers, analytics, messages. Use `../public/js/api.js`. Chart.js CDN for charts. Auth gate on every page. |
 | 9 | Customer auth modal | `stitch/index.html`, collections, product-detail, shopping-bag, checkout | Add ACCOUNT nav link + modal HTML + login/register JS to 5 pages |
@@ -223,7 +217,7 @@ RAEN_v1/
 │   │   │   └── paypal.js             ← PayPal SDK config
 │   │   ├── controllers/
 │   │   │   ├── paymentController.js  ← Task 5: DONE — full webhook handlers implemented
-│   │   │   ├── adminController.js    ← Task 7: add 7 new methods
+│   │   │   ├── adminController.js    ← Task 7: DONE — 8 methods (3 replaced, 5 new)
 │   │   │   ├── analyticsController.js← Task 2: DONE
 │   │   │   └── contactController.js  ← Task 6: verify /contact endpoint exists
 │   │   ├── middleware/
