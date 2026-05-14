@@ -194,8 +194,6 @@ Open `http://localhost:4173/admin/index.html` — dashboard must load with real 
 | # | Task | Key files | Notes |
 |---|------|-----------|-------|
 | 8 | Admin dashboard UI | `stitch/admin/` (8 new pages) | See Section 5. Auth gate, sidebar, Chart.js, all 8 pages. api.js path is `../public/js/api.js`. |
-| 7 | Admin backend endpoints | `adminController.js`, `adminRoutes.js` | Add: getAnalytics, getDashboardExtended, createProduct(improved), updateProduct(improved), deleteProduct(soft), getProductStats, cancelOrder. Add input validation: `salePrice >= 0`, `0 <= discountPercent <= 100` |
-| 8 | Admin UI — 8 pages | `stitch/admin/` (new folder) | Create: index, orders, products, inventory, payments, customers, analytics, messages. Use `../public/js/api.js`. Chart.js CDN for charts. Auth gate on every page. |
 | 9 | Customer auth modal | `stitch/index.html`, collections, product-detail, shopping-bag, checkout | Add ACCOUNT nav link + modal HTML + login/register JS to 5 pages |
 | 10 | Customer account page | `stitch/account.html` (new) | Auth gate, profile edit, order history, addresses |
 | 11 | Discount pricing on frontend | `stitch/product-detail.html`, `stitch/collections.html` | effectivePrice = salePrice OR price*(1-discountPercent/100) |
