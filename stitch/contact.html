@@ -308,7 +308,30 @@ For all enquiries — orders, atelier appointments, press, and bespoke commissio
 <p class="font-body text-on-surface-variant leading-relaxed">
 Find us on Instagram at @raenlabel for collection updates and editorial content.
 </p>
-<a class="inline-block font-label text-xs letter-spaced text-primary border-b border-primary pb-2 hover:opacity-70 transition-opacity" href="mailto:hello@raen.design">Send a Message</a>
+<form id="contact-form" class="space-y-8 mt-2">
+<div>
+  <label class="font-label text-[10px] letter-spaced text-tertiary uppercase block mb-3">Name</label>
+  <input type="text" name="name" required
+    class="w-full bg-transparent border-b border-outline-variant py-3 font-body text-sm text-on-surface focus:outline-none focus:border-primary transition-colors">
+</div>
+<div>
+  <label class="font-label text-[10px] letter-spaced text-tertiary uppercase block mb-3">Email</label>
+  <input type="email" name="email" required
+    class="w-full bg-transparent border-b border-outline-variant py-3 font-body text-sm text-on-surface focus:outline-none focus:border-primary transition-colors">
+</div>
+<div>
+  <label class="font-label text-[10px] letter-spaced text-tertiary uppercase block mb-3">Message</label>
+  <textarea name="message" required rows="4"
+    class="w-full bg-transparent border-b border-outline-variant py-3 font-body text-sm text-on-surface focus:outline-none focus:border-primary transition-colors resize-none"></textarea>
+</div>
+<div class="pt-4">
+  <button type="submit" id="contact-submit"
+    class="font-label text-xs letter-spaced text-primary border-b border-primary pb-2 hover:opacity-70 transition-opacity bg-transparent cursor-pointer">
+    Send Message
+  </button>
+  <p id="contact-error" style="display:none;" class="font-body text-xs text-error mt-4"></p>
+</div>
+</form>
 </div>
 <div class="aspect-[4/5] bg-surface-container-low overflow-hidden">
 <div class="raen-store-carousel">
@@ -397,5 +420,45 @@ A contemporary fashion house dedicated to considered design, fluid silk, and the
 </div>
 </div>
 </footer>
+<script src="public/js/api.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var form = document.getElementById('contact-form');
+  if (!form) return;
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var btn = document.getElementById('contact-submit');
+    var errEl = document.getElementById('contact-error');
+
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    errEl.style.display = 'none';
+
+    var get = function (key) {
+      return form.querySelector('[name="' + key + '"]') || form.querySelector('#' + key);
+    };
+
+    var data = {
+      name: get('name')?.value?.trim(),
+      email: get('email')?.value?.trim(),
+      message: get('message')?.value?.trim(),
+      subject: get('subject')?.value?.trim() || 'Customer Enquiry'
+    };
+    var phone = get('phone')?.value?.trim();
+    if (phone) data.phone = phone; // backend ignores for now, add to ContactMessage model in Phase 2
+
+    try {
+      await apiPost('/contact', data);
+      form.outerHTML = '<div style="padding:60px 0;"><p style="font-family:\'Work Sans\',sans-serif;font-size:16px;font-weight:700;letter-spacing:0.2em;color:#1a1a1a;line-height:2.2;text-transform:uppercase;">YOUR MESSAGE HAS BEEN RECEIVED.<br>WE WILL BE IN TOUCH WITHIN 48 HOURS.</p></div>';
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Send Message';
+      errEl.textContent = 'Unable to send. Please email hello@raen.design directly.';
+      errEl.style.display = 'block';
+    }
+  });
+});
+</script>
 </body></html>
 
