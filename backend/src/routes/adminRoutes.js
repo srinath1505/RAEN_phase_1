@@ -9,12 +9,38 @@ const validationMiddleware = require('../middleware/validationMiddleware');
 router.use(authMiddleware);
 router.use(adminMiddleware);
 
+// Dashboard
 router.get('/dashboard', adminController.getDashboard);
+router.get('/dashboard-extended', adminController.getDashboardExtended);
 
-// Products
+// Analytics
+router.get('/analytics', adminController.getAnalytics);
+
+// Products — order is permanent: stats route MUST be registered before /:id
 router.get('/products', adminController.getAllProducts);
-router.post('/products', adminController.createProduct);
-router.patch('/products/:id', adminController.updateProduct);
+router.post(
+  '/products',
+  [
+    body('name').notEmpty().withMessage('Name is required'),
+    body('price').isFloat({ min: 0 }).withMessage('Price must be a non-negative number'),
+    body('salePrice').optional({ nullable: true }).isFloat({ min: 0 }).withMessage('Sale price must be non-negative'),
+    body('discountPercent').optional({ nullable: true }).isInt({ min: 0, max: 100 }).withMessage('Discount must be between 0 and 100')
+  ],
+  validationMiddleware,
+  adminController.createProduct
+);
+router.get('/products/:id/stats', adminController.getProductStats);
+router.get('/products/:id', adminController.getProduct);
+router.patch(
+  '/products/:id',
+  [
+    body('price').optional().isFloat({ min: 0 }).withMessage('Price must be a non-negative number'),
+    body('salePrice').optional({ nullable: true }).isFloat({ min: 0 }).withMessage('Sale price must be non-negative'),
+    body('discountPercent').optional({ nullable: true }).isInt({ min: 0, max: 100 }).withMessage('Discount must be between 0 and 100')
+  ],
+  validationMiddleware,
+  adminController.updateProduct
+);
 router.delete('/products/:id', adminController.deleteProduct);
 
 // Orders
@@ -24,10 +50,12 @@ router.patch(
   '/orders/:id/status',
   [
     body('status').isIn(['PENDING', 'PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED'])
+      .withMessage('Invalid order status')
   ],
   validationMiddleware,
   adminController.updateOrderStatus
 );
+router.post('/orders/:id/cancel', adminController.cancelOrder);
 
 // Inventory
 router.get('/inventory', adminController.getAllInventory);
@@ -55,6 +83,7 @@ router.patch(
   '/early-access/:id/status',
   [
     body('status').isIn(['NEW', 'REVIEWED', 'APPROVED', 'REJECTED'])
+      .withMessage('Invalid early access status')
   ],
   validationMiddleware,
   adminController.updateEarlyAccessStatus
@@ -66,6 +95,7 @@ router.patch(
   '/contact-messages/:id/status',
   [
     body('status').isIn(['NEW', 'READ', 'REPLIED'])
+      .withMessage('Invalid message status')
   ],
   validationMiddleware,
   adminController.updateContactMessageStatus
