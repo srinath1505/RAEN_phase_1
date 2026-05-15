@@ -219,7 +219,8 @@ class PaymentService {
     
     // Update order status
     await orderService.updatePaymentStatus(payment.orderId, 'FAILED');
-    
+    await orderService.updateOrderStatus(payment.orderId, 'CANCELLED');
+
     // Send payment failed email
     await emailService.sendPaymentFailed(payment.order);
     

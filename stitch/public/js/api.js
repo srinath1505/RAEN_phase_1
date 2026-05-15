@@ -82,7 +82,9 @@ async function apiRequest(endpoint, options = {}) {
     const result = await response.json();
     
     if (!response.ok) {
-      throw new Error(result.message || 'Request failed');
+      const err = new Error(result.message || 'Request failed');
+      err.status = response.status;
+      throw err;
     }
     
     // Unwrap data if it's in the standard API response format

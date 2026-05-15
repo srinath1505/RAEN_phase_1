@@ -132,6 +132,7 @@ exports.getAllOrders = async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
       include: {
+        user: { select: { firstName: true, lastName: true } },
         items: true,
         payments: true
       },
@@ -227,7 +228,20 @@ exports.getAllCustomers = async (req, res) => {
       }
     });
     
-    return success(res, { customers }, 'Customers retrieved');
+    const spentData = await prisma.order.groupBy({
+      by: ['email'],
+      where: { paymentStatus: 'PAID' },
+      _sum: { total: true }
+    });
+    const spentMap = Object.fromEntries(
+      spentData.map(s => [s.email, s._sum.total || 0])
+    );
+    const customersWithSpent = customers.map(c => ({
+      ...c,
+      totalSpent: spentMap[c.email] || 0
+    }));
+
+    return success(res, { customers: customersWithSpent }, 'Customers retrieved');
   } catch (err) {
     return error(res, err.message, 400);
   }
@@ -278,9 +292,18 @@ exports.getPendingVerifications = async (req, res) => {
 exports.approvePayment = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     await paymentService.approveUpiPayment(id, null, null);
-    
+    await prisma.adminAuditLog.create({
+      data: {
+        adminUserId: req.user.id,
+        action: 'APPROVE_UPI_PAYMENT',
+        entityType: 'Payment',
+        entityId: id,
+        metadata: {}
+      }
+    });
+
     return success(res, null, 'Payment approved');
   } catch (err) {
     return error(res, err.message, 400);
@@ -290,9 +313,18 @@ exports.approvePayment = async (req, res) => {
 exports.rejectPayment = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     await paymentService.rejectUpiPayment(id);
-    
+    await prisma.adminAuditLog.create({
+      data: {
+        adminUserId: req.user.id,
+        action: 'REJECT_UPI_PAYMENT',
+        entityType: 'Payment',
+        entityId: id,
+        metadata: {}
+      }
+    });
+
     return success(res, null, 'Payment rejected');
   } catch (err) {
     return error(res, err.message, 400);

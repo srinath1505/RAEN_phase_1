@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAEN Admin — Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Helvetica, Arial, sans-serif; background: #f5f5f0; }
+    a { text-decoration: none; color: inherit; }
+    .sidebar { position: fixed; top: 0; left: 0; width: 200px; height: 100vh; background: #1a1a1a; display: flex; flex-direction: column; z-index: 100; }
+    .sidebar-brand { padding: 24px 20px; font-size: 11px; letter-spacing: 0.3em; color: #b8960c; font-weight: 700; border-bottom: 1px solid #333; }
+    .sidebar nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .nav-link { display: block; padding: 10px 20px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #999; transition: color 0.15s, background 0.15s; }
+    .nav-link:hover { color: #fff; background: #222; }
+    .nav-link.active { color: #b8960c; border-left: 2px solid #b8960c; padding-left: 18px; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid #333; }
+    .signout-btn { width: 100%; padding: 8px; background: transparent; border: 1px solid #333; color: #999; font-size: 10px; letter-spacing: 0.15em; cursor: pointer; text-transform: uppercase; transition: all 0.15s; }
+    .signout-btn:hover { border-color: #666; color: #ccc; }
+    .main { margin-left: 200px; padding: 28px 32px; min-height: 100vh; }
+    .page-header { margin-bottom: 24px; }
+    .page-title { font-size: 20px; font-weight: 700; color: #1a1a1a; letter-spacing: 0.03em; }
+    .page-sub { font-size: 12px; color: #888; margin-top: 4px; letter-spacing: 0.05em; }
+    .alert-banner { padding: 14px 20px; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 3px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+    .alert-banner-text { font-size: 13px; color: #991b1b; }
+    .alert-banner a { color: #dc2626; font-weight: 600; text-decoration: underline; margin-left: 8px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: #fff; padding: 18px 20px; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); border-top: 3px solid #b8960c; }
+    .stat-label { font-size: 10px; letter-spacing: 0.15em; color: #888; text-transform: uppercase; margin-bottom: 6px; }
+    .stat-value { font-size: 26px; font-weight: 700; color: #1a1a1a; line-height: 1; }
+    .stat-sub { font-size: 11px; color: #aaa; margin-top: 4px; }
+    .stat-card.warning { border-top-color: #f59e0b; }
+    .stat-card.danger { border-top-color: #dc2626; }
+    .card { background: #fff; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); margin-bottom: 20px; }
+    .card-header { padding: 16px 20px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
+    .card-title { font-size: 12px; letter-spacing: 0.12em; font-weight: 700; text-transform: uppercase; color: #1a1a1a; }
+    .card-body { padding: 20px; }
+    .chart-wrap { position: relative; height: 260px; }
+    .period-btns { display: flex; gap: 6px; }
+    .period-btn { padding: 5px 12px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid #ddd; background: #fff; cursor: pointer; color: #888; transition: all 0.15s; }
+    .period-btn.active { border-color: #b8960c; color: #b8960c; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { text-align: left; padding: 9px 12px; background: #f8f8f8; border-bottom: 2px solid #e5e5e5; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #666; font-weight: 600; }
+    td { padding: 10px 12px; border-bottom: 1px solid #f2f2f2; color: #333; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 2px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .badge-pending { background: #fef3c7; color: #92400e; }
+    .badge-paid { background: #dbeafe; color: #1e40af; }
+    .badge-processing { background: #dbeafe; color: #1e40af; }
+    .badge-shipped { background: #ccfbf1; color: #065f46; }
+    .badge-delivered { background: #dcfce7; color: #166534; }
+    .badge-cancelled { background: #fee2e2; color: #991b1b; }
+    .badge-refunded { background: #f3e8ff; color: #6b21a8; }
+    .low-stock-row-red { background: #fee2e2 !important; }
+    .low-stock-row-amber { background: #fef9c3 !important; }
+    .stock-red { color: #dc2626; font-weight: 700; }
+    .stock-amber { color: #d97706; font-weight: 700; }
+    .view-all { font-size: 11px; letter-spacing: 0.1em; color: #b8960c; text-transform: uppercase; }
+    .view-all:hover { text-decoration: underline; }
+    .empty-cell { text-align: center; padding: 40px 20px; color: #bbb; }
+    .empty-icon { font-size: 24px; margin-bottom: 8px; }
+    .empty-text { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; }
+    .spinner { text-align: center; padding: 40px; color: #bbb; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+    @media (max-width: 1280px) {
+      .stat-grid { grid-template-columns: repeat(3, 1fr); }
+      .two-col { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-brand">RAEN ADMIN</div>
+  <nav>
+    <a href="index.html" class="nav-link active">Dashboard</a>
+    <a href="orders.html" class="nav-link">Orders</a>
+    <a href="products.html" class="nav-link">Products</a>
+    <a href="inventory.html" class="nav-link">Inventory</a>
+    <a href="payments.html" class="nav-link">Payments</a>
+    <a href="customers.html" class="nav-link">Customers</a>
+    <a href="analytics.html" class="nav-link">Analytics</a>
+    <a href="messages.html" class="nav-link">Messages</a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="signout-btn" onclick="logout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub" id="last-updated">Loading...</div>
+  </div>
+
+  <!-- UPI Alert Banner -->
+  <div class="alert-banner" id="upi-alert" style="display:none;">
+    <span class="alert-banner-text" id="upi-alert-text"></span>
+    <a href="payments.html">Review Payments &rarr;</a>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Orders</div>
+      <div class="stat-value" id="stat-total-orders">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Revenue</div>
+      <div class="stat-value" id="stat-total-revenue" style="font-size:20px;">—</div>
+    </div>
+    <div class="stat-card warning">
+      <div class="stat-label">Pending Orders</div>
+      <div class="stat-value" id="stat-pending">—</div>
+    </div>
+    <div class="stat-card danger" id="stat-upi-card">
+      <div class="stat-label">UPI Pending Verify</div>
+      <div class="stat-value" id="stat-upi">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Customers</div>
+      <div class="stat-value" id="stat-customers">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">New This Month</div>
+      <div class="stat-value" id="stat-new-customers">—</div>
+    </div>
+  </div>
+
+  <!-- Revenue Chart -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Revenue</span>
+      <div class="period-btns">
+        <button class="period-btn" data-period="7" onclick="switchPeriod(7)">7 Days</button>
+        <button class="period-btn active" data-period="30" onclick="switchPeriod(30)">30 Days</button>
+        <button class="period-btn" data-period="90" onclick="switchPeriod(90)">90 Days</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="chart-wrap">
+        <canvas id="revenue-chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Revenue Sub-cards -->
+  <div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
+    <div class="stat-card" style="border-top-color:#e5e5e5;">
+      <div class="stat-label">Today</div>
+      <div class="stat-value" id="rev-today" style="font-size:18px;">—</div>
+    </div>
+    <div class="stat-card" style="border-top-color:#e5e5e5;">
+      <div class="stat-label">This Week</div>
+      <div class="stat-value" id="rev-week" style="font-size:18px;">—</div>
+    </div>
+    <div class="stat-card" style="border-top-color:#e5e5e5;">
+      <div class="stat-label">This Month</div>
+      <div class="stat-value" id="rev-month" style="font-size:18px;">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">All Time</div>
+      <div class="stat-value" id="rev-alltime" style="font-size:18px;">—</div>
+    </div>
+  </div>
+
+  <!-- Order Status Row -->
+  <div class="stat-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:24px;">
+    <div class="stat-card" style="border-top-color:#e5e5e5;">
+      <div class="stat-label">Processing</div>
+      <div class="stat-value" id="stat-processing">—</div>
+    </div>
+    <div class="stat-card" style="border-top-color:#3b82f6;">
+      <div class="stat-label">Shipped</div>
+      <div class="stat-value" id="stat-shipped">—</div>
+    </div>
+    <div class="stat-card" style="border-top-color:#10b981;">
+      <div class="stat-label">Delivered</div>
+      <div class="stat-value" id="stat-delivered">—</div>
+    </div>
+    <div class="stat-card" style="border-top-color:#e5e5e5;">
+      <div class="stat-label">Conversion Rate</div>
+      <div class="stat-value" id="stat-conversion" style="font-size:20px;">—</div>
+    </div>
+    <div class="stat-card" style="border-top-color:#e5e5e5;">
+      <div class="stat-label">Cart → Checkout</div>
+      <div class="stat-value" id="stat-cart-checkout" style="font-size:20px;">—</div>
+    </div>
+  </div>
+
+  <!-- Lower: Low Stock + Top Products -->
+  <div class="two-col">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Low Stock Alerts</span>
+        <a href="inventory.html" class="view-all">View All &rarr;</a>
+      </div>
+      <div id="low-stock-body">
+        <div class="spinner">Loading...</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Top Products by Revenue</span>
+      </div>
+      <div id="top-products-body">
+        <div class="spinner">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Orders -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Recent Orders</span>
+      <a href="orders.html" class="view-all">View All &rarr;</a>
+    </div>
+    <div id="recent-orders-body">
+      <div class="spinner">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<script src="../public/js/api.js"></script>
+<script>
+  const _token = localStorage.getItem('raen_auth_token');
+  if (!_token) window.location.href = 'login.html';
+
+  const fmt = n => '€' + (n || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtDate = d => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  function logout() { localStorage.removeItem('raen_auth_token'); window.location.href = 'login.html'; }
+
+  async function adminFetch(fn) {
+    try { return await fn(); }
+    catch(e) {
+      if (e.status === 401 || e.status === 403) {
+        localStorage.removeItem('raen_auth_token');
+        window.location.href = 'login.html';
+      }
+      throw e;
+    }
+  }
+
+  function badgeClass(status) {
+    return 'badge badge-' + (status || '').toLowerCase();
+  }
+
+  let revenueChart = null;
+
+  async function loadDashboard() {
+    const [dash, analyticsData] = await Promise.all([
+      adminFetch(() => apiGet('/admin/dashboard-extended')),
+      adminFetch(() => apiGet('/admin/analytics?period=30'))
+    ]);
+
+    document.getElementById('last-updated').textContent =
+      'Last updated ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+    // UPI alert
+    const upi = dash.pendingUPIVerifications || 0;
+    if (upi > 0) {
+      document.getElementById('upi-alert-text').textContent =
+        upi + ' UPI payment' + (upi > 1 ? 's' : '') + ' awaiting verification';
+      document.getElementById('upi-alert').style.display = 'flex';
+    }
+
+    // Summary cards
+    document.getElementById('stat-total-orders').textContent = dash.orders?.total ?? 0;
+    document.getElementById('stat-total-revenue').textContent = fmt(dash.revenue?.total);
+    document.getElementById('stat-pending').textContent = dash.orders?.pending ?? 0;
+    document.getElementById('stat-upi').textContent = upi;
+    document.getElementById('stat-customers').textContent = dash.customers?.total ?? 0;
+    document.getElementById('stat-new-customers').textContent = dash.customers?.newThisMonth ?? 0;
+
+    // Revenue sub-cards
+    document.getElementById('rev-today').textContent = fmt(dash.revenue?.today);
+    document.getElementById('rev-week').textContent = fmt(dash.revenue?.week);
+    document.getElementById('rev-month').textContent = fmt(dash.revenue?.month);
+    document.getElementById('rev-alltime').textContent = fmt(dash.revenue?.total);
+
+    // Order status row
+    document.getElementById('stat-processing').textContent = dash.orders?.processing ?? 0;
+    document.getElementById('stat-shipped').textContent = dash.orders?.shipped ?? 0;
+    document.getElementById('stat-delivered').textContent = dash.orders?.delivered ?? 0;
+    document.getElementById('stat-conversion').textContent = (analyticsData.summary?.conversionRate || 0) + '%';
+    document.getElementById('stat-cart-checkout').textContent = (analyticsData.summary?.cartToCheckout || 0) + '%';
+
+    // Revenue chart
+    renderChart(analyticsData.revenueByDay || []);
+
+    // Low stock
+    renderLowStock(dash.lowStockItems || []);
+
+    // Top products
+    renderTopProducts(dash.topProducts || []);
+
+    // Recent orders
+    renderRecentOrders(dash.recentOrders || []);
+  }
+
+  function renderChart(revenueByDay) {
+    const ctx = document.getElementById('revenue-chart').getContext('2d');
+    const labels = revenueByDay.map(r => {
+      const d = new Date(r.date);
+      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    });
+    const values = revenueByDay.map(r => r.revenue || 0);
+
+    if (revenueChart) revenueChart.destroy();
+    revenueChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          borderColor: '#b8960c',
+          backgroundColor: 'rgba(184,150,12,0.08)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.3,
+          pointRadius: 3,
+          pointBackgroundColor: '#b8960c',
+          pointHoverRadius: 5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: {
+          callbacks: { label: ctx => fmt(ctx.parsed.y) }
+        }},
+        scales: {
+          x: { grid: { color: '#f0f0f0' }, ticks: { font: { size: 10 }, color: '#999', maxRotation: 0 } },
+          y: { grid: { color: '#f0f0f0' }, ticks: { font: { size: 10 }, color: '#999', callback: v => '€' + v.toLocaleString() } }
+        }
+      }
+    });
+  }
+
+  async function switchPeriod(days) {
+    document.querySelectorAll('.period-btn').forEach(b => b.classList.toggle('active', +b.dataset.period === days));
+    const data = await adminFetch(() => apiGet('/admin/analytics?period=' + days));
+    renderChart(data.revenueByDay || []);
+    document.getElementById('stat-conversion').textContent = (data.summary?.conversionRate || 0) + '%';
+    document.getElementById('stat-cart-checkout').textContent = (data.summary?.cartToCheckout || 0) + '%';
+  }
+
+  function renderLowStock(items) {
+    const el = document.getElementById('low-stock-body');
+    if (!items.length) {
+      el.innerHTML = '<div class="empty-cell"><div class="empty-icon">✓</div><div class="empty-text">All items well stocked</div></div>';
+      return;
+    }
+    el.innerHTML = '<table><thead><tr><th>Product</th><th>Size</th><th>SKU</th><th>Stock</th></tr></thead><tbody>' +
+      items.map(item => {
+        const isRed = item.stock <= 2;
+        const isAmber = item.stock > 2 && item.stock <= 5;
+        const rowClass = isRed ? 'low-stock-row-red' : isAmber ? 'low-stock-row-amber' : '';
+        const stockClass = isRed ? 'stock-red' : isAmber ? 'stock-amber' : '';
+        return `<tr class="${rowClass}">
+          <td>${item.product?.name || '—'}</td>
+          <td>${item.size}</td>
+          <td style="font-size:10px;color:#888;">${item.sku}</td>
+          <td class="${stockClass}">${item.stock}</td>
+        </tr>`;
+      }).join('') + '</tbody></table>';
+  }
+
+  function renderTopProducts(products) {
+    const el = document.getElementById('top-products-body');
+    if (!products.length) {
+      el.innerHTML = '<div class="empty-cell"><div class="empty-icon">📦</div><div class="empty-text">No sales data yet</div></div>';
+      return;
+    }
+    el.innerHTML = '<table><thead><tr><th>#</th><th>Product</th><th>Revenue</th><th>Units</th></tr></thead><tbody>' +
+      products.slice(0, 5).map((p, i) => `<tr>
+        <td style="color:#aaa;font-size:11px;">${i + 1}</td>
+        <td>${p.productName || '—'}</td>
+        <td>${fmt(p._sum?.lineTotal)}</td>
+        <td>${p._sum?.quantity || 0}</td>
+      </tr>`).join('') + '</tbody></table>';
+  }
+
+  function renderRecentOrders(orders) {
+    const el = document.getElementById('recent-orders-body');
+    if (!orders.length) {
+      el.innerHTML = '<div class="empty-cell"><div class="empty-icon">🛒</div><div class="empty-text">No orders yet — they\'ll appear here when customers purchase</div></div>';
+      return;
+    }
+    el.innerHTML = '<table><thead><tr><th>Order #</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th></tr></thead><tbody>' +
+      orders.map(o => `<tr>
+        <td style="font-weight:600;font-size:11px;">#${o.orderNumber}</td>
+        <td style="font-size:12px;">${o.email}</td>
+        <td style="color:#888;">${(o.items || []).length}</td>
+        <td>${fmt(o.total)}</td>
+        <td><span class="${badgeClass(o.status)}">${o.status}</span></td>
+        <td style="color:#888;font-size:11px;">${fmtDate(o.createdAt)}</td>
+      </tr>`).join('') + '</tbody></table>';
+  }
+
+  loadDashboard().catch(err => console.error('Dashboard load error:', err));
+</script>
+</body>
+</html>

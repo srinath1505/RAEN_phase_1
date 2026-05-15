@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAEN Admin — Orders</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Helvetica, Arial, sans-serif; background: #f5f5f0; }
+    a { text-decoration: none; color: inherit; }
+    .sidebar { position: fixed; top: 0; left: 0; width: 200px; height: 100vh; background: #1a1a1a; display: flex; flex-direction: column; z-index: 100; }
+    .sidebar-brand { padding: 24px 20px; font-size: 11px; letter-spacing: 0.3em; color: #b8960c; font-weight: 700; border-bottom: 1px solid #333; }
+    .sidebar nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .nav-link { display: block; padding: 10px 20px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #999; }
+    .nav-link:hover { color: #fff; background: #222; }
+    .nav-link.active { color: #b8960c; border-left: 2px solid #b8960c; padding-left: 18px; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid #333; }
+    .signout-btn { width: 100%; padding: 8px; background: transparent; border: 1px solid #333; color: #999; font-size: 10px; letter-spacing: 0.15em; cursor: pointer; text-transform: uppercase; }
+    .signout-btn:hover { border-color: #666; color: #ccc; }
+    .main { margin-left: 200px; padding: 28px 32px; min-height: 100vh; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .page-title { font-size: 20px; font-weight: 700; color: #1a1a1a; letter-spacing: 0.03em; }
+    .page-count { font-size: 11px; color: #888; letter-spacing: 0.08em; margin-top: 3px; }
+    .filters { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+    .filter-input { padding: 8px 12px; border: 1px solid #ddd; font-size: 12px; background: #fff; outline: none; min-width: 220px; }
+    .filter-input:focus { border-color: #1a1a1a; }
+    .filter-select { padding: 8px 12px; border: 1px solid #ddd; font-size: 12px; background: #fff; cursor: pointer; outline: none; }
+    .card { background: #fff; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { text-align: left; padding: 10px 12px; background: #f8f8f8; border-bottom: 2px solid #e5e5e5; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #666; font-weight: 600; }
+    td { padding: 10px 12px; border-bottom: 1px solid #f2f2f2; color: #333; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover > td { background: #fafafa; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 2px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .badge-pending { background: #fef3c7; color: #92400e; }
+    .badge-paid { background: #dbeafe; color: #1e40af; }
+    .badge-processing { background: #dbeafe; color: #1e40af; }
+    .badge-shipped { background: #ccfbf1; color: #065f46; }
+    .badge-delivered { background: #dcfce7; color: #166534; }
+    .badge-cancelled { background: #fee2e2; color: #991b1b; }
+    .badge-refunded { background: #f3e8ff; color: #6b21a8; }
+    .badge-unpaid { background: #f3f4f6; color: #6b7280; }
+    .badge-pending_verification { background: #fef3c7; color: #92400e; }
+    .badge-failed { background: #fee2e2; color: #991b1b; }
+    .status-select { font-size: 11px; padding: 4px 6px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
+    .btn-cancel { padding: 4px 10px; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid #dc2626; color: #dc2626; background: transparent; cursor: pointer; }
+    .btn-cancel:hover { background: #dc2626; color: #fff; }
+    .btn-view { padding: 4px 10px; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid #ddd; color: #555; background: transparent; cursor: pointer; }
+    .btn-view:hover { border-color: #1a1a1a; color: #1a1a1a; }
+    .expand-row td { background: #f9f9f9 !important; padding: 0; }
+    .expand-inner { padding: 16px 20px; border-top: 1px solid #eee; }
+    .expand-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+    .expand-section { }
+    .expand-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #888; margin-bottom: 8px; font-weight: 600; }
+    .expand-value { font-size: 12px; color: #333; line-height: 1.6; }
+    .item-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #eee; font-size: 12px; }
+    .item-row:last-child { border-bottom: none; }
+    .pagination { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-top: 1px solid #f0f0f0; background: #fff; border-radius: 0 0 3px 3px; }
+    .pagination-info { font-size: 11px; color: #888; letter-spacing: 0.06em; }
+    .pagination-btns { display: flex; gap: 8px; }
+    .pg-btn { padding: 6px 14px; font-size: 11px; letter-spacing: 0.08em; border: 1px solid #ddd; background: #fff; cursor: pointer; text-transform: uppercase; color: #555; }
+    .pg-btn:hover:not(:disabled) { border-color: #1a1a1a; color: #1a1a1a; }
+    .pg-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .empty-row td { text-align: center; padding: 48px 20px; color: #bbb; }
+    .empty-icon { font-size: 28px; margin-bottom: 10px; }
+    .empty-text { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; }
+    .spinner { text-align: center; padding: 48px; color: #bbb; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+    .error-msg { padding: 14px 20px; color: #dc2626; font-size: 11px; letter-spacing: 0.08em; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-brand">RAEN ADMIN</div>
+  <nav>
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="orders.html" class="nav-link active">Orders</a>
+    <a href="products.html" class="nav-link">Products</a>
+    <a href="inventory.html" class="nav-link">Inventory</a>
+    <a href="payments.html" class="nav-link">Payments</a>
+    <a href="customers.html" class="nav-link">Customers</a>
+    <a href="analytics.html" class="nav-link">Analytics</a>
+    <a href="messages.html" class="nav-link">Messages</a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="signout-btn" onclick="logout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Orders</div>
+      <div class="page-count" id="order-count">Loading...</div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <input class="filter-input" type="text" id="search" placeholder="Search order #, customer name or email..." oninput="debounceFilter()">
+    <select class="filter-select" id="status-filter" onchange="applyFilters()">
+      <option value="">All Statuses</option>
+      <option value="PENDING">Pending</option>
+      <option value="PAID">Paid</option>
+      <option value="PROCESSING">Processing</option>
+      <option value="SHIPPED">Shipped</option>
+      <option value="DELIVERED">Delivered</option>
+      <option value="CANCELLED">Cancelled</option>
+      <option value="REFUNDED">Refunded</option>
+    </select>
+    <select class="filter-select" id="date-filter" onchange="applyFilters()">
+      <option value="">All Time</option>
+      <option value="7">This Week</option>
+      <option value="30">This Month</option>
+      <option value="90">Last 3 Months</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div id="table-wrap">
+      <div class="spinner">Loading orders...</div>
+    </div>
+    <div class="pagination" id="pagination" style="display:none;">
+      <div class="pagination-info" id="pg-info"></div>
+      <div class="pagination-btns">
+        <button class="pg-btn" id="pg-prev" onclick="changePage(-1)">&#8592; Previous</button>
+        <button class="pg-btn" id="pg-next" onclick="changePage(1)">Next &#8594;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../public/js/api.js"></script>
+<script>
+  const _token = localStorage.getItem('raen_auth_token');
+  if (!_token) window.location.href = 'login.html';
+
+  const fmt = n => '€' + (n || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtDate = d => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  function logout() { localStorage.removeItem('raen_auth_token'); window.location.href = 'login.html'; }
+
+  async function adminFetch(fn) {
+    try { return await fn(); }
+    catch(e) {
+      if (e.status === 401 || e.status === 403) {
+        localStorage.removeItem('raen_auth_token');
+        window.location.href = 'login.html';
+      }
+      throw e;
+    }
+  }
+
+  const STATUS_ORDER = ['PENDING','PAID','PROCESSING','SHIPPED','DELIVERED','CANCELLED','REFUNDED'];
+  const PAGE_SIZE = 20;
+  let allOrders = [];
+  let filtered = [];
+  let currentPage = 1;
+  let expandedId = null;
+  let searchTimer = null;
+
+  async function load() {
+    try {
+      const data = await adminFetch(() => apiGet('/admin/orders'));
+      allOrders = data.orders || [];
+      applyFilters();
+    } catch(e) {
+      document.getElementById('table-wrap').innerHTML =
+        '<div class="error-msg">Unable to load orders — check your connection and refresh.</div>';
+    }
+  }
+
+  function debounceFilter() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(applyFilters, 300);
+  }
+
+  function applyFilters() {
+    const search = document.getElementById('search').value.toLowerCase().trim();
+    const statusF = document.getElementById('status-filter').value;
+    const days = parseInt(document.getElementById('date-filter').value) || 0;
+    const cutoff = days ? new Date(Date.now() - days * 86400000) : null;
+
+    filtered = allOrders.filter(o => {
+      if (statusF && o.status !== statusF) return false;
+      if (cutoff && new Date(o.createdAt) < cutoff) return false;
+      if (search) {
+        const name = o.user ? (o.user.firstName + ' ' + o.user.lastName).toLowerCase() : '';
+        const match = o.orderNumber?.toLowerCase().includes(search) ||
+          o.email?.toLowerCase().includes(search) ||
+          name.includes(search);
+        if (!match) return false;
+      }
+      return true;
+    });
+
+    document.getElementById('order-count').textContent =
+      filtered.length + ' of ' + allOrders.length + ' order' + (allOrders.length !== 1 ? 's' : '');
+    currentPage = 1;
+    renderTable();
+  }
+
+  function renderTable() {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const page = filtered.slice(start, start + PAGE_SIZE);
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+
+    if (!filtered.length) {
+      document.getElementById('table-wrap').innerHTML =
+        `<table><thead><tr><th>Order #</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody><tr class="empty-row"><td colspan="8"><div class="empty-icon">📋</div><div class="empty-text">No orders match your filters</div></td></tr></tbody></table>`;
+      document.getElementById('pagination').style.display = 'none';
+      return;
+    }
+
+    let rows = '';
+    page.forEach(o => {
+      const canCancel = (o.status === 'PENDING' || o.status === 'PAID') &&
+        (Date.now() - new Date(o.createdAt).getTime()) < 48 * 3600 * 1000;
+      const customerPrimary = o.user
+        ? (o.user.firstName + ' ' + o.user.lastName)
+        : o.email;
+      const customerSub = o.user
+        ? `<div style="font-size:11px;color:#aaa;">${o.email}</div>`
+        : '';
+      const payBadge = 'badge badge-' + (o.paymentStatus || '').toLowerCase().replace('_', '-');
+
+      rows += `<tr data-id="${o.id}">
+        <td style="font-weight:600;font-size:11px;">#${o.orderNumber}</td>
+        <td>${customerPrimary}${customerSub}</td>
+        <td style="color:#888;">${(o.items || []).length}</td>
+        <td style="font-weight:600;">${fmt(o.total)}</td>
+        <td><span class="${payBadge}">${o.paymentStatus || '—'}</span></td>
+        <td>
+          <select class="status-select" onchange="updateStatus('${o.id}','${o.orderNumber}',this)" data-current="${o.status}">
+            ${STATUS_ORDER.map(s => `<option value="${s}" ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}
+          </select>
+        </td>
+        <td style="color:#888;font-size:11px;">${fmtDate(o.createdAt)}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn-view" onclick="toggleExpand('${o.id}')">View</button>
+          ${canCancel ? `<button class="btn-cancel" onclick="cancelOrder('${o.id}','${o.orderNumber}')" style="margin-left:6px;">Cancel</button>` : ''}
+        </td>
+      </tr>
+      <tr class="expand-row" id="expand-${o.id}" style="display:none;">
+        <td colspan="8">${buildExpandContent(o)}</td>
+      </tr>`;
+    });
+
+    document.getElementById('table-wrap').innerHTML =
+      `<table><thead><tr><th>Order #</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
+
+    // Pagination
+    document.getElementById('pagination').style.display = 'flex';
+    document.getElementById('pg-info').textContent =
+      `Page ${currentPage} of ${totalPages} — ${filtered.length} orders`;
+    document.getElementById('pg-prev').disabled = currentPage <= 1;
+    document.getElementById('pg-next').disabled = currentPage >= totalPages;
+  }
+
+  function buildExpandContent(o) {
+    const addr = o.shippingAddress || {};
+    const addrStr = [addr.addressLine1, addr.addressLine2, addr.city, addr.state, addr.postalCode, addr.country]
+      .filter(Boolean).join(', ');
+
+    const itemsHtml = (o.items || []).map(item =>
+      `<div class="item-row">
+        <span>${item.productName} &mdash; ${item.size} &times; ${item.quantity}</span>
+        <span>${fmt(item.lineTotal)}</span>
+      </div>`
+    ).join('');
+
+    const payInfo = (o.payments || []).map(p =>
+      `<div>${p.provider} &mdash; ${p.status}</div>`
+    ).join('') || '<div style="color:#aaa;">No payment record</div>';
+
+    return `<div class="expand-inner">
+      <div class="expand-grid">
+        <div class="expand-section">
+          <div class="expand-label">Order Items</div>
+          ${itemsHtml || '<div style="color:#aaa;font-size:12px;">No items</div>'}
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid #eee;font-size:12px;font-weight:600;display:flex;justify-content:space-between;">
+            <span>Total</span><span>${fmt(o.total)}</span>
+          </div>
+        </div>
+        <div class="expand-section">
+          <div class="expand-label">Shipping Address</div>
+          <div class="expand-value">${addrStr || 'Not available'}</div>
+          <div style="margin-top:12px;"><div class="expand-label">Contact</div>
+          <div class="expand-value">${o.email}<br>${o.phone || ''}</div></div>
+        </div>
+        <div class="expand-section">
+          <div class="expand-label">Payment Method</div>
+          <div class="expand-value">${payInfo}</div>
+          <div style="margin-top:12px;"><div class="expand-label">Breakdown</div>
+          <div class="expand-value" style="font-size:11px;color:#888;">
+            Subtotal: ${fmt(o.subtotal)}<br>
+            Tax: ${fmt(o.tax)}<br>
+            Shipping: ${fmt(o.shipping)}
+          </div></div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function toggleExpand(id) {
+    const row = document.getElementById('expand-' + id);
+    if (!row) return;
+    const isOpen = row.style.display !== 'none';
+    if (expandedId && expandedId !== id) {
+      const prev = document.getElementById('expand-' + expandedId);
+      if (prev) prev.style.display = 'none';
+    }
+    row.style.display = isOpen ? 'none' : 'table-row';
+    expandedId = isOpen ? null : id;
+  }
+
+  async function updateStatus(id, orderNumber, select) {
+    const newStatus = select.value;
+    const oldStatus = select.dataset.current;
+    if (newStatus === oldStatus) return;
+
+    const oldIdx = STATUS_ORDER.indexOf(oldStatus);
+    const newIdx = STATUS_ORDER.indexOf(newStatus);
+    const isBackward = newIdx < oldIdx && newIdx !== -1 && oldIdx !== -1;
+    const msg = isBackward
+      ? `Warning: this moves order #${orderNumber} backwards from ${oldStatus} to ${newStatus}. Confirm?`
+      : `Change order #${orderNumber} status to ${newStatus}?`;
+
+    if (!confirm(msg)) { select.value = oldStatus; return; }
+
+    try {
+      await adminFetch(() => apiPatch('/admin/orders/' + id + '/status', { status: newStatus }));
+      select.dataset.current = newStatus;
+      showToast('Order #' + orderNumber + ' updated to ' + newStatus, 'success');
+      // Update badge in parent row
+      const row = select.closest('tr');
+      if (row) {
+        const badgeEl = row.querySelector('.badge');
+        // refresh entire table to reflect changes
+        await load();
+      }
+    } catch(e) {
+      select.value = oldStatus;
+      showToast('Failed to update status: ' + e.message, 'error');
+    }
+  }
+
+  async function cancelOrder(id, orderNumber) {
+    if (!confirm(`Cancel order #${orderNumber}? This cannot be undone and inventory will be restored.`)) return;
+    try {
+      await adminFetch(() => apiPost('/admin/orders/' + id + '/cancel', {}));
+      showToast('Order #' + orderNumber + ' cancelled.', 'success');
+      await load();
+    } catch(e) {
+      showToast('Cancel failed: ' + e.message, 'error');
+    }
+  }
+
+  function changePage(delta) {
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    currentPage = Math.max(1, Math.min(totalPages, currentPage + delta));
+    renderTable();
+    window.scrollTo(0, 0);
+  }
+
+  load();
+</script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAEN Admin — Messages</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Helvetica, Arial, sans-serif; background: #f5f5f0; }
+    a { text-decoration: none; color: inherit; }
+    .sidebar { position: fixed; top: 0; left: 0; width: 200px; height: 100vh; background: #1a1a1a; display: flex; flex-direction: column; z-index: 100; }
+    .sidebar-brand { padding: 24px 20px; font-size: 11px; letter-spacing: 0.3em; color: #b8960c; font-weight: 700; border-bottom: 1px solid #333; }
+    .sidebar nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .nav-link { display: block; padding: 10px 20px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #999; }
+    .nav-link:hover { color: #fff; background: #222; }
+    .nav-link.active { color: #b8960c; border-left: 2px solid #b8960c; padding-left: 18px; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid #333; }
+    .signout-btn { width: 100%; padding: 8px; background: transparent; border: 1px solid #333; color: #999; font-size: 10px; letter-spacing: 0.15em; cursor: pointer; text-transform: uppercase; }
+    .signout-btn:hover { border-color: #666; color: #ccc; }
+    .main { margin-left: 200px; padding: 28px 32px; min-height: 100vh; }
+    .page-title { font-size: 20px; font-weight: 700; color: #1a1a1a; letter-spacing: 0.03em; margin-bottom: 24px; }
+    /* Tabs */
+    .tabs { display: flex; border-bottom: 2px solid #e5e5e5; margin-bottom: 24px; }
+    .tab-btn { padding: 10px 24px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #888; border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; }
+    .tab-btn.active { color: #b8960c; border-bottom-color: #b8960c; }
+    .tab-btn:hover:not(.active) { color: #555; }
+    .tab-count { display: inline-block; background: #e5e5e5; color: #555; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 8px; margin-left: 5px; }
+    .tab-count.new { background: #fef3c7; color: #92400e; }
+    /* Filters */
+    .filters { display: flex; gap: 10px; margin-bottom: 16px; }
+    .filter-select { padding: 8px 12px; border: 1px solid #ddd; font-size: 12px; background: #fff; cursor: pointer; outline: none; }
+    /* Card & table */
+    .card { background: #fff; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { text-align: left; padding: 10px 12px; background: #f8f8f8; border-bottom: 2px solid #e5e5e5; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #666; font-weight: 600; }
+    td { padding: 10px 12px; border-bottom: 1px solid #f2f2f2; color: #333; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover > td { background: #fafafa; }
+    .row-clickable { cursor: pointer; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 2px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .badge-new { background: #fef3c7; color: #92400e; }
+    .badge-read { background: #dbeafe; color: #1e40af; }
+    .badge-replied { background: #dcfce7; color: #166534; }
+    .badge-reviewed { background: #dbeafe; color: #1e40af; }
+    .badge-approved { background: #dcfce7; color: #166534; }
+    .badge-rejected { background: #f3f4f6; color: #6b7280; }
+    .status-select { font-size: 11px; padding: 4px 6px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
+    .btn-reply { padding: 4px 10px; font-size: 10px; letter-spacing: 0.06em; border: 1px solid #b8960c; color: #b8960c; background: #fff; cursor: pointer; text-transform: uppercase; }
+    .btn-reply:hover { background: #b8960c; color: #fff; }
+    /* Expand row */
+    .expand-row td { background: #f9f9f9 !important; padding: 0; }
+    .expand-inner { padding: 16px 20px 20px; border-top: 1px solid #eee; }
+    .expand-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #888; margin-bottom: 8px; font-weight: 600; }
+    .message-body { font-size: 13px; color: #333; line-height: 1.7; white-space: pre-wrap; padding: 12px; background: #fff; border-left: 3px solid #b8960c; }
+    .interest-body { font-size: 13px; color: #333; line-height: 1.7; white-space: pre-wrap; }
+    .meta-row { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 12px; font-size: 11px; color: #888; }
+    .meta-item strong { color: #555; }
+    .unread-row { background: #fffef5; }
+    .unread-row td { font-weight: 600; }
+    .subject-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .truncate { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .empty-row td { text-align: center; padding: 48px 20px; color: #bbb; }
+    .empty-icon { font-size: 28px; margin-bottom: 10px; }
+    .empty-text { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; }
+    .spinner { text-align: center; padding: 48px; color: #bbb; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+    .error-msg { padding: 14px 20px; color: #dc2626; font-size: 11px; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-brand">RAEN ADMIN</div>
+  <nav>
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="orders.html" class="nav-link">Orders</a>
+    <a href="products.html" class="nav-link">Products</a>
+    <a href="inventory.html" class="nav-link">Inventory</a>
+    <a href="payments.html" class="nav-link">Payments</a>
+    <a href="customers.html" class="nav-link">Customers</a>
+    <a href="analytics.html" class="nav-link">Analytics</a>
+    <a href="messages.html" class="nav-link active">Messages</a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="signout-btn" onclick="logout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-title">Messages</div>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-contact" onclick="switchTab('contact')">
+      Contact Messages <span class="tab-count new" id="contact-new-count"></span>
+    </button>
+    <button class="tab-btn" id="tab-early" onclick="switchTab('early')">
+      Early Access Requests <span class="tab-count" id="early-new-count"></span>
+    </button>
+  </div>
+
+  <!-- Contact Tab -->
+  <div id="panel-contact">
+    <div class="filters">
+      <select class="filter-select" id="contact-status-filter" onchange="filterContact()">
+        <option value="">All Statuses</option>
+        <option value="NEW">New</option>
+        <option value="READ">Read</option>
+        <option value="REPLIED">Replied</option>
+      </select>
+    </div>
+    <div class="card">
+      <div id="contact-table-wrap"><div class="spinner">Loading messages...</div></div>
+    </div>
+  </div>
+
+  <!-- Early Access Tab -->
+  <div id="panel-early" style="display:none;">
+    <div class="filters">
+      <select class="filter-select" id="early-status-filter" onchange="filterEarly()">
+        <option value="">All Statuses</option>
+        <option value="NEW">New</option>
+        <option value="REVIEWED">Reviewed</option>
+        <option value="APPROVED">Approved</option>
+        <option value="REJECTED">Rejected</option>
+      </select>
+    </div>
+    <div class="card">
+      <div id="early-table-wrap"><div class="spinner">Loading requests...</div></div>
+    </div>
+  </div>
+</div>
+
+<script src="../public/js/api.js"></script>
+<script>
+  const _token = localStorage.getItem('raen_auth_token');
+  if (!_token) window.location.href = 'login.html';
+
+  const fmtDate = d => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  function logout() { localStorage.removeItem('raen_auth_token'); window.location.href = 'login.html'; }
+
+  async function adminFetch(fn) {
+    try { return await fn(); }
+    catch(e) {
+      if (e.status === 401 || e.status === 403) {
+        localStorage.removeItem('raen_auth_token');
+        window.location.href = 'login.html';
+      }
+      throw e;
+    }
+  }
+
+  let allMessages = [];
+  let allRequests = [];
+  let expandedMsgId = null;
+  let expandedEaId = null;
+  let currentTab = 'contact';
+
+  async function load() {
+    try {
+      const [msgData, earlyData] = await Promise.all([
+        adminFetch(() => apiGet('/admin/contact-messages')),
+        adminFetch(() => apiGet('/admin/early-access'))
+      ]);
+      allMessages = msgData.messages || [];
+      allRequests = earlyData.requests || [];
+      updateCounts();
+      filterContact();
+      filterEarly();
+    } catch(e) {
+      document.getElementById('contact-table-wrap').innerHTML =
+        '<div class="error-msg">Unable to load messages — check your connection and refresh.</div>';
+      document.getElementById('early-table-wrap').innerHTML =
+        '<div class="error-msg">Unable to load requests — check your connection and refresh.</div>';
+    }
+  }
+
+  function updateCounts() {
+    const newMsgs = allMessages.filter(m => m.status === 'NEW').length;
+    const newEarly = allRequests.filter(r => r.status === 'NEW').length;
+    const cEl = document.getElementById('contact-new-count');
+    const eEl = document.getElementById('early-new-count');
+    if (newMsgs > 0) { cEl.textContent = newMsgs; cEl.className = 'tab-count new'; }
+    else { cEl.textContent = allMessages.length; cEl.className = 'tab-count'; }
+    eEl.textContent = allRequests.length;
+    if (newEarly > 0) eEl.className = 'tab-count new'; else eEl.className = 'tab-count';
+  }
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tab-contact').classList.toggle('active', tab === 'contact');
+    document.getElementById('tab-early').classList.toggle('active', tab === 'early');
+    document.getElementById('panel-contact').style.display = tab === 'contact' ? 'block' : 'none';
+    document.getElementById('panel-early').style.display = tab === 'early' ? 'block' : 'none';
+  }
+
+  function filterContact() {
+    const sf = document.getElementById('contact-status-filter').value;
+    const filtered = allMessages.filter(m => !sf || m.status === sf);
+    renderContactTable(filtered);
+  }
+
+  function filterEarly() {
+    const sf = document.getElementById('early-status-filter').value;
+    const filtered = allRequests.filter(r => !sf || r.status === sf);
+    renderEarlyTable(filtered);
+  }
+
+  function renderContactTable(messages) {
+    if (!messages.length) {
+      document.getElementById('contact-table-wrap').innerHTML =
+        `<table><thead><tr><th>Name</th><th>Email</th><th>Subject</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody><tr class="empty-row"><td colspan="6"><div class="empty-icon">✉</div><div class="empty-text">No contact messages yet</div></td></tr></tbody></table>`;
+      return;
+    }
+
+    let rows = '';
+    messages.forEach(m => {
+      const isUnread = m.status === 'NEW';
+      const badgeClass = 'badge badge-' + m.status.toLowerCase();
+      const mailto = `mailto:${m.email}?subject=Re: ${encodeURIComponent(m.subject)}&body=${encodeURIComponent('\n\n---\nOriginal message from ' + m.name + ':\n' + m.message)}`;
+
+      rows += `<tr class="${isUnread ? 'unread-row row-clickable' : 'row-clickable'}" onclick="toggleContactExpand('${m.id}')">
+        <td>${m.name}</td>
+        <td style="color:#666;">${m.email}</td>
+        <td class="subject-cell" title="${m.subject}">${m.subject}</td>
+        <td><span class="${badgeClass}" id="msg-badge-${m.id}">${m.status}</span></td>
+        <td style="color:#888;font-size:11px;">${fmtDate(m.createdAt)}</td>
+        <td onclick="event.stopPropagation();" style="white-space:nowrap;">
+          <select class="status-select" id="msg-status-${m.id}" onchange="updateMessageStatus('${m.id}',this)">
+            <option value="NEW" ${m.status==='NEW'?'selected':''}>New</option>
+            <option value="READ" ${m.status==='READ'?'selected':''}>Read</option>
+            <option value="REPLIED" ${m.status==='REPLIED'?'selected':''}>Replied</option>
+          </select>
+          <a href="${mailto}" class="btn-reply" style="display:inline-block;margin-left:6px;" onclick="event.stopPropagation();">Reply</a>
+        </td>
+      </tr>
+      <tr class="expand-row" id="msg-expand-${m.id}" style="display:none;">
+        <td colspan="6">
+          <div class="expand-inner">
+            <div class="expand-label">Message from ${m.name}</div>
+            <div class="message-body">${escHtml(m.message)}</div>
+          </div>
+        </td>
+      </tr>`;
+    });
+
+    document.getElementById('contact-table-wrap').innerHTML =
+      `<table><thead><tr><th>Name</th><th>Email</th><th>Subject</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  function renderEarlyTable(requests) {
+    if (!requests.length) {
+      document.getElementById('early-table-wrap').innerHTML =
+        `<table><thead><tr><th>Name</th><th>Email</th><th>City</th><th>Interest</th><th>Budget</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody><tr class="empty-row"><td colspan="8"><div class="empty-icon">⭐</div><div class="empty-text">No early access requests yet</div></td></tr></tbody></table>`;
+      return;
+    }
+
+    let rows = '';
+    requests.forEach(r => {
+      const badgeClass = 'badge badge-' + r.status.toLowerCase();
+      const budgetTrunc = r.budgetOrPreference
+        ? (r.budgetOrPreference.length > 40 ? r.budgetOrPreference.slice(0, 40) + '…' : r.budgetOrPreference)
+        : '—';
+      const interestTrunc = r.interest
+        ? (r.interest.length > 30 ? r.interest.slice(0, 30) + '…' : r.interest)
+        : '—';
+
+      rows += `<tr class="row-clickable" onclick="toggleEarlyExpand('${r.id}')">
+        <td style="font-weight:600;">${r.firstName} ${r.lastName}</td>
+        <td style="color:#666;">${r.email}</td>
+        <td style="color:#888;">${r.city || '—'}</td>
+        <td class="truncate" title="${r.interest || ''}">${interestTrunc}</td>
+        <td class="truncate" title="${r.budgetOrPreference || ''}">${budgetTrunc}</td>
+        <td><span class="${badgeClass}" id="ea-badge-${r.id}">${r.status}</span></td>
+        <td style="color:#888;font-size:11px;">${fmtDate(r.createdAt)}</td>
+        <td onclick="event.stopPropagation();">
+          <select class="status-select" id="ea-status-${r.id}" onchange="updateEarlyStatus('${r.id}',this)">
+            <option value="NEW" ${r.status==='NEW'?'selected':''}>New</option>
+            <option value="REVIEWED" ${r.status==='REVIEWED'?'selected':''}>Reviewed</option>
+            <option value="APPROVED" ${r.status==='APPROVED'?'selected':''}>Approved</option>
+            <option value="REJECTED" ${r.status==='REJECTED'?'selected':''}>Rejected</option>
+          </select>
+        </td>
+      </tr>
+      <tr class="expand-row" id="ea-expand-${r.id}" style="display:none;">
+        <td colspan="8">
+          <div class="expand-inner">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+              <div>
+                <div class="expand-label">Interest</div>
+                <div class="interest-body">${escHtml(r.interest || '—')}</div>
+              </div>
+              <div>
+                <div class="expand-label">Budget / Preference</div>
+                <div class="interest-body">${escHtml(r.budgetOrPreference || '—')}</div>
+              </div>
+            </div>
+            <div class="meta-row">
+              <span><strong>Phone:</strong> ${r.phone || '—'}</span>
+              <span><strong>Accepted Privacy:</strong> ${r.acceptedPrivacy ? 'Yes' : 'No'}</span>
+              <span><strong>Wants Updates:</strong> ${r.wantsUpdates ? 'Yes' : 'No'}</span>
+              <span><strong>Submitted:</strong> ${fmtDate(r.createdAt)}</span>
+            </div>
+          </div>
+        </td>
+      </tr>`;
+    });
+
+    document.getElementById('early-table-wrap').innerHTML =
+      `<table><thead><tr><th>Name</th><th>Email</th><th>City</th><th>Interest</th><th>Budget</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  function toggleContactExpand(id) {
+    const row = document.getElementById('msg-expand-' + id);
+    if (!row) return;
+    const isOpen = row.style.display !== 'none';
+
+    if (expandedMsgId && expandedMsgId !== id) {
+      const prev = document.getElementById('msg-expand-' + expandedMsgId);
+      if (prev) prev.style.display = 'none';
+    }
+
+    if (!isOpen) {
+      row.style.display = 'table-row';
+      expandedMsgId = id;
+      const msg = allMessages.find(m => m.id === id);
+      if (msg && msg.status === 'NEW') {
+        updateMessageStatus(id, null, 'READ');
+      }
+    } else {
+      row.style.display = 'none';
+      expandedMsgId = null;
+    }
+  }
+
+  function toggleEarlyExpand(id) {
+    const row = document.getElementById('ea-expand-' + id);
+    if (!row) return;
+    const isOpen = row.style.display !== 'none';
+    if (expandedEaId && expandedEaId !== id) {
+      const prev = document.getElementById('ea-expand-' + expandedEaId);
+      if (prev) prev.style.display = 'none';
+    }
+    row.style.display = isOpen ? 'none' : 'table-row';
+    expandedEaId = isOpen ? null : id;
+  }
+
+  async function updateMessageStatus(id, selectEl, forcedStatus) {
+    const newStatus = forcedStatus || selectEl?.value;
+    const msg = allMessages.find(m => m.id === id);
+    if (!msg || msg.status === newStatus) return;
+
+    try {
+      await adminFetch(() => apiPatch('/admin/contact-messages/' + id + '/status', { status: newStatus }));
+      msg.status = newStatus;
+      const badge = document.getElementById('msg-badge-' + id);
+      if (badge) { badge.className = 'badge badge-' + newStatus.toLowerCase(); badge.textContent = newStatus; }
+      const sel = document.getElementById('msg-status-' + id);
+      if (sel) sel.value = newStatus;
+      // Remove unread styling
+      const row = badge?.closest('tr');
+      if (row) row.classList.remove('unread-row');
+      updateCounts();
+    } catch(e) {
+      showToast('Status update failed: ' + e.message, 'error');
+      if (selectEl) selectEl.value = msg.status;
+    }
+  }
+
+  async function updateEarlyStatus(id, selectEl) {
+    const newStatus = selectEl.value;
+    const req = allRequests.find(r => r.id === id);
+    if (!req || req.status === newStatus) return;
+
+    try {
+      await adminFetch(() => apiPatch('/admin/early-access/' + id + '/status', { status: newStatus }));
+      req.status = newStatus;
+      const badge = document.getElementById('ea-badge-' + id);
+      if (badge) { badge.className = 'badge badge-' + newStatus.toLowerCase(); badge.textContent = newStatus; }
+      updateCounts();
+    } catch(e) {
+      showToast('Status update failed: ' + e.message, 'error');
+      selectEl.value = req.status;
+    }
+  }
+
+  function escHtml(str) {
+    return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  load();
+</script>
+</body>
+</html>

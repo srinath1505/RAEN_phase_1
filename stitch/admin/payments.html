@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAEN Admin — Payments</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Helvetica, Arial, sans-serif; background: #f5f5f0; }
+    a { text-decoration: none; color: inherit; }
+    .sidebar { position: fixed; top: 0; left: 0; width: 200px; height: 100vh; background: #1a1a1a; display: flex; flex-direction: column; z-index: 100; }
+    .sidebar-brand { padding: 24px 20px; font-size: 11px; letter-spacing: 0.3em; color: #b8960c; font-weight: 700; border-bottom: 1px solid #333; }
+    .sidebar nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .nav-link { display: block; padding: 10px 20px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #999; }
+    .nav-link:hover { color: #fff; background: #222; }
+    .nav-link.active { color: #b8960c; border-left: 2px solid #b8960c; padding-left: 18px; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid #333; }
+    .signout-btn { width: 100%; padding: 8px; background: transparent; border: 1px solid #333; color: #999; font-size: 10px; letter-spacing: 0.15em; cursor: pointer; text-transform: uppercase; }
+    .signout-btn:hover { border-color: #666; color: #ccc; }
+    .main { margin-left: 200px; padding: 28px 32px; min-height: 100vh; }
+    .page-title { font-size: 20px; font-weight: 700; color: #1a1a1a; letter-spacing: 0.03em; margin-bottom: 24px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: #fff; padding: 18px 20px; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); border-top: 3px solid #b8960c; }
+    .stat-label { font-size: 10px; letter-spacing: 0.15em; color: #888; text-transform: uppercase; margin-bottom: 6px; }
+    .stat-value { font-size: 22px; font-weight: 700; color: #1a1a1a; line-height: 1; }
+    .stat-sub { font-size: 11px; color: #aaa; margin-top: 4px; }
+    /* UPI Pending Section */
+    .upi-pending { background: #fff; border: 2px solid #f59e0b; border-radius: 3px; margin-bottom: 24px; }
+    .upi-pending-header { padding: 14px 20px; background: #fffbeb; border-bottom: 1px solid #fde68a; display: flex; align-items: center; gap: 10px; }
+    .upi-pending-title { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #92400e; }
+    .upi-count { background: #f59e0b; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+    .upi-card { padding: 16px 20px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+    .upi-card:last-child { border-bottom: none; }
+    .upi-info { flex: 1; }
+    .upi-order { font-weight: 700; font-size: 13px; }
+    .upi-detail { font-size: 11px; color: #666; margin-top: 4px; line-height: 1.6; }
+    .upi-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-approve { padding: 7px 16px; background: #166534; color: #fff; border: none; cursor: pointer; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .btn-approve:hover { background: #14532d; }
+    .btn-reject { padding: 7px 16px; background: #fff; color: #dc2626; border: 1px solid #dc2626; cursor: pointer; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .btn-reject:hover { background: #dc2626; color: #fff; }
+    /* Main Table */
+    .card { background: #fff; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+    .card-header { padding: 14px 20px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .card-title { font-size: 12px; letter-spacing: 0.12em; font-weight: 700; text-transform: uppercase; color: #1a1a1a; }
+    .filters { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-select { padding: 7px 10px; border: 1px solid #ddd; font-size: 12px; background: #fff; cursor: pointer; outline: none; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { text-align: left; padding: 10px 12px; background: #f8f8f8; border-bottom: 2px solid #e5e5e5; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #666; font-weight: 600; }
+    td { padding: 10px 12px; border-bottom: 1px solid #f2f2f2; color: #333; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover > td { background: #fafafa; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 2px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .badge-success { background: #dcfce7; color: #166534; }
+    .badge-failed { background: #fee2e2; color: #991b1b; }
+    .badge-pending { background: #fef3c7; color: #92400e; }
+    .badge-verification_required { background: #ffedd5; color: #9a3412; }
+    .badge-cancelled { background: #f3f4f6; color: #6b7280; }
+    .badge-refunded { background: #f3e8ff; color: #6b21a8; }
+    .badge-created { background: #f3f4f6; color: #6b7280; }
+    .badge-razorpay { background: #dbeafe; color: #1e40af; }
+    .badge-paypal { background: #fef9c3; color: #92400e; }
+    .badge-upi_manual { background: #ccfbf1; color: #065f46; }
+    .empty-row td { text-align: center; padding: 48px 20px; color: #bbb; }
+    .empty-icon { font-size: 28px; margin-bottom: 10px; }
+    .empty-text { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; }
+    .spinner { text-align: center; padding: 48px; color: #bbb; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+    .error-msg { padding: 14px 20px; color: #dc2626; font-size: 11px; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-brand">RAEN ADMIN</div>
+  <nav>
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="orders.html" class="nav-link">Orders</a>
+    <a href="products.html" class="nav-link">Products</a>
+    <a href="inventory.html" class="nav-link">Inventory</a>
+    <a href="payments.html" class="nav-link active">Payments</a>
+    <a href="customers.html" class="nav-link">Customers</a>
+    <a href="analytics.html" class="nav-link">Analytics</a>
+    <a href="messages.html" class="nav-link">Messages</a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="signout-btn" onclick="logout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-title">Payments</div>
+
+  <!-- Summary Cards -->
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Revenue</div>
+      <div class="stat-value" id="stat-total">—</div>
+      <div class="stat-sub" id="stat-total-count"></div>
+    </div>
+    <div class="stat-card" style="border-top-color:#3b82f6;">
+      <div class="stat-label">Razorpay</div>
+      <div class="stat-value" id="stat-razorpay">—</div>
+    </div>
+    <div class="stat-card" style="border-top-color:#f59e0b;">
+      <div class="stat-label">PayPal</div>
+      <div class="stat-value" id="stat-paypal">—</div>
+    </div>
+    <div class="stat-card" style="border-top-color:#10b981;">
+      <div class="stat-label">UPI Manual</div>
+      <div class="stat-value" id="stat-upi">—</div>
+    </div>
+  </div>
+
+  <!-- UPI Pending -->
+  <div class="upi-pending" id="upi-section" style="display:none;">
+    <div class="upi-pending-header">
+      <span class="upi-pending-title">UPI Payments Pending Verification</span>
+      <span class="upi-count" id="upi-count">0</span>
+    </div>
+    <div id="upi-list"><div class="spinner">Loading...</div></div>
+  </div>
+
+  <!-- All Payments Table -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">All Payments</span>
+      <div class="filters">
+        <select class="filter-select" id="provider-filter" onchange="applyFilters()">
+          <option value="">All Providers</option>
+          <option value="RAZORPAY">Razorpay</option>
+          <option value="PAYPAL">PayPal</option>
+          <option value="UPI_MANUAL">UPI Manual</option>
+        </select>
+        <select class="filter-select" id="status-filter" onchange="applyFilters()">
+          <option value="">All Statuses</option>
+          <option value="SUCCESS">Success</option>
+          <option value="PENDING">Pending</option>
+          <option value="VERIFICATION_REQUIRED">Needs Verification</option>
+          <option value="FAILED">Failed</option>
+          <option value="REFUNDED">Refunded</option>
+          <option value="CANCELLED">Cancelled</option>
+          <option value="CREATED">Created</option>
+        </select>
+      </div>
+    </div>
+    <div id="table-wrap"><div class="spinner">Loading payments...</div></div>
+  </div>
+</div>
+
+<script src="../public/js/api.js"></script>
+<script>
+  const _token = localStorage.getItem('raen_auth_token');
+  if (!_token) window.location.href = 'login.html';
+
+  const fmt = n => '€' + (n || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtDate = d => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  function logout() { localStorage.removeItem('raen_auth_token'); window.location.href = 'login.html'; }
+
+  async function adminFetch(fn) {
+    try { return await fn(); }
+    catch(e) {
+      if (e.status === 401 || e.status === 403) {
+        localStorage.removeItem('raen_auth_token');
+        window.location.href = 'login.html';
+      }
+      throw e;
+    }
+  }
+
+  let allPayments = [];
+  let pendingPayments = [];
+
+  async function load() {
+    try {
+      const [paymentsData, pendingData] = await Promise.all([
+        adminFetch(() => apiGet('/admin/payments')),
+        adminFetch(() => apiGet('/admin/payments/pending-verification'))
+      ]);
+      allPayments = paymentsData.payments || [];
+      pendingPayments = pendingData.payments || [];
+      renderSummary();
+      renderPending();
+      applyFilters();
+    } catch(e) {
+      document.getElementById('table-wrap').innerHTML =
+        '<div class="error-msg">Unable to load payments — check your connection and refresh.</div>';
+    }
+  }
+
+  function renderSummary() {
+    const paid = allPayments.filter(p => p.status === 'SUCCESS');
+    const total = paid.reduce((s, p) => s + (p.amount || 0), 0);
+    const razorpay = paid.filter(p => p.provider === 'RAZORPAY').reduce((s, p) => s + (p.amount || 0), 0);
+    const paypal = paid.filter(p => p.provider === 'PAYPAL').reduce((s, p) => s + (p.amount || 0), 0);
+    const upi = paid.filter(p => p.provider === 'UPI_MANUAL').reduce((s, p) => s + (p.amount || 0), 0);
+
+    document.getElementById('stat-total').textContent = fmt(total);
+    document.getElementById('stat-total-count').textContent = paid.length + ' successful payment' + (paid.length !== 1 ? 's' : '');
+    document.getElementById('stat-razorpay').textContent = fmt(razorpay);
+    document.getElementById('stat-paypal').textContent = fmt(paypal);
+    document.getElementById('stat-upi').textContent = fmt(upi);
+  }
+
+  function renderPending() {
+    if (!pendingPayments.length) {
+      document.getElementById('upi-section').style.display = 'none';
+      return;
+    }
+    document.getElementById('upi-section').style.display = 'block';
+    document.getElementById('upi-count').textContent = pendingPayments.length;
+
+    const html = pendingPayments.map(p => {
+      const items = (p.order?.items || []).map(i => i.productName + ' × ' + i.quantity).join(', ');
+      return `<div class="upi-card" id="upi-card-${p.id}">
+        <div class="upi-info">
+          <div class="upi-order">#${p.order?.orderNumber || '—'} &mdash; ${fmt(p.amount)}</div>
+          <div class="upi-detail">
+            <span>Customer: ${p.order?.email || '—'}</span><br>
+            <span>UPI Ref: <strong>${p.upiReferenceId || '—'}</strong></span><br>
+            ${items ? '<span>Items: ' + items + '</span>' : ''}
+          </div>
+        </div>
+        <div class="upi-actions">
+          <button class="btn-approve" onclick="approvePayment('${p.id}','${p.order?.orderNumber}',${p.amount})">Approve</button>
+          <button class="btn-reject" onclick="rejectPayment('${p.id}','${p.order?.orderNumber}')">Reject</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('upi-list').innerHTML = html;
+  }
+
+  function applyFilters() {
+    const providerF = document.getElementById('provider-filter').value;
+    const statusF = document.getElementById('status-filter').value;
+    const filtered = allPayments.filter(p => {
+      if (providerF && p.provider !== providerF) return false;
+      if (statusF && p.status !== statusF) return false;
+      return true;
+    });
+    renderTable(filtered);
+  }
+
+  function renderTable(payments) {
+    if (!payments.length) {
+      document.getElementById('table-wrap').innerHTML =
+        `<table><thead><tr><th>Order #</th><th>Customer</th><th>Provider</th><th>Amount</th><th>Status</th><th>UPI Ref</th><th>Date</th></tr></thead>
+        <tbody><tr class="empty-row"><td colspan="7"><div class="empty-icon">💳</div><div class="empty-text">No payments recorded yet</div></td></tr></tbody></table>`;
+      return;
+    }
+
+    const rows = payments.map(p => {
+      const provBadge = 'badge badge-' + (p.provider || '').toLowerCase();
+      const statusBadge = 'badge badge-' + (p.status || '').toLowerCase().replace('_', '-');
+      return `<tr>
+        <td style="font-weight:600;font-size:11px;">#${p.order?.orderNumber || '—'}</td>
+        <td style="font-size:12px;">${p.order?.email || '—'}</td>
+        <td><span class="${provBadge}">${(p.provider || '').replace('_', ' ')}</span></td>
+        <td style="font-weight:600;">${fmt(p.amount)}</td>
+        <td><span class="${statusBadge}">${(p.status || '').replace('_', ' ')}</span></td>
+        <td style="font-size:11px;color:#888;font-family:monospace;">${p.upiReferenceId || '—'}</td>
+        <td style="color:#888;font-size:11px;">${fmtDate(p.createdAt)}</td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('table-wrap').innerHTML =
+      `<table><thead><tr><th>Order #</th><th>Customer</th><th>Provider</th><th>Amount</th><th>Status</th><th>UPI Ref</th><th>Date</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  async function approvePayment(id, orderNumber, amount) {
+    if (!confirm(`Approve UPI payment of ${fmt(amount)} for order #${orderNumber}?\nThis will mark the order as paid and reduce inventory.`)) return;
+    try {
+      await adminFetch(() => apiPatch('/admin/payments/' + id + '/approve', {}));
+      showToast('Payment approved. Order #' + orderNumber + ' marked as paid.', 'success');
+      await load();
+    } catch(e) {
+      showToast('Approval failed: ' + e.message, 'error');
+    }
+  }
+
+  async function rejectPayment(id, orderNumber) {
+    if (!confirm(`Reject UPI payment for order #${orderNumber}?\nThe order will be cancelled and inventory restored.`)) return;
+    try {
+      await adminFetch(() => apiPatch('/admin/payments/' + id + '/reject', {}));
+      showToast('Payment rejected. Order #' + orderNumber + ' cancelled.', 'success');
+      await load();
+    } catch(e) {
+      showToast('Rejection failed: ' + e.message, 'error');
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>

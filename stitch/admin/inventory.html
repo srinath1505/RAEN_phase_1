@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAEN Admin — Inventory</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Helvetica, Arial, sans-serif; background: #f5f5f0; }
+    a { text-decoration: none; color: inherit; }
+    .sidebar { position: fixed; top: 0; left: 0; width: 200px; height: 100vh; background: #1a1a1a; display: flex; flex-direction: column; z-index: 100; }
+    .sidebar-brand { padding: 24px 20px; font-size: 11px; letter-spacing: 0.3em; color: #b8960c; font-weight: 700; border-bottom: 1px solid #333; }
+    .sidebar nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .nav-link { display: block; padding: 10px 20px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #999; }
+    .nav-link:hover { color: #fff; background: #222; }
+    .nav-link.active { color: #b8960c; border-left: 2px solid #b8960c; padding-left: 18px; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid #333; }
+    .signout-btn { width: 100%; padding: 8px; background: transparent; border: 1px solid #333; color: #999; font-size: 10px; letter-spacing: 0.15em; cursor: pointer; text-transform: uppercase; }
+    .signout-btn:hover { border-color: #666; color: #ccc; }
+    .main { margin-left: 200px; padding: 28px 32px; min-height: 100vh; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .page-title { font-size: 20px; font-weight: 700; color: #1a1a1a; letter-spacing: 0.03em; }
+    .alert-banner { padding: 14px 20px; background: #fef9c3; border: 1px solid #fcd34d; border-radius: 3px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+    .alert-text { font-size: 13px; color: #92400e; }
+    .alert-dismiss { background: none; border: none; cursor: pointer; font-size: 18px; color: #92400e; line-height: 1; padding: 0 4px; }
+    .bulk-panel { background: #fff; border: 1px solid #e5e5e5; padding: 16px 20px; margin-bottom: 16px; border-radius: 3px; display: none; }
+    .bulk-title { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; color: #1a1a1a; margin-bottom: 12px; }
+    .bulk-body { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .bulk-label { font-size: 12px; color: #555; }
+    .bulk-input { width: 80px; padding: 7px 10px; border: 1px solid #ddd; font-size: 13px; text-align: center; }
+    .bulk-btn { padding: 8px 18px; background: #1a1a1a; color: #fff; border: none; cursor: pointer; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
+    .bulk-btn:hover { background: #333; }
+    .bulk-btn:disabled { background: #999; cursor: not-allowed; }
+    .bulk-items-list { font-size: 11px; color: #888; margin-top: 8px; max-height: 120px; overflow-y: auto; }
+    .filters { display: flex; gap: 10px; margin-bottom: 16px; }
+    .filter-input { padding: 8px 12px; border: 1px solid #ddd; font-size: 12px; background: #fff; outline: none; min-width: 240px; }
+    .filter-input:focus { border-color: #1a1a1a; }
+    .card { background: #fff; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { text-align: left; padding: 10px 12px; background: #f8f8f8; border-bottom: 2px solid #e5e5e5; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #666; font-weight: 600; cursor: pointer; user-select: none; }
+    th:hover { color: #1a1a1a; }
+    td { padding: 10px 12px; border-bottom: 1px solid #f2f2f2; color: #333; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    .stock-cell { cursor: pointer; font-weight: 600; border-radius: 2px; padding: 3px 6px; display: inline-block; }
+    .stock-red { background: #fee2e2; color: #dc2626; }
+    .stock-amber { background: #fef9c3; color: #d97706; }
+    .stock-normal { color: #166534; }
+    .stock-edit-input { width: 70px; padding: 4px 8px; border: 1px solid #b8960c; font-size: 12px; text-align: center; outline: none; }
+    .row-red-bg { background: #fff5f5; }
+    .row-amber-bg { background: #fffbeb; }
+    .empty-row td { text-align: center; padding: 48px 20px; color: #bbb; }
+    .empty-icon { font-size: 28px; margin-bottom: 10px; }
+    .empty-text { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; }
+    .spinner { text-align: center; padding: 48px; color: #bbb; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+    .error-msg { padding: 14px 20px; color: #dc2626; font-size: 11px; letter-spacing: 0.08em; }
+    .sort-indicator { margin-left: 4px; color: #b8960c; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-brand">RAEN ADMIN</div>
+  <nav>
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="orders.html" class="nav-link">Orders</a>
+    <a href="products.html" class="nav-link">Products</a>
+    <a href="inventory.html" class="nav-link active">Inventory</a>
+    <a href="payments.html" class="nav-link">Payments</a>
+    <a href="customers.html" class="nav-link">Customers</a>
+    <a href="analytics.html" class="nav-link">Analytics</a>
+    <a href="messages.html" class="nav-link">Messages</a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="signout-btn" onclick="logout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <div class="page-title">Inventory</div>
+  </div>
+
+  <div class="alert-banner" id="alert-banner" style="display:none;">
+    <span class="alert-text" id="alert-text"></span>
+    <button class="alert-dismiss" onclick="this.closest('.alert-banner').style.display='none'">&times;</button>
+  </div>
+
+  <div class="bulk-panel" id="bulk-panel">
+    <div class="bulk-title">Bulk Restock Low-Stock Items</div>
+    <div id="bulk-items-list" class="bulk-items-list"></div>
+    <div class="bulk-body" style="margin-top:12px;">
+      <span class="bulk-label">Set all to:</span>
+      <input class="bulk-input" type="number" id="bulk-qty" value="10" min="1">
+      <button class="bulk-btn" id="bulk-apply-btn" onclick="applyBulkRestock()">Apply Restock</button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <input class="filter-input" type="text" id="search" placeholder="Search by product name or SKU..." oninput="applyFilters()">
+  </div>
+
+  <div class="card">
+    <div id="table-wrap"><div class="spinner">Loading inventory...</div></div>
+  </div>
+</div>
+
+<script src="../public/js/api.js"></script>
+<script>
+  const _token = localStorage.getItem('raen_auth_token');
+  if (!_token) window.location.href = 'login.html';
+
+  const fmtDate = d => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  function logout() { localStorage.removeItem('raen_auth_token'); window.location.href = 'login.html'; }
+
+  async function adminFetch(fn) {
+    try { return await fn(); }
+    catch(e) {
+      if (e.status === 401 || e.status === 403) {
+        localStorage.removeItem('raen_auth_token');
+        window.location.href = 'login.html';
+      }
+      throw e;
+    }
+  }
+
+  let allInventory = [];
+  let sortKey = 'stock';
+  let sortAsc = true;
+
+  async function load() {
+    try {
+      const data = await adminFetch(() => apiGet('/admin/inventory'));
+      allInventory = data.inventory || [];
+      checkAlerts();
+      applyFilters();
+    } catch(e) {
+      document.getElementById('table-wrap').innerHTML =
+        '<div class="error-msg">Unable to load inventory — check your connection and refresh.</div>';
+    }
+  }
+
+  function checkAlerts() {
+    const lowItems = allInventory.filter(i => i.stock <= 5);
+    if (lowItems.length) {
+      document.getElementById('alert-text').textContent =
+        lowItems.length + ' item' + (lowItems.length > 1 ? 's are' : ' is') + ' low in stock and need restocking.';
+      document.getElementById('alert-banner').style.display = 'flex';
+
+      // Bulk panel
+      const criticalItems = allInventory.filter(i => i.stock <= 5);
+      document.getElementById('bulk-panel').style.display = 'block';
+      document.getElementById('bulk-items-list').innerHTML =
+        criticalItems.map(i => `<div>${i.product?.name} — ${i.size} (SKU: ${i.sku}) — Stock: ${i.stock}</div>`).join('');
+    }
+  }
+
+  function applyFilters() {
+    const search = document.getElementById('search').value.toLowerCase().trim();
+    let filtered = allInventory.filter(i => {
+      if (!search) return true;
+      return i.product?.name?.toLowerCase().includes(search) || i.sku?.toLowerCase().includes(search);
+    });
+    filtered = sortItems(filtered);
+    renderTable(filtered);
+  }
+
+  function sortItems(items) {
+    return [...items].sort((a, b) => {
+      let aVal, bVal;
+      if (sortKey === 'stock') { aVal = a.stock; bVal = b.stock; }
+      else if (sortKey === 'product') { aVal = a.product?.name || ''; bVal = b.product?.name || ''; }
+      else { aVal = a[sortKey] || ''; bVal = b[sortKey] || ''; }
+      if (typeof aVal === 'string') return sortAsc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      return sortAsc ? aVal - bVal : bVal - aVal;
+    });
+  }
+
+  function setSort(key) {
+    if (sortKey === key) sortAsc = !sortAsc;
+    else { sortKey = key; sortAsc = true; }
+    applyFilters();
+  }
+
+  function sortIcon(key) {
+    if (sortKey !== key) return '';
+    return `<span class="sort-indicator">${sortAsc ? '▲' : '▼'}</span>`;
+  }
+
+  function renderTable(items) {
+    if (!items.length) {
+      document.getElementById('table-wrap').innerHTML =
+        `<table><thead><tr><th>Product</th><th>SKU</th><th>Size</th><th>Stock</th><th>Reserved</th><th>Available</th><th>Updated</th></tr></thead>
+        <tbody><tr class="empty-row"><td colspan="7"><div class="empty-icon">📦</div><div class="empty-text">No inventory records</div></td></tr></tbody></table>`;
+      return;
+    }
+
+    const rows = items.map(item => {
+      const isRed = item.stock <= 2;
+      const isAmber = item.stock > 2 && item.stock <= 5;
+      const rowClass = isRed ? 'row-red-bg' : isAmber ? 'row-amber-bg' : '';
+      const stockClass = isRed ? 'stock-cell stock-red' : isAmber ? 'stock-cell stock-amber' : 'stock-cell stock-normal';
+      const available = item.stock - (item.reservedStock || 0);
+
+      return `<tr class="${rowClass}" data-id="${item.id}">
+        <td style="font-weight:600;">${item.product?.name || '—'}</td>
+        <td style="font-size:10px;color:#888;font-family:monospace;">${item.sku}</td>
+        <td style="font-weight:600;letter-spacing:0.05em;">${item.size}</td>
+        <td><span class="${stockClass}" id="stock-display-${item.id}" onclick="startEdit('${item.id}',${item.stock})">${item.stock}</span></td>
+        <td style="color:#888;">${item.reservedStock || 0}</td>
+        <td style="font-weight:600;${available < 0 ? 'color:#dc2626;' : ''}">${available}</td>
+        <td style="color:#888;font-size:11px;">${fmtDate(item.updatedAt)}</td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('table-wrap').innerHTML =
+      `<table><thead>
+        <tr>
+          <th onclick="setSort('product')">Product ${sortIcon('product')}</th>
+          <th>SKU</th>
+          <th>Size</th>
+          <th onclick="setSort('stock')">Stock ${sortIcon('stock')}</th>
+          <th>Reserved</th>
+          <th>Available</th>
+          <th>Updated</th>
+        </tr>
+      </thead><tbody>${rows}</tbody></table>`;
+  }
+
+  function startEdit(id, currentStock) {
+    const span = document.getElementById('stock-display-' + id);
+    if (!span) return;
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = 0;
+    input.value = currentStock;
+    input.className = 'stock-edit-input';
+    input.onblur = () => saveStock(id, input, currentStock);
+    input.onkeydown = e => {
+      if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+      if (e.key === 'Escape') { span.textContent = currentStock; span.style.display = ''; input.remove(); }
+    };
+    span.style.display = 'none';
+    span.parentNode.insertBefore(input, span.nextSibling);
+    input.focus();
+    input.select();
+  }
+
+  async function saveStock(id, input, oldStock) {
+    const newStock = parseInt(input.value);
+    const span = document.getElementById('stock-display-' + id);
+    input.remove();
+    if (isNaN(newStock) || newStock < 0 || newStock === oldStock) {
+      if (span) { span.style.display = ''; }
+      return;
+    }
+    try {
+      await adminFetch(() => apiPatch('/admin/inventory/' + id, { stock: newStock }));
+      const item = allInventory.find(i => i.id === id);
+      if (item) item.stock = newStock;
+      showToast('Stock updated to ' + newStock, 'success');
+      checkAlerts();
+      applyFilters();
+    } catch(e) {
+      if (span) { span.style.display = ''; }
+      showToast('Update failed: ' + e.message, 'error');
+    }
+  }
+
+  async function applyBulkRestock() {
+    const qty = parseInt(document.getElementById('bulk-qty').value);
+    if (isNaN(qty) || qty < 1) { showToast('Enter a valid quantity', 'error'); return; }
+    const lowItems = allInventory.filter(i => i.stock <= 5);
+    if (!lowItems.length) return;
+    if (!confirm(`Set ${lowItems.length} low-stock item${lowItems.length > 1 ? 's' : ''} to ${qty} units each?`)) return;
+
+    const btn = document.getElementById('bulk-apply-btn');
+    btn.disabled = true;
+    btn.textContent = 'Restocking...';
+    let done = 0;
+
+    for (const item of lowItems) {
+      try {
+        await adminFetch(() => apiPatch('/admin/inventory/' + item.id, { stock: qty }));
+        item.stock = qty;
+        done++;
+      } catch(e) {
+        console.error('Failed to restock', item.sku, e.message);
+      }
+    }
+
+    showToast(`Restocked ${done} of ${lowItems.length} items to ${qty} units.`, 'success');
+    btn.disabled = false;
+    btn.textContent = 'Apply Restock';
+    checkAlerts();
+    applyFilters();
+  }
+
+  load();
+</script>
+</body>
+</html>

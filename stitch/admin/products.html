@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAEN Admin — Products</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Helvetica, Arial, sans-serif; background: #f5f5f0; }
+    a { text-decoration: none; color: inherit; }
+    .sidebar { position: fixed; top: 0; left: 0; width: 200px; height: 100vh; background: #1a1a1a; display: flex; flex-direction: column; z-index: 100; }
+    .sidebar-brand { padding: 24px 20px; font-size: 11px; letter-spacing: 0.3em; color: #b8960c; font-weight: 700; border-bottom: 1px solid #333; }
+    .sidebar nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .nav-link { display: block; padding: 10px 20px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #999; }
+    .nav-link:hover { color: #fff; background: #222; }
+    .nav-link.active { color: #b8960c; border-left: 2px solid #b8960c; padding-left: 18px; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid #333; }
+    .signout-btn { width: 100%; padding: 8px; background: transparent; border: 1px solid #333; color: #999; font-size: 10px; letter-spacing: 0.15em; cursor: pointer; text-transform: uppercase; }
+    .signout-btn:hover { border-color: #666; color: #ccc; }
+    .main { margin-left: 200px; padding: 28px 32px; min-height: 100vh; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .page-title { font-size: 20px; font-weight: 700; color: #1a1a1a; letter-spacing: 0.03em; }
+    .btn-primary { padding: 10px 20px; background: #1a1a1a; color: #fff; border: none; cursor: pointer; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; }
+    .btn-primary:hover { background: #333; }
+    .filters { display: flex; gap: 10px; margin-bottom: 16px; }
+    .filter-input { padding: 8px 12px; border: 1px solid #ddd; font-size: 12px; background: #fff; outline: none; min-width: 240px; }
+    .filter-input:focus { border-color: #1a1a1a; }
+    .filter-select { padding: 8px 12px; border: 1px solid #ddd; font-size: 12px; background: #fff; cursor: pointer; outline: none; }
+    .card { background: #fff; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { text-align: left; padding: 10px 12px; background: #f8f8f8; border-bottom: 2px solid #e5e5e5; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #666; font-weight: 600; }
+    td { padding: 10px 12px; border-bottom: 1px solid #f2f2f2; color: #333; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover > td { background: #fafafa; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 2px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .badge-active { background: #dcfce7; color: #166534; }
+    .badge-draft { background: #fef9c3; color: #92400e; }
+    .badge-archived { background: #f3f4f6; color: #6b7280; }
+    .action-btn { padding: 4px 10px; font-size: 10px; letter-spacing: 0.06em; border: 1px solid #ddd; background: #fff; cursor: pointer; margin-right: 4px; color: #555; }
+    .action-btn:hover { border-color: #1a1a1a; color: #1a1a1a; }
+    .action-btn.danger { border-color: #fca5a5; color: #dc2626; }
+    .action-btn.danger:hover { background: #dc2626; color: #fff; border-color: #dc2626; }
+    .action-btn.gold { border-color: #b8960c; color: #b8960c; }
+    .action-btn.gold:hover { background: #b8960c; color: #fff; }
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #fff; width: 100%; max-width: 560px; padding: 32px; position: relative; }
+    .modal-title { font-size: 14px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 24px; color: #1a1a1a; }
+    .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: #999; line-height: 1; }
+    .modal-close:hover { color: #1a1a1a; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #666; margin-bottom: 5px; font-weight: 600; }
+    .form-input { width: 100%; padding: 9px 10px; border: 1px solid #ddd; font-size: 13px; outline: none; }
+    .form-input:focus { border-color: #1a1a1a; }
+    .form-error { font-size: 11px; color: #dc2626; margin-top: 4px; display: none; }
+    .sizes-wrap { display: flex; gap: 12px; flex-wrap: wrap; }
+    .size-check { display: flex; align-items: center; gap: 5px; font-size: 12px; cursor: pointer; }
+    .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid #f0f0f0; }
+    .btn-secondary { padding: 9px 20px; background: #fff; color: #555; border: 1px solid #ddd; cursor: pointer; font-size: 11px; letter-spacing: 0.1em; }
+    .btn-submit { padding: 9px 24px; background: #1a1a1a; color: #fff; border: none; cursor: pointer; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; }
+    .btn-submit:disabled { background: #999; cursor: not-allowed; }
+    /* Stats modal */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px; }
+    .stats-item { background: #f8f8f8; padding: 14px; text-align: center; }
+    .stats-val { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+    .stats-lbl { font-size: 10px; letter-spacing: 0.1em; color: #888; text-transform: uppercase; margin-top: 2px; }
+    .spinner { text-align: center; padding: 48px; color: #bbb; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+    .empty-row td { text-align: center; padding: 48px 20px; color: #bbb; }
+    .empty-icon { font-size: 28px; margin-bottom: 10px; }
+    .empty-text { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; }
+    .error-msg { padding: 14px 20px; color: #dc2626; font-size: 11px; letter-spacing: 0.08em; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-brand">RAEN ADMIN</div>
+  <nav>
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="orders.html" class="nav-link">Orders</a>
+    <a href="products.html" class="nav-link active">Products</a>
+    <a href="inventory.html" class="nav-link">Inventory</a>
+    <a href="payments.html" class="nav-link">Payments</a>
+    <a href="customers.html" class="nav-link">Customers</a>
+    <a href="analytics.html" class="nav-link">Analytics</a>
+    <a href="messages.html" class="nav-link">Messages</a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="signout-btn" onclick="logout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <div class="page-title">Products</div>
+    <button class="btn-primary" onclick="openCreateModal()">+ Add Product</button>
+  </div>
+
+  <div class="filters">
+    <input class="filter-input" type="text" id="search" placeholder="Search by name..." oninput="applyFilters()">
+    <select class="filter-select" id="status-filter" onchange="applyFilters()">
+      <option value="">All Statuses</option>
+      <option value="ACTIVE">Active</option>
+      <option value="DRAFT">Draft</option>
+      <option value="ARCHIVED">Archived</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div id="table-wrap"><div class="spinner">Loading products...</div></div>
+  </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div class="modal-overlay" id="product-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeProductModal()">&times;</button>
+    <div class="modal-title" id="modal-title">Add Product</div>
+    <form id="product-form" onsubmit="submitProduct(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Name *</label>
+          <input class="form-input" type="text" id="f-name" required oninput="autoSlug()">
+          <div class="form-error" id="e-name">Name is required</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Slug *</label>
+          <input class="form-input" type="text" id="f-slug" required>
+          <div class="form-error" id="e-slug">Slug is required</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-input" id="f-desc" rows="3" style="resize:vertical;"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <input class="form-input" type="text" id="f-category">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-input" id="f-status">
+            <option value="ACTIVE">Active</option>
+            <option value="DRAFT">Draft</option>
+            <option value="ARCHIVED">Archived</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Price (EUR) *</label>
+          <input class="form-input" type="number" id="f-price" min="0" step="0.01" required>
+          <div class="form-error" id="e-price">Valid price required</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sale Price (EUR)</label>
+          <input class="form-input" type="number" id="f-sale-price" min="0" step="0.01" placeholder="Leave blank to clear">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Discount % (0–100)</label>
+          <input class="form-input" type="number" id="f-discount" min="0" max="100" step="1" placeholder="e.g. 20">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Available Sizes</label>
+          <div class="sizes-wrap">
+            <label class="size-check"><input type="checkbox" value="XS" checked> XS</label>
+            <label class="size-check"><input type="checkbox" value="S" checked> S</label>
+            <label class="size-check"><input type="checkbox" value="M" checked> M</label>
+            <label class="size-check"><input type="checkbox" value="L" checked> L</label>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Image Paths (one per line)</label>
+        <textarea class="form-input" id="f-images" rows="3" style="resize:vertical;" placeholder="public/images/product/1.avif"></textarea>
+        <div style="font-size:10px;color:#aaa;margin-top:4px;">Paths are relative to the stitch/ folder</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeProductModal()">Cancel</button>
+        <button type="submit" class="btn-submit" id="modal-submit-btn">Save Product</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Stats Modal -->
+<div class="modal-overlay" id="stats-modal">
+  <div class="modal" style="max-width:440px;">
+    <button class="modal-close" onclick="closeStatsModal()">&times;</button>
+    <div class="modal-title" id="stats-modal-title">Product Stats</div>
+    <div id="stats-content"><div class="spinner">Loading...</div></div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" onclick="closeStatsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="../public/js/api.js"></script>
+<script>
+  const _token = localStorage.getItem('raen_auth_token');
+  if (!_token) window.location.href = 'login.html';
+
+  const fmt = n => '€' + (n || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function logout() { localStorage.removeItem('raen_auth_token'); window.location.href = 'login.html'; }
+
+  async function adminFetch(fn) {
+    try { return await fn(); }
+    catch(e) {
+      if (e.status === 401 || e.status === 403) {
+        localStorage.removeItem('raen_auth_token');
+        window.location.href = 'login.html';
+      }
+      throw e;
+    }
+  }
+
+  function parseImages(product) {
+    try {
+      const imgs = typeof product.images === 'string' ? JSON.parse(product.images) : (product.images || []);
+      return Array.isArray(imgs) ? imgs : [];
+    } catch { return []; }
+  }
+
+  function imgSrc(product) {
+    const imgs = parseImages(product);
+    if (!imgs[0]) return null;
+    return '../' + imgs[0].split('/').map(seg => encodeURIComponent(seg)).join('/');
+  }
+
+  let allProducts = [];
+  let editingId = null;
+  let searchTimer = null;
+
+  async function load() {
+    try {
+      const data = await adminFetch(() => apiGet('/admin/products'));
+      allProducts = data.products || [];
+      applyFilters();
+    } catch(e) {
+      document.getElementById('table-wrap').innerHTML =
+        '<div class="error-msg">Unable to load products — check your connection and refresh.</div>';
+    }
+  }
+
+  function applyFilters() {
+    const search = document.getElementById('search').value.toLowerCase().trim();
+    const statusF = document.getElementById('status-filter').value;
+    const filtered = allProducts.filter(p => {
+      if (statusF && p.status !== statusF) return false;
+      if (search && !p.name?.toLowerCase().includes(search)) return false;
+      return true;
+    });
+    renderTable(filtered);
+  }
+
+  function renderTable(products) {
+    if (!products.length) {
+      document.getElementById('table-wrap').innerHTML =
+        `<table><thead><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th>Sale Price</th><th>Status</th><th>Stock</th><th>Actions</th></tr></thead>
+        <tbody><tr class="empty-row"><td colspan="8"><div class="empty-icon">📦</div><div class="empty-text">No products found</div></td></tr></tbody></table>`;
+      return;
+    }
+
+    const rows = products.map(p => {
+      const totalStock = (p.inventory || []).reduce((s, inv) => s + inv.stock, 0);
+      const src = imgSrc(p);
+      const thumb = src
+        ? `<img src="${src}" onerror="this.style.display='none'" style="width:40px;height:50px;object-fit:cover;">`
+        : `<div style="width:40px;height:50px;background:#e5e5e5;"></div>`;
+      const salePriceDisplay = p.salePrice ? fmt(p.salePrice) : (p.discountPercent ? fmt(p.price * (1 - p.discountPercent / 100)) + ` <span style="font-size:10px;color:#d97706;">(${p.discountPercent}% off)</span>` : '<span style="color:#ccc;">—</span>');
+
+      return `<tr>
+        <td style="width:52px;">${thumb}</td>
+        <td>
+          <div style="font-weight:600;">${p.name}</div>
+          <div style="font-size:10px;color:#aaa;">${p.slug}</div>
+        </td>
+        <td style="color:#888;">${p.category || '—'}</td>
+        <td style="font-weight:600;">${fmt(p.price)}</td>
+        <td>${salePriceDisplay}</td>
+        <td><span class="badge badge-${(p.status||'').toLowerCase()}">${p.status}</span></td>
+        <td style="font-weight:600;${totalStock <= 5 ? 'color:#d97706;' : ''}">${totalStock}</td>
+        <td style="white-space:nowrap;">
+          <button class="action-btn" onclick="openEditModal('${p.id}')">Edit</button>
+          <button class="action-btn gold" onclick="openStatsModal('${p.id}','${p.name.replace(/'/g,"\\'")}')">Stats</button>
+          <button class="action-btn danger" onclick="archiveProduct('${p.id}','${p.name.replace(/'/g,"\\'")}')">Archive</button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('table-wrap').innerHTML =
+      `<table><thead><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th>Sale Price</th><th>Status</th><th>Stock</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  function autoSlug() {
+    if (editingId) return;
+    const name = document.getElementById('f-name').value;
+    document.getElementById('f-slug').value = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  }
+
+  function openCreateModal() {
+    editingId = null;
+    document.getElementById('modal-title').textContent = 'Add Product';
+    document.getElementById('modal-submit-btn').textContent = 'Create Product';
+    document.getElementById('product-form').reset();
+    document.querySelectorAll('.sizes-wrap input[type=checkbox]').forEach(c => c.checked = true);
+    document.getElementById('product-modal').classList.add('open');
+  }
+
+  function openEditModal(id) {
+    const p = allProducts.find(x => x.id === id);
+    if (!p) return;
+    editingId = id;
+    document.getElementById('modal-title').textContent = 'Edit Product';
+    document.getElementById('modal-submit-btn').textContent = 'Save Changes';
+    document.getElementById('f-name').value = p.name || '';
+    document.getElementById('f-slug').value = p.slug || '';
+    document.getElementById('f-desc').value = p.description || '';
+    document.getElementById('f-category').value = p.category || '';
+    document.getElementById('f-status').value = p.status || 'ACTIVE';
+    document.getElementById('f-price').value = p.price || '';
+    document.getElementById('f-sale-price').value = p.salePrice || '';
+    document.getElementById('f-discount').value = p.discountPercent || '';
+    const imgs = parseImages(p);
+    document.getElementById('f-images').value = imgs.join('\n');
+    const sizes = Array.isArray(p.sizes) ? p.sizes : (typeof p.sizes === 'string' ? JSON.parse(p.sizes || '[]') : []);
+    document.querySelectorAll('.sizes-wrap input[type=checkbox]').forEach(c => {
+      c.checked = sizes.includes(c.value);
+    });
+    document.getElementById('product-modal').classList.add('open');
+  }
+
+  function closeProductModal() {
+    document.getElementById('product-modal').classList.remove('open');
+    editingId = null;
+  }
+
+  async function submitProduct(e) {
+    e.preventDefault();
+    let valid = true;
+    const name = document.getElementById('f-name').value.trim();
+    const price = parseFloat(document.getElementById('f-price').value);
+    if (!name) { document.getElementById('e-name').style.display = 'block'; valid = false; } else { document.getElementById('e-name').style.display = 'none'; }
+    if (isNaN(price) || price < 0) { document.getElementById('e-price').style.display = 'block'; valid = false; } else { document.getElementById('e-price').style.display = 'none'; }
+    if (!valid) return;
+
+    const sizes = [...document.querySelectorAll('.sizes-wrap input[type=checkbox]:checked')].map(c => c.value);
+    const imagesRaw = document.getElementById('f-images').value.trim();
+    const images = imagesRaw ? imagesRaw.split('\n').map(l => l.trim()).filter(Boolean) : [];
+    const salePriceVal = document.getElementById('f-sale-price').value;
+    const discountVal = document.getElementById('f-discount').value;
+
+    const payload = {
+      name,
+      slug: document.getElementById('f-slug').value.trim(),
+      description: document.getElementById('f-desc').value.trim(),
+      category: document.getElementById('f-category').value.trim(),
+      status: document.getElementById('f-status').value,
+      price,
+      salePrice: salePriceVal ? parseFloat(salePriceVal) : null,
+      discountPercent: discountVal ? parseInt(discountVal) : null,
+      images,
+      sizes
+    };
+
+    const btn = document.getElementById('modal-submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    try {
+      if (editingId) {
+        await adminFetch(() => apiPatch('/admin/products/' + editingId, payload));
+        showToast('Product updated.', 'success');
+      } else {
+        await adminFetch(() => apiPost('/admin/products', payload));
+        showToast('Product created.', 'success');
+      }
+      closeProductModal();
+      await load();
+    } catch(err) {
+      showToast('Save failed: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = editingId ? 'Save Changes' : 'Create Product';
+    }
+  }
+
+  async function archiveProduct(id, name) {
+    if (!confirm(`Archive product "${name}"? It will no longer appear on the site.`)) return;
+    try {
+      await adminFetch(() => apiDelete('/admin/products/' + id));
+      showToast(`"${name}" archived.`, 'success');
+      await load();
+    } catch(e) {
+      showToast('Archive failed: ' + e.message, 'error');
+    }
+  }
+
+  async function openStatsModal(id, name) {
+    document.getElementById('stats-modal-title').textContent = name + ' — Stats (30 days)';
+    document.getElementById('stats-content').innerHTML = '<div class="spinner">Loading...</div>';
+    document.getElementById('stats-modal').classList.add('open');
+    try {
+      const data = await adminFetch(() => apiGet('/admin/products/' + id + '/stats'));
+      const s = data;
+      document.getElementById('stats-content').innerHTML = `
+        <div class="stats-grid">
+          <div class="stats-item"><div class="stats-val">${s.totalOrders || 0}</div><div class="stats-lbl">Total Orders</div></div>
+          <div class="stats-item"><div class="stats-val">${fmt(s.totalRevenue)}</div><div class="stats-lbl">Revenue</div></div>
+          <div class="stats-item"><div class="stats-val">${s.totalUnitsSold || 0}</div><div class="stats-lbl">Units Sold</div></div>
+          <div class="stats-item"><div class="stats-val">${s.pageViews30Days || 0}</div><div class="stats-lbl">Page Views (30d)</div></div>
+          <div class="stats-item"><div class="stats-val">${s.cartAdds30Days || 0}</div><div class="stats-lbl">Cart Adds (30d)</div></div>
+          <div class="stats-item"><div class="stats-val">${s.conversionRate30Days || 0}%</div><div class="stats-lbl">Conversion</div></div>
+        </div>`;
+    } catch(e) {
+      document.getElementById('stats-content').innerHTML = '<div style="color:#dc2626;padding:20px;font-size:12px;">Failed to load stats.</div>';
+    }
+  }
+
+  function closeStatsModal() {
+    document.getElementById('stats-modal').classList.remove('open');
+  }
+
+  load();
+</script>
+</body>
+</html>

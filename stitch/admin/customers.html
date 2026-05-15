@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAEN Admin — Customers</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Helvetica, Arial, sans-serif; background: #f5f5f0; }
+    a { text-decoration: none; color: inherit; }
+    .sidebar { position: fixed; top: 0; left: 0; width: 200px; height: 100vh; background: #1a1a1a; display: flex; flex-direction: column; z-index: 100; }
+    .sidebar-brand { padding: 24px 20px; font-size: 11px; letter-spacing: 0.3em; color: #b8960c; font-weight: 700; border-bottom: 1px solid #333; }
+    .sidebar nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .nav-link { display: block; padding: 10px 20px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #999; }
+    .nav-link:hover { color: #fff; background: #222; }
+    .nav-link.active { color: #b8960c; border-left: 2px solid #b8960c; padding-left: 18px; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid #333; }
+    .signout-btn { width: 100%; padding: 8px; background: transparent; border: 1px solid #333; color: #999; font-size: 10px; letter-spacing: 0.15em; cursor: pointer; text-transform: uppercase; }
+    .signout-btn:hover { border-color: #666; color: #ccc; }
+    .main { margin-left: 200px; padding: 28px 32px; min-height: 100vh; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .page-title { font-size: 20px; font-weight: 700; color: #1a1a1a; letter-spacing: 0.03em; }
+    .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: #fff; padding: 18px 20px; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); border-top: 3px solid #b8960c; }
+    .stat-label { font-size: 10px; letter-spacing: 0.15em; color: #888; text-transform: uppercase; margin-bottom: 6px; }
+    .stat-value { font-size: 26px; font-weight: 700; color: #1a1a1a; line-height: 1; }
+    .filters { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; }
+    .filter-input { padding: 8px 12px; border: 1px solid #ddd; font-size: 12px; background: #fff; outline: none; min-width: 280px; }
+    .filter-input:focus { border-color: #1a1a1a; }
+    .card { background: #fff; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { text-align: left; padding: 10px 12px; background: #f8f8f8; border-bottom: 2px solid #e5e5e5; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #666; font-weight: 600; cursor: pointer; user-select: none; white-space: nowrap; }
+    th:hover { color: #1a1a1a; }
+    td { padding: 10px 12px; border-bottom: 1px solid #f2f2f2; color: #333; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover > td { background: #fafafa; }
+    .btn-view { padding: 4px 12px; font-size: 10px; letter-spacing: 0.08em; border: 1px solid #ddd; background: #fff; cursor: pointer; color: #555; text-transform: uppercase; }
+    .btn-view:hover { border-color: #b8960c; color: #b8960c; }
+    .expand-row td { background: #f9f9f9 !important; padding: 0; }
+    .expand-inner { padding: 16px 20px; border-top: 1px solid #eee; }
+    .expand-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #888; margin-bottom: 10px; font-weight: 600; }
+    .sub-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 4px; }
+    .sub-table th { background: #f0f0f0; padding: 7px 10px; font-size: 10px; letter-spacing: 0.08em; color: #666; font-weight: 600; text-transform: uppercase; }
+    .sub-table td { padding: 8px 10px; border-bottom: 1px solid #eee; }
+    .sub-table tr:last-child td { border-bottom: none; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 2px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .badge-pending { background: #fef3c7; color: #92400e; }
+    .badge-paid { background: #dbeafe; color: #1e40af; }
+    .badge-processing { background: #dbeafe; color: #1e40af; }
+    .badge-shipped { background: #ccfbf1; color: #065f46; }
+    .badge-delivered { background: #dcfce7; color: #166534; }
+    .badge-cancelled { background: #fee2e2; color: #991b1b; }
+    .badge-refunded { background: #f3e8ff; color: #6b21a8; }
+    .sort-indicator { margin-left: 4px; color: #b8960c; }
+    .empty-row td { text-align: center; padding: 48px 20px; color: #bbb; }
+    .empty-icon { font-size: 28px; margin-bottom: 10px; }
+    .empty-text { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; }
+    .spinner { text-align: center; padding: 48px; color: #bbb; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+    .error-msg { padding: 14px 20px; color: #dc2626; font-size: 11px; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-brand">RAEN ADMIN</div>
+  <nav>
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="orders.html" class="nav-link">Orders</a>
+    <a href="products.html" class="nav-link">Products</a>
+    <a href="inventory.html" class="nav-link">Inventory</a>
+    <a href="payments.html" class="nav-link">Payments</a>
+    <a href="customers.html" class="nav-link active">Customers</a>
+    <a href="analytics.html" class="nav-link">Analytics</a>
+    <a href="messages.html" class="nav-link">Messages</a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="signout-btn" onclick="logout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <div class="page-title">Customers</div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Customers</div>
+      <div class="stat-value" id="stat-total">—</div>
+    </div>
+    <div class="stat-card" style="border-top-color:#3b82f6;">
+      <div class="stat-label">New This Month</div>
+      <div class="stat-value" id="stat-new">—</div>
+    </div>
+    <div class="stat-card" style="border-top-color:#10b981;">
+      <div class="stat-label">With Orders</div>
+      <div class="stat-value" id="stat-with-orders">—</div>
+    </div>
+    <div class="stat-card" style="border-top-color:#e5e5e5;">
+      <div class="stat-label">Total Revenue</div>
+      <div class="stat-value" id="stat-revenue" style="font-size:18px;">—</div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <input class="filter-input" type="text" id="search" placeholder="Search by name or email..." oninput="applyFilters()">
+  </div>
+
+  <div class="card">
+    <div id="table-wrap"><div class="spinner">Loading customers...</div></div>
+  </div>
+</div>
+
+<script src="../public/js/api.js"></script>
+<script>
+  const _token = localStorage.getItem('raen_auth_token');
+  if (!_token) window.location.href = 'login.html';
+
+  const fmt = n => '€' + (n || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtDate = d => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  function logout() { localStorage.removeItem('raen_auth_token'); window.location.href = 'login.html'; }
+
+  async function adminFetch(fn) {
+    try { return await fn(); }
+    catch(e) {
+      if (e.status === 401 || e.status === 403) {
+        localStorage.removeItem('raen_auth_token');
+        window.location.href = 'login.html';
+      }
+      throw e;
+    }
+  }
+
+  let allCustomers = [];
+  let allOrders = [];
+  let sortKey = 'createdAt';
+  let sortAsc = false;
+  let expandedEmail = null;
+
+  async function load() {
+    try {
+      const [custData, ordersData] = await Promise.all([
+        adminFetch(() => apiGet('/admin/customers')),
+        adminFetch(() => apiGet('/admin/orders'))
+      ]);
+      allCustomers = custData.customers || [];
+      allOrders = ordersData.orders || [];
+      renderStats();
+      applyFilters();
+    } catch(e) {
+      document.getElementById('table-wrap').innerHTML =
+        '<div class="error-msg">Unable to load customers — check your connection and refresh.</div>';
+    }
+  }
+
+  function renderStats() {
+    const thisMonthStart = new Date();
+    thisMonthStart.setDate(1); thisMonthStart.setHours(0,0,0,0);
+    const newCount = allCustomers.filter(c => new Date(c.createdAt) >= thisMonthStart).length;
+    const withOrders = allCustomers.filter(c => (c._count?.orders || 0) > 0).length;
+    const totalRevenue = allCustomers.reduce((s, c) => s + (c.totalSpent || 0), 0);
+    document.getElementById('stat-total').textContent = allCustomers.length;
+    document.getElementById('stat-new').textContent = newCount;
+    document.getElementById('stat-with-orders').textContent = withOrders;
+    document.getElementById('stat-revenue').textContent = fmt(totalRevenue);
+  }
+
+  function applyFilters() {
+    const search = document.getElementById('search').value.toLowerCase().trim();
+    let filtered = allCustomers.filter(c => {
+      if (!search) return true;
+      const name = ((c.firstName || '') + ' ' + (c.lastName || '')).toLowerCase();
+      return name.includes(search) || (c.email || '').toLowerCase().includes(search);
+    });
+    filtered = sortItems(filtered);
+    renderTable(filtered);
+  }
+
+  function sortItems(items) {
+    return [...items].sort((a, b) => {
+      let aVal, bVal;
+      if (sortKey === 'orders') { aVal = a._count?.orders || 0; bVal = b._count?.orders || 0; }
+      else if (sortKey === 'totalSpent') { aVal = a.totalSpent || 0; bVal = b.totalSpent || 0; }
+      else if (sortKey === 'createdAt') { aVal = new Date(a.createdAt); bVal = new Date(b.createdAt); }
+      else { aVal = a[sortKey] || ''; bVal = b[sortKey] || ''; }
+      if (typeof aVal === 'string') return sortAsc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      return sortAsc ? aVal - bVal : bVal - aVal;
+    });
+  }
+
+  function setSort(key) {
+    if (sortKey === key) sortAsc = !sortAsc;
+    else { sortKey = key; sortAsc = false; }
+    applyFilters();
+  }
+
+  function sortIcon(key) {
+    if (sortKey !== key) return '';
+    return `<span class="sort-indicator">${sortAsc ? '▲' : '▼'}</span>`;
+  }
+
+  function renderTable(customers) {
+    if (!customers.length) {
+      document.getElementById('table-wrap').innerHTML =
+        `<table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Orders</th><th>Total Spent</th><th>Member Since</th><th></th></tr></thead>
+        <tbody><tr class="empty-row"><td colspan="7"><div class="empty-icon">👤</div><div class="empty-text">No registered customers yet</div></td></tr></tbody></table>`;
+      return;
+    }
+
+    let rows = '';
+    customers.forEach(c => {
+      const name = ((c.firstName || '') + ' ' + (c.lastName || '')).trim() || '—';
+      rows += `<tr data-email="${c.email}">
+        <td style="font-weight:600;">${name}</td>
+        <td style="color:#666;">${c.email}</td>
+        <td style="color:#888;">${c.phone || '—'}</td>
+        <td style="font-weight:600;cursor:pointer;" onclick="setSort('orders')">${c._count?.orders || 0}</td>
+        <td style="font-weight:600;">${fmt(c.totalSpent)}</td>
+        <td style="color:#888;font-size:11px;">${fmtDate(c.createdAt)}</td>
+        <td><button class="btn-view" onclick="toggleExpand('${c.email}')">View Orders</button></td>
+      </tr>
+      <tr class="expand-row" id="expand-${CSS.escape(c.email)}" style="display:none;">
+        <td colspan="7">${buildOrderExpand(c.email)}</td>
+      </tr>`;
+    });
+
+    document.getElementById('table-wrap').innerHTML =
+      `<table><thead>
+        <tr>
+          <th onclick="setSort('firstName')">Name ${sortIcon('firstName')}</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th onclick="setSort('orders')">Orders ${sortIcon('orders')}</th>
+          <th onclick="setSort('totalSpent')">Total Spent ${sortIcon('totalSpent')}</th>
+          <th onclick="setSort('createdAt')">Member Since ${sortIcon('createdAt')}</th>
+          <th></th>
+        </tr>
+      </thead><tbody>${rows}</tbody></table>`;
+  }
+
+  function buildOrderExpand(email) {
+    const customerOrders = allOrders
+      .filter(o => o.email === email)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 5);
+
+    if (!customerOrders.length) {
+      return `<div class="expand-inner"><div class="expand-label">Order History</div>
+        <div style="color:#aaa;font-size:12px;padding:8px 0;">No orders yet.</div></div>`;
+    }
+
+    const rows = customerOrders.map(o =>
+      `<tr>
+        <td style="font-weight:600;">#${o.orderNumber}</td>
+        <td>${fmt(o.total)}</td>
+        <td><span class="badge badge-${(o.status||'').toLowerCase()}">${o.status}</span></td>
+        <td style="color:#888;font-size:11px;">${fmtDate(o.createdAt)}</td>
+      </tr>`
+    ).join('');
+
+    return `<div class="expand-inner">
+      <div class="expand-label">Last ${customerOrders.length} Order${customerOrders.length > 1 ? 's' : ''}</div>
+      <table class="sub-table">
+        <thead><tr><th>Order #</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }
+
+  function toggleExpand(email) {
+    const id = 'expand-' + CSS.escape(email);
+    const row = document.getElementById(id);
+    if (!row) return;
+    const isOpen = row.style.display !== 'none';
+    if (expandedEmail && expandedEmail !== email) {
+      const prev = document.getElementById('expand-' + CSS.escape(expandedEmail));
+      if (prev) prev.style.display = 'none';
+    }
+    row.style.display = isOpen ? 'none' : 'table-row';
+    expandedEmail = isOpen ? null : email;
+  }
+
+  load();
+</script>
+</body>
+</html>
