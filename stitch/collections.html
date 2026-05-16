@@ -884,14 +884,24 @@ document.getElementById('newsletterForm').addEventListener('submit', async (e) =
             const href = card.getAttribute('href');
             if (!href) return;
             
-            const slug = href.replace('.html', '');
+            const slugMatch = href.match(/slug=([^&]+)/);
+            const slug = slugMatch ? slugMatch[1] : href.replace('.html', '');
             const product = productMap[slug];
-            
+
             if (product) {
-                // Update price with database value
+                // Update price — strikethrough original + gold effective price when discounted
                 const priceEl = card.querySelector('.product-price');
                 if (priceEl) {
-                    priceEl.textContent = `€${product.price.toLocaleString()}`;
+                    const effectivePrice = product.salePrice ||
+                        (product.discountPercent ? product.price * (1 - product.discountPercent / 100) : null);
+                    if (effectivePrice && effectivePrice < product.price) {
+                        priceEl.innerHTML =
+                            `<span style="text-decoration:line-through;color:#999;font-size:0.85em;margin-right:6px;">€${Number(product.price).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>` +
+                            `<span style="color:#b8960c;">€${Number(effectivePrice).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>` +
+                            (product.discountPercent ? ` <span style="font-size:10px;letter-spacing:0.1em;color:#b8960c;">${product.discountPercent}% OFF</span>` : '');
+                    } else {
+                        priceEl.textContent = `€${Number(product.price).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    }
                 }
                 
                 // Update product link to use slug

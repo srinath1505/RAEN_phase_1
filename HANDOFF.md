@@ -1,7 +1,7 @@
 # RAEN Phase 1 — Session Handoff Document
 
 **Written:** 2026-05-14
-**Last updated:** 2026-05-16 (Task 10 complete, 149/149 tests pass)
+**Last updated:** 2026-05-16 (Task 11 complete — ALL 11 TASKS DONE ✅)
 **Safety repo:** https://github.com/srinath1505/RAEN_phase_1
 **Local path:** `C:\Users\Srinath\Downloads\RAEN_v1`
 
@@ -40,7 +40,7 @@ a24fe4f  feat(api): Task 5 complete — payment webhooks with DB transactions
 75cf62f  feat(db): Task 1 complete — add salePrice/discountPercent, PageView, CartEvent
 ```
 
-### Tasks 1–10: COMPLETE ✅ | Task 11: NOT STARTED ⏳
+### Tasks 1–11: ALL COMPLETE ✅ — Phase 1 DONE
 
 ### Running servers:
 ```bash
@@ -442,7 +442,7 @@ Auth middleware returns `"Authentication required"` and `"Invalid or expired tok
 | # | Task | Key files | Notes |
 |---|------|-----------|-------|
 | 10 | Customer account page | `stitch/account.html` | ✅ COMPLETE — 149/149 tests pass |
-| 11 | Discount pricing on frontend | `stitch/product-detail.html`, `stitch/collections.html` | `effectivePrice = product.salePrice \|\| (product.discountPercent ? product.price * (1 - product.discountPercent/100) : null)`. If effectivePrice < price: strikethrough original + gold effective price + "X% OFF" badge. |
+| 11 | Discount pricing on frontend | `stitch/product-detail.html`, `stitch/collections.html` | ✅ COMPLETE — 70/70 tests pass. Also fixed broken slug extraction in collections.html. |
 
 ---
 

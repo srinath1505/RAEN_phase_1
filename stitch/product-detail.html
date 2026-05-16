@@ -859,9 +859,20 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
         const titleEl = document.querySelector('h1.font-headline');
         if (titleEl) titleEl.textContent = product.name;
 
-        // Update price — always 2 decimal places, EUR symbol
+        // Update price — strikethrough original + gold effective price when discounted
         const priceEl = document.querySelector('p.font-headline.italic');
-        if (priceEl) priceEl.textContent = `€${Number(product.price).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        if (priceEl) {
+            const effectivePrice = product.salePrice ||
+                (product.discountPercent ? product.price * (1 - product.discountPercent / 100) : null);
+            if (effectivePrice && effectivePrice < product.price) {
+                priceEl.innerHTML =
+                    `<span style="text-decoration:line-through;color:#999;margin-right:8px;">€${Number(product.price).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>` +
+                    `<span style="color:#b8960c;">€${Number(effectivePrice).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>` +
+                    (product.discountPercent ? `<span style="font-size:11px;letter-spacing:0.1em;color:#b8960c;margin-left:8px;">${product.discountPercent}% OFF</span>` : '');
+            } else {
+                priceEl.textContent = `€${Number(product.price).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            }
+        }
 
         // Update description
         const descEl = document.querySelector('.text-on-surface-variant.leading-relaxed');
