@@ -2,6 +2,37 @@ const prisma = require('../config/db');
 const orderService = require('../services/orderService');
 const { success, error } = require('../utils/apiResponse');
 
+exports.getProfile = async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { id: true, firstName: true, lastName: true, email: true, phone: true, createdAt: true }
+    });
+    if (!user) return error(res, 'User not found', 404);
+    return success(res, { user }, 'Profile retrieved');
+  } catch (err) {
+    return error(res, err.message, 400);
+  }
+};
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const { firstName, lastName, phone } = req.body;
+    const data = {};
+    if (firstName !== undefined) data.firstName = firstName.trim();
+    if (lastName !== undefined) data.lastName = lastName.trim();
+    if (phone !== undefined) data.phone = phone ? phone.trim() : null;
+    const user = await prisma.user.update({
+      where: { id: req.user.id },
+      data,
+      select: { id: true, firstName: true, lastName: true, email: true, phone: true }
+    });
+    return success(res, { user }, 'Profile updated');
+  } catch (err) {
+    return error(res, err.message, 400);
+  }
+};
+
 exports.getOrders = async (req, res) => {
   try {
     const userId = req.user.id;

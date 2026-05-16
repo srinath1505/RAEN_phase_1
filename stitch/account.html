@@ -34,116 +34,744 @@
   }
 </script>
 <style>
-  body { font-family: 'Work Sans', sans-serif; background-color: #f9f9f9; color: #1a1c1c; }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Work Sans', sans-serif; background-color: #f9f9f9; color: #1a1c1c; margin: 0; }
   .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
-  .glass-nav { background: #ffffff; border-bottom: 1px solid rgba(0,0,0,0.05); }
+  .glass-nav { background: #ffffff; border-bottom: 1px solid rgba(0,0,0,0.07); }
+
+  /* Section nav */
+  .snav-link {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #999;
+    text-decoration: none;
+    padding-bottom: 3px;
+    border-bottom: 1px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .snav-link:hover { color: #1a1c1c; }
+  .snav-link.snav-active { color: #1a1c1c; border-bottom-color: #1a1c1c; }
+
+  /* Order status badges */
+  .order-badge {
+    display: inline-block;
+    font-family: 'Work Sans', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .badge-PENDING   { color: #9a7d3a; border-color: #9a7d3a; background: rgba(154,125,58,0.06); }
+  .badge-PAID      { color: #2d7a4f; border-color: #2d7a4f; background: rgba(45,122,79,0.06); }
+  .badge-PROCESSING{ color: #2d5f8a; border-color: #2d5f8a; background: rgba(45,95,138,0.06); }
+  .badge-SHIPPED   { color: #2d5f8a; border-color: #2d5f8a; background: rgba(45,95,138,0.06); }
+  .badge-DELIVERED { color: #2d7a4f; border-color: #2d7a4f; background: rgba(45,122,79,0.06); }
+  .badge-CANCELLED { color: #8a2d2d; border-color: #8a2d2d; background: rgba(138,45,45,0.06); }
+  .badge-REFUNDED  { color: #6a6a6a; border-color: #6a6a6a; background: rgba(106,106,106,0.06); }
+
+  /* Orders table */
+  #orders-tbody tr { border-bottom: 1px solid #f0f0f0; transition: background 0.15s; }
+  #orders-tbody tr:hover { background: #fafafa; }
+
+  /* Modal */
+  #address-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; align-items: center; justify-content: center; }
+  #address-modal.open { display: flex; }
+  .modal-card { background: #fff; width: 100%; max-width: 480px; padding: 40px; position: relative; margin: 20px; max-height: 90vh; overflow-y: auto; }
+  .modal-close { position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 22px; cursor: pointer; color: #777; line-height: 1; }
+  .modal-close:hover { color: #1a1c1c; }
+
+  /* Form inputs */
+  .raen-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    font-size: 13px;
+    font-family: 'Work Sans', sans-serif;
+    background: #fff;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .raen-input:focus { border-color: #1a1c1c; }
+  .raen-label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #777;
+    margin-bottom: 6px;
+    font-family: 'Work Sans', sans-serif;
+  }
+  .raen-form-group { margin-bottom: 18px; }
+
+  /* Buttons */
+  .btn-dark {
+    background: #1a1c1c;
+    color: #fff;
+    border: none;
+    padding: 10px 28px;
+    cursor: pointer;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-family: 'Work Sans', sans-serif;
+    transition: opacity 0.2s;
+  }
+  .btn-dark:hover { opacity: 0.82; }
+  .btn-ghost {
+    background: none;
+    border: 1px solid #e5e5e5;
+    padding: 10px 24px;
+    cursor: pointer;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #777;
+    font-family: 'Work Sans', sans-serif;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-ghost:hover { border-color: #1a1c1c; color: #1a1c1c; }
+
+  /* Address cards */
+  .addr-card {
+    border: 1px solid #e5e5e5;
+    padding: 28px 24px;
+    background: #fff;
+    transition: border-color 0.2s;
+  }
+  .addr-card:hover { border-color: #ccc; }
 </style>
+<!-- Analytics tracking -->
+<script>
+(function(){
+  var sid = localStorage.getItem('raen_session') || (function(){
+    var s = 'sess_' + Math.random().toString(36).slice(2);
+    localStorage.setItem('raen_session', s);
+    return s;
+  })();
+  var base = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:5000' : '';
+  var path = window.location.pathname + window.location.search;
+  fetch(base + '/api/analytics/pageview', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: path, sessionId: sid }),
+    keepalive: true
+  }).catch(function(){});
+  window.__raenSession = sid;
+  window.__trackCart = function(event, productId, orderId) {
+    fetch(base + '/api/analytics/cart-event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event: event, sessionId: sid, productId: productId, orderId: orderId }),
+      keepalive: true
+    }).catch(function(){});
+  };
+})();
+</script>
 <!-- Auth gate: redirect immediately if no token -->
 <script>
-  (function () {
-    var token = localStorage.getItem('raen_auth_token');
-    if (!token) window.location.href = 'index.html';
-  })();
+(function(){
+  if (!localStorage.getItem('raen_auth_token')) {
+    window.location.href = 'index.html';
+  }
+})();
 </script>
 </head>
-<body class="bg-surface text-on-surface">
+<body>
 
-<!-- TopNavBar -->
-<nav class="fixed top-0 w-full z-50 glass-nav border-b border-outline-variant/10">
-<div class="max-w-[1800px] mx-auto px-6 lg:px-12 h-20 flex items-center justify-between">
-  <div class="flex items-center gap-12">
-    <a class="font-headline text-2xl tracking-[0.5em] font-light uppercase text-primary transition-opacity hover:opacity-70" href="index.html">
-      <img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height:3em;width:auto;"/>
-    </a>
-    <div class="hidden lg:flex items-center gap-8">
-      <a class="font-label text-xs letter-spaced text-on-surface hover:opacity-70" href="collections.html">Collections</a>
-      <a class="font-label text-xs letter-spaced text-on-surface hover:opacity-70" href="journal.html">Archive</a>
+<!-- ============ MAIN NAV ============ -->
+<nav class="fixed top-0 w-full z-50 glass-nav">
+  <div class="max-w-[1800px] mx-auto px-6 lg:px-12 h-20 flex items-center justify-between">
+    <div class="flex items-center gap-12">
+      <a class="font-headline text-2xl tracking-[0.5em] font-light uppercase text-primary transition-opacity hover:opacity-70" href="index.html">
+        <img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height:3em;width:auto;"/>
+      </a>
+      <div class="hidden lg:flex items-center gap-8">
+        <a class="font-label text-xs letter-spaced text-on-surface hover:opacity-70 transition-opacity" href="collections.html">Collections</a>
+        <a class="font-label text-xs letter-spaced text-on-surface hover:opacity-70 transition-opacity" href="journal.html">Archive</a>
+      </div>
+    </div>
+    <div class="flex items-center gap-6">
+      <a class="font-label text-xs tracking-[0.15em] uppercase text-on-surface hover:opacity-70 transition-opacity" href="account.html" style="text-decoration:none;">My Account</a>
+      <a class="flex items-center gap-2" href="shopping-bag.html" aria-label="Shopping bag">
+        <span class="material-symbols-outlined text-on-surface">shopping_bag</span>
+      </a>
+      <button onclick="raenSignOut()" class="font-label text-xs tracking-[0.15em] uppercase text-on-surface hover:opacity-70 transition-opacity" style="background:none;border:none;cursor:pointer;padding:0;">Sign Out</button>
     </div>
   </div>
-  <div class="flex items-center gap-6">
-    <a class="font-label text-xs tracking-[0.15em] uppercase text-on-surface hover:opacity-70 transition-opacity" href="account.html" style="text-decoration:none;">MY ACCOUNT</a>
-    <a class="flex items-center gap-2" href="shopping-bag.html" aria-label="Shopping bag">
-      <span class="material-symbols-outlined text-on-surface">shopping_bag</span>
-    </a>
-  </div>
-</div>
 </nav>
 
-<main class="pt-40 pb-32 px-6 max-w-[1800px] mx-auto">
+<!-- ============ PAGE WRAPPER (offset for fixed nav) ============ -->
+<div style="padding-top:80px;">
 
-  <!-- Header -->
-  <div class="mb-16">
-    <span class="font-label text-[10px] tracking-[0.3em] uppercase text-tertiary">Member Portal</span>
-    <h1 class="font-headline text-5xl md:text-7xl font-light mt-2 text-primary">My Account</h1>
-  </div>
-
-  <!-- Coming soon card -->
-  <div class="max-w-xl">
-    <div style="border:1px solid #e5e5e5;padding:48px 40px;background:#fff;">
-
-      <div id="account-user-info" style="margin-bottom:32px;">
-        <p class="font-label text-[10px] tracking-[0.2em] uppercase text-tertiary mb-2">Signed in as</p>
-        <p id="account-email" class="font-body text-sm text-on-surface">—</p>
-        <p id="account-name"  class="font-headline text-xl font-light mt-1 text-primary">—</p>
-      </div>
-
-      <div style="width:40px;height:1px;background:#e5e5e5;margin-bottom:32px;"></div>
-
-      <p class="font-label text-[10px] tracking-[0.3em] uppercase text-tertiary mb-3">Coming Soon</p>
-      <h2 class="font-headline text-2xl font-light text-primary mb-4">Full Account Portal</h2>
-      <p class="font-body text-sm text-tertiary leading-relaxed max-w-sm">
-        Order history, saved addresses, and exclusive member benefits are being prepared.
-        You will be notified when your portal is ready.
-      </p>
-
-      <div style="margin-top:40px;padding-top:32px;border-top:1px solid #e5e5e5;">
-        <button onclick="raenSignOut()"
-                class="font-label text-xs tracking-[0.2em] uppercase text-tertiary hover:text-primary transition-colors"
-                style="background:none;border:none;cursor:pointer;padding:0;">
-          Sign Out
-        </button>
-      </div>
+  <!-- Sticky in-page section nav -->
+  <div id="section-nav" style="position:sticky;top:80px;z-index:40;background:#f9f9f9;border-bottom:1px solid #e8e8e8;">
+    <div class="max-w-[1800px] mx-auto px-6 lg:px-12" style="display:flex;gap:40px;height:44px;align-items:center;">
+      <a href="#profile"   class="snav-link snav-active">Profile</a>
+      <a href="#orders"    class="snav-link">Orders</a>
+      <a href="#addresses" class="snav-link">Addresses</a>
     </div>
   </div>
 
-</main>
+  <!-- ============ MAIN CONTENT ============ -->
+  <main class="max-w-[1800px] mx-auto px-6 lg:px-12" style="padding-top:56px;padding-bottom:120px;">
 
-<!-- Footer -->
-<footer class="bg-surface border-t border-outline-variant/10 py-16">
-<div class="max-w-[1800px] mx-auto px-6 lg:px-12">
-  <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-    <p class="font-label text-[10px] tracking-[0.2em] uppercase text-tertiary">© 2026 RAEN. All rights reserved.</p>
-    <div class="flex gap-8">
-      <a class="font-label text-[10px] tracking-[0.2em] uppercase text-tertiary hover:text-primary" href="collections.html">Collections</a>
-      <a class="font-label text-[10px] tracking-[0.2em] uppercase text-tertiary hover:text-primary" href="contact.html">Contact</a>
+    <!-- Page header -->
+    <div style="margin-bottom:64px;">
+      <span class="font-label" style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#999;">Member Portal</span>
+      <h1 class="font-headline" style="font-size:clamp(2.8rem,6vw,4.5rem);font-weight:300;margin-top:8px;color:#1a1c1c;line-height:1.1;">My Account</h1>
     </div>
+
+    <!-- ============ PROFILE SECTION ============ -->
+    <section id="profile" style="margin-bottom:88px;">
+      <p class="font-label" style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#999;margin-bottom:28px;">Profile</p>
+
+      <!-- Display mode (default) -->
+      <div id="profile-display" style="max-width:580px;border:1px solid #e5e5e5;padding:40px;background:#fff;">
+        <div style="margin-bottom:22px;">
+          <p class="raen-label">Full Name</p>
+          <p id="disp-name" class="font-body" style="font-size:15px;color:#1a1c1c;">—</p>
+        </div>
+        <div style="margin-bottom:22px;">
+          <p class="raen-label">Email</p>
+          <p id="disp-email" class="font-body" style="font-size:15px;color:#1a1c1c;">—</p>
+          <p class="font-label" style="font-size:9px;letter-spacing:0.08em;color:#bbb;margin-top:4px;">To change your email, contact support at hello@raen.design</p>
+        </div>
+        <div style="margin-bottom:36px;">
+          <p class="raen-label">Phone</p>
+          <p id="disp-phone" class="font-body" style="font-size:15px;color:#1a1c1c;">—</p>
+        </div>
+        <button id="edit-profile-btn" onclick="showProfileEdit()" class="btn-dark">Edit Profile</button>
+      </div>
+
+      <!-- Edit mode (hidden) -->
+      <div id="profile-edit" style="display:none;max-width:580px;border:1px solid #1a1c1c;padding:40px;background:#fff;">
+        <form id="profile-form" novalidate>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:0;">
+            <div class="raen-form-group">
+              <label class="raen-label" for="edit-first">First Name</label>
+              <input id="edit-first" type="text" class="raen-input" required autocomplete="given-name"/>
+            </div>
+            <div class="raen-form-group">
+              <label class="raen-label" for="edit-last">Last Name</label>
+              <input id="edit-last" type="text" class="raen-input" required autocomplete="family-name"/>
+            </div>
+          </div>
+          <div class="raen-form-group">
+            <label class="raen-label" for="edit-phone">
+              Phone
+              <span style="font-size:9px;letter-spacing:0.05em;text-transform:none;color:#bbb;margin-left:6px;">E.164 format, e.g. +44123456789</span>
+            </label>
+            <input id="edit-phone" type="tel" class="raen-input" placeholder="+44123456789" autocomplete="tel"/>
+            <p id="phone-error" style="color:#c0392b;font-size:11px;margin-top:5px;display:none;"></p>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:8px;">
+            <button type="submit" id="save-profile-btn" class="btn-dark">Save Changes</button>
+            <button type="button" onclick="hideProfileEdit()" class="btn-ghost">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============ ORDERS SECTION ============ -->
+    <section id="orders" style="margin-bottom:88px;">
+      <p class="font-label" style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#999;margin-bottom:28px;">Order History</p>
+
+      <p id="orders-loading" class="font-body" style="font-size:13px;color:#aaa;">Loading orders…</p>
+
+      <!-- Empty state -->
+      <div id="orders-empty" style="display:none;max-width:480px;">
+        <p class="font-body" style="font-size:14px;color:#888;margin-bottom:18px;">No orders yet.</p>
+        <a href="collections.html" class="font-label" style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#1a1c1c;text-decoration:none;border-bottom:1px solid #1a1c1c;padding-bottom:2px;">Browse the Collection</a>
+      </div>
+
+      <!-- Orders table -->
+      <div id="orders-table-wrap" style="display:none;overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="border-bottom:2px solid #e5e5e5;">
+              <th style="text-align:left;padding:10px 16px 10px 0;font-family:'Work Sans',sans-serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#999;font-weight:500;">Order</th>
+              <th style="text-align:left;padding:10px 16px;font-family:'Work Sans',sans-serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#999;font-weight:500;">Date</th>
+              <th style="text-align:left;padding:10px 16px;font-family:'Work Sans',sans-serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#999;font-weight:500;">Items</th>
+              <th style="text-align:left;padding:10px 16px;font-family:'Work Sans',sans-serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#999;font-weight:500;">Total</th>
+              <th style="text-align:left;padding:10px 16px;font-family:'Work Sans',sans-serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#999;font-weight:500;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="orders-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ ADDRESSES SECTION ============ -->
+    <section id="addresses" style="margin-bottom:88px;">
+      <div style="display:flex;align-items:baseline;gap:28px;margin-bottom:28px;">
+        <p class="font-label" style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#999;margin:0;">Saved Addresses</p>
+        <a href="#" id="add-address-link" onclick="openAddressModal(null);return false;"
+           class="font-label"
+           style="display:none;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#1a1c1c;text-decoration:none;border-bottom:1px solid #ccc;padding-bottom:1px;transition:border-color 0.2s;"
+           onmouseover="this.style.borderBottomColor='#1a1c1c'" onmouseout="this.style.borderBottomColor='#ccc'">
+          + Add Address
+        </a>
+      </div>
+
+      <p id="addresses-loading" class="font-body" style="font-size:13px;color:#aaa;">Loading addresses…</p>
+
+      <!-- Empty state -->
+      <div id="addresses-empty" style="display:none;">
+        <p class="font-body" style="font-size:14px;color:#888;margin-bottom:16px;">No saved addresses.</p>
+        <a href="#" onclick="openAddressModal(null);return false;" class="font-label"
+           style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#1a1c1c;text-decoration:none;border-bottom:1px solid #1a1c1c;padding-bottom:2px;">
+          + Add Address
+        </a>
+      </div>
+
+      <!-- Addresses grid -->
+      <div id="addresses-grid" style="display:none;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px;max-width:900px;"></div>
+    </section>
+
+    <!-- ============ SIGN OUT (bottom) ============ -->
+    <div style="padding-top:32px;border-top:1px solid #e8e8e8;max-width:580px;">
+      <button onclick="raenSignOut()" class="font-label"
+              style="background:none;border:none;cursor:pointer;padding:0;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#aaa;transition:color 0.2s;"
+              onmouseover="this.style.color='#1a1c1c'" onmouseout="this.style.color='#aaa'">
+        Sign Out
+      </button>
+    </div>
+
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="bg-surface border-t border-outline-variant/10 py-24">
+    <div class="max-w-[1800px] mx-auto px-6 lg:px-12">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24">
+        <div class="lg:col-span-1">
+          <a class="font-headline text-3xl tracking-[0.5em] font-light block mb-8 uppercase text-primary hover:opacity-70 transition-opacity" href="index.html">
+            <img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height:3em;width:auto;"/>
+          </a>
+          <p class="font-body text-sm text-on-surface-variant leading-relaxed">
+            A contemporary fashion house dedicated to considered design, fluid silk, and the quiet authority of exceptional craft.
+          </p>
+        </div>
+        <div>
+          <h5 class="font-label text-xs letter-spaced text-primary mb-8 uppercase">Collection</h5>
+          <ul class="flex flex-col gap-4">
+            <li><a class="font-body text-sm text-on-surface-variant hover:text-primary" href="collections.html">All Objects</a></li>
+            <li><a class="font-body text-sm text-on-surface-variant hover:text-primary" href="collections.html">New Arrivals</a></li>
+            <li><a class="font-body text-sm text-on-surface-variant hover:text-primary" href="collections.html">The Monolith</a></li>
+            <li><a class="font-body text-sm text-on-surface-variant hover:text-primary" href="collections.html">Core Essentials</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5 class="font-label text-xs letter-spaced text-primary mb-8 uppercase">Customer Care</h5>
+          <ul class="flex flex-col gap-4">
+            <li><a class="font-body text-sm text-on-surface-variant hover:text-primary" href="shipping-returns.html">Shipping &amp; Returns</a></li>
+            <li><a class="font-body text-sm text-on-surface-variant hover:text-primary" href="size-guide.html">Size Guide</a></li>
+            <li><a class="font-body text-sm text-on-surface-variant hover:text-primary" href="contact.html">Contact Us</a></li>
+            <li><a class="font-body text-sm text-on-surface-variant hover:text-primary" href="privacy-policy.html">Privacy Policy</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5 class="font-label text-xs letter-spaced text-primary mb-8 uppercase">Social</h5>
+          <ul class="flex flex-col gap-4">
+            <li><a class="font-body text-sm text-on-surface-variant hover:text-primary" href="https://instagram.com/raenlabel" target="_blank" rel="noopener">Instagram</a></li>
+            <li><a class="font-body text-sm text-on-surface-variant hover:text-primary" href="https://pinterest.com/raendesign" target="_blank" rel="noopener">Pinterest</a></li>
+            <li><a class="font-body text-sm text-on-surface-variant hover:text-primary" href="https://vimeo.com/raendesign" target="_blank" rel="noopener">Vimeo</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="flex flex-col md:flex-row justify-between items-center gap-8 pt-12 border-t border-outline-variant/10">
+        <p class="font-label text-[10px] letter-spaced text-tertiary">© 2026 RAEN. All rights reserved.</p>
+        <div class="flex gap-8">
+          <a class="font-label text-[10px] letter-spaced text-tertiary hover:text-primary" href="privacy-policy.html">Privacy Policy</a>
+          <a class="font-label text-[10px] letter-spaced text-tertiary hover:text-primary" href="terms-of-service.html">Terms of Service</a>
+          <a class="font-label text-[10px] letter-spaced text-tertiary hover:text-primary" href="contact.html">Contact</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</div><!-- end page wrapper -->
+
+<!-- ============ ADDRESS MODAL ============ -->
+<div id="address-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeAddressModal()" aria-label="Close">&times;</button>
+    <h2 id="modal-title" class="font-headline" style="font-size:22px;font-weight:300;color:#1a1c1c;margin-bottom:28px;">Add Address</h2>
+
+    <form id="address-form" novalidate>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="raen-form-group" style="grid-column:1/-1;">
+          <label class="raen-label" for="addr-fullName">Full Name <span style="color:#c0392b;">*</span></label>
+          <input id="addr-fullName" type="text" class="raen-input" required autocomplete="name"/>
+        </div>
+        <div class="raen-form-group" style="grid-column:1/-1;">
+          <label class="raen-label" for="addr-phone">Phone <span style="color:#c0392b;">*</span></label>
+          <input id="addr-phone" type="tel" class="raen-input" required autocomplete="tel"/>
+        </div>
+        <div class="raen-form-group" style="grid-column:1/-1;">
+          <label class="raen-label" for="addr-line1">Address Line 1 <span style="color:#c0392b;">*</span></label>
+          <input id="addr-line1" type="text" class="raen-input" required autocomplete="address-line1"/>
+        </div>
+        <div class="raen-form-group" style="grid-column:1/-1;">
+          <label class="raen-label" for="addr-line2">Address Line 2 <span style="color:#bbb;font-size:9px;text-transform:none;letter-spacing:0.05em;">Optional</span></label>
+          <input id="addr-line2" type="text" class="raen-input" autocomplete="address-line2"/>
+        </div>
+        <div class="raen-form-group">
+          <label class="raen-label" for="addr-city">City <span style="color:#c0392b;">*</span></label>
+          <input id="addr-city" type="text" class="raen-input" required autocomplete="address-level2"/>
+        </div>
+        <div class="raen-form-group">
+          <label class="raen-label" for="addr-state">State / Province <span style="color:#bbb;font-size:9px;text-transform:none;letter-spacing:0.05em;">Optional</span></label>
+          <input id="addr-state" type="text" class="raen-input" autocomplete="address-level1"/>
+        </div>
+        <div class="raen-form-group">
+          <label class="raen-label" for="addr-postal">Postal Code <span style="color:#c0392b;">*</span></label>
+          <input id="addr-postal" type="text" class="raen-input" required autocomplete="postal-code"/>
+        </div>
+        <div class="raen-form-group">
+          <label class="raen-label" for="addr-country">Country <span style="color:#c0392b;">*</span></label>
+          <input id="addr-country" type="text" class="raen-input" required autocomplete="country-name"/>
+        </div>
+      </div>
+
+      <p id="addr-error" style="color:#c0392b;font-size:12px;margin-bottom:14px;display:none;"></p>
+
+      <div style="display:flex;gap:12px;margin-top:4px;">
+        <button type="submit" id="addr-save-btn" class="btn-dark">Save Address</button>
+        <button type="button" onclick="closeAddressModal()" class="btn-ghost">Cancel</button>
+      </div>
+    </form>
   </div>
 </div>
-</footer>
 
+<!-- ============ SCRIPTS ============ -->
 <script src="public/js/api.js"></script>
 <script>
-  function raenSignOut() {
+// ── State ────────────────────────────────────────────────────────────────────
+var currentUser = null;
+var allAddresses = [];
+var editingAddressId = null;
+
+// ── Utilities ────────────────────────────────────────────────────────────────
+function raenSignOut() {
+  localStorage.removeItem('raen_auth_token');
+  window.location.href = 'index.html';
+}
+
+function escHtml(str) {
+  if (str == null) return '';
+  var d = document.createElement('div');
+  d.textContent = String(str);
+  return d.innerHTML;
+}
+
+function fmtDate(iso) {
+  return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+// ── Section nav: highlight active section via IntersectionObserver ────────────
+function initSectionNav() {
+  var links = document.querySelectorAll('.snav-link');
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        links.forEach(function(l) { l.classList.remove('snav-active'); });
+        var active = document.querySelector('.snav-link[href="#' + entry.target.id + '"]');
+        if (active) active.classList.add('snav-active');
+      }
+    });
+  }, { threshold: 0.25, rootMargin: '-80px 0px -55% 0px' });
+
+  ['profile', 'orders', 'addresses'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) observer.observe(el);
+  });
+}
+
+// ── Profile ──────────────────────────────────────────────────────────────────
+async function loadProfile() {
+  try {
+    var data = await apiGet('/account/profile');
+    var user = data.user || data;
+    currentUser = user;
+
+    document.getElementById('disp-name').textContent =
+      [user.firstName, user.lastName].filter(Boolean).join(' ') || '—';
+    document.getElementById('disp-email').textContent = user.email || '—';
+    document.getElementById('disp-phone').textContent = user.phone || 'Not set';
+
+    document.getElementById('edit-first').value = user.firstName || '';
+    document.getElementById('edit-last').value  = user.lastName  || '';
+    document.getElementById('edit-phone').value = user.phone     || '';
+  } catch (e) {
+    // Expired or invalid token
     localStorage.removeItem('raen_auth_token');
     window.location.href = 'index.html';
   }
+}
 
-  document.addEventListener('DOMContentLoaded', async function () {
+function showProfileEdit() {
+  document.getElementById('profile-display').style.display = 'none';
+  document.getElementById('profile-edit').style.display   = 'block';
+  document.getElementById('phone-error').style.display    = 'none';
+}
+
+function hideProfileEdit() {
+  document.getElementById('profile-edit').style.display   = 'none';
+  document.getElementById('profile-display').style.display = 'block';
+  document.getElementById('phone-error').style.display    = 'none';
+}
+
+// ── Orders ───────────────────────────────────────────────────────────────────
+async function loadOrders() {
+  try {
+    var data   = await apiGet('/account/orders');
+    var orders = data.orders || data || [];
+    document.getElementById('orders-loading').style.display = 'none';
+
+    if (!orders.length) {
+      document.getElementById('orders-empty').style.display = 'block';
+      return;
+    }
+
+    var tbody = document.getElementById('orders-tbody');
+    tbody.innerHTML = orders.map(function(order) {
+      var first   = order.items[0];
+      var summary = first
+        ? (order.items.length === 1
+            ? escHtml(first.productName) + ' (' + escHtml(first.size) + ') &times; ' + first.quantity
+            : escHtml(first.productName) + ' + ' + (order.items.length - 1) + ' more')
+        : '&mdash;';
+
+      var badgeClass = 'badge-' + (order.status || 'PENDING');
+      return '<tr>'
+        + '<td style="padding:14px 16px 14px 0;">'
+        +   '<a href="order-confirmation.html?orderNumber=' + escHtml(order.orderNumber) + '"'
+        +      ' style="font-family:\'Work Sans\',sans-serif;font-size:11px;letter-spacing:0.1em;color:#1a1c1c;text-decoration:none;border-bottom:1px solid #ccc;">'
+        +      escHtml(order.orderNumber)
+        +   '</a>'
+        + '</td>'
+        + '<td style="padding:14px 16px;font-size:13px;color:#666;">' + fmtDate(order.createdAt) + '</td>'
+        + '<td style="padding:14px 16px;font-size:13px;color:#555;max-width:250px;">' + summary + '</td>'
+        + '<td style="padding:14px 16px;font-family:\'Work Sans\',sans-serif;font-size:12px;letter-spacing:0.05em;color:#1a1c1c;white-space:nowrap;">'
+        +   '&euro;' + order.total.toFixed(2)
+        + '</td>'
+        + '<td style="padding:14px 16px;"><span class="order-badge ' + escHtml(badgeClass) + '">' + escHtml(order.status) + '</span></td>'
+        + '</tr>';
+    }).join('');
+
+    document.getElementById('orders-table-wrap').style.display = 'block';
+  } catch (e) {
+    document.getElementById('orders-loading').textContent = 'Unable to load orders.';
+  }
+}
+
+// ── Addresses ────────────────────────────────────────────────────────────────
+async function loadAddresses() {
+  try {
+    var data = await apiGet('/account/addresses');
+    allAddresses = data.addresses || data || [];
+    document.getElementById('addresses-loading').style.display = 'none';
+    document.getElementById('add-address-link').style.display  = 'inline';
+    renderAddresses();
+  } catch (e) {
+    document.getElementById('addresses-loading').textContent = 'Unable to load addresses.';
+  }
+}
+
+function renderAddresses() {
+  var grid  = document.getElementById('addresses-grid');
+  var empty = document.getElementById('addresses-empty');
+
+  if (!allAddresses.length) {
+    grid.style.display  = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+
+  empty.style.display = 'none';
+  grid.style.display  = 'grid';
+
+  grid.innerHTML = allAddresses.map(function(addr) {
+    var lines = escHtml(addr.addressLine1);
+    if (addr.addressLine2) lines += '<br>' + escHtml(addr.addressLine2);
+    lines += '<br>' + escHtml(addr.city);
+    if (addr.state) lines += ', ' + escHtml(addr.state);
+    lines += ' ' + escHtml(addr.postalCode) + '<br>' + escHtml(addr.country);
+
+    return '<div class="addr-card">'
+      + '<p style="font-family:\'Work Sans\',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.05em;color:#1a1c1c;margin:0 0 10px;">'
+      +   escHtml(addr.fullName)
+      + '</p>'
+      + '<p style="font-family:\'Work Sans\',sans-serif;font-size:12px;color:#666;line-height:1.85;margin:0 0 8px;">' + lines + '</p>'
+      + '<p style="font-size:11px;color:#999;margin:0 0 20px;">' + escHtml(addr.phone) + '</p>'
+      + '<div style="display:flex;gap:20px;">'
+      +   '<button onclick="openAddressModal(\'' + escHtml(addr.id) + '\')"'
+      +           ' style="background:none;border:none;cursor:pointer;padding:0;font-family:\'Work Sans\',sans-serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#1a1c1c;border-bottom:1px solid #ccc;padding-bottom:1px;">'
+      +     'Edit'
+      +   '</button>'
+      +   '<button onclick="confirmDeleteAddress(\'' + escHtml(addr.id) + '\')"'
+      +           ' style="background:none;border:none;cursor:pointer;padding:0;font-family:\'Work Sans\',sans-serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#c0392b;">'
+      +     'Delete'
+      +   '</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function openAddressModal(addressId) {
+  editingAddressId = addressId || null;
+  var modal = document.getElementById('address-modal');
+  var title = document.getElementById('modal-title');
+  document.getElementById('address-form').reset();
+  document.getElementById('addr-error').style.display = 'none';
+
+  if (addressId) {
+    title.textContent = 'Edit Address';
+    var addr = allAddresses.find(function(a) { return a.id === addressId; });
+    if (addr) {
+      document.getElementById('addr-fullName').value = addr.fullName      || '';
+      document.getElementById('addr-phone').value    = addr.phone         || '';
+      document.getElementById('addr-line1').value    = addr.addressLine1  || '';
+      document.getElementById('addr-line2').value    = addr.addressLine2  || '';
+      document.getElementById('addr-city').value     = addr.city          || '';
+      document.getElementById('addr-state').value    = addr.state         || '';
+      document.getElementById('addr-postal').value   = addr.postalCode    || '';
+      document.getElementById('addr-country').value  = addr.country       || '';
+    }
+  } else {
+    title.textContent = 'Add Address';
+  }
+
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAddressModal() {
+  document.getElementById('address-modal').classList.remove('open');
+  document.body.style.overflow = '';
+  editingAddressId = null;
+}
+
+async function confirmDeleteAddress(id) {
+  if (!confirm('Delete this address? This cannot be undone.')) return;
+  try {
+    await apiDelete('/account/addresses/' + id);
+    allAddresses = allAddresses.filter(function(a) { return a.id !== id; });
+    renderAddresses();
+    showToast('Address deleted', 'success');
+  } catch (e) {
+    showToast(e.message || 'Could not delete address', 'error');
+  }
+}
+
+// ── DOMContentLoaded ──────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async function() {
+  initSectionNav();
+
+  // Load all data in parallel
+  await Promise.all([loadProfile(), loadOrders(), loadAddresses()]);
+
+  // ── Profile form submit ──────────────────────────────────────────────────
+  document.getElementById('profile-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var btn      = document.getElementById('save-profile-btn');
+    var phoneVal = document.getElementById('edit-phone').value.trim();
+    var errEl    = document.getElementById('phone-error');
+    errEl.style.display = 'none';
+
+    if (phoneVal && !/^\+\d{7,}$/.test(phoneVal)) {
+      errEl.textContent   = 'Phone must start with + followed by at least 7 digits (e.g. +44123456789).';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    setLoadingState(btn, true, 'Saving…');
     try {
-      const userData = await apiGet('/auth/me');
-      const user = userData.user || userData;
-      const emailEl = document.getElementById('account-email');
-      const nameEl  = document.getElementById('account-name');
-      if (emailEl && user.email) emailEl.textContent = user.email;
-      if (nameEl  && (user.firstName || user.lastName)) {
-        nameEl.textContent = [user.firstName, user.lastName].filter(Boolean).join(' ');
-      }
-    } catch (e) {
-      // Token expired or invalid — redirect to home
-      localStorage.removeItem('raen_auth_token');
-      window.location.href = 'index.html';
+      var data = await apiPatch('/account/profile', {
+        firstName: document.getElementById('edit-first').value.trim(),
+        lastName:  document.getElementById('edit-last').value.trim(),
+        phone:     phoneVal || null
+      });
+      var user = data.user || data;
+      currentUser = user;
+
+      document.getElementById('disp-name').textContent  =
+        [user.firstName, user.lastName].filter(Boolean).join(' ');
+      document.getElementById('disp-phone').textContent = user.phone || 'Not set';
+      document.getElementById('edit-first').value = user.firstName || '';
+      document.getElementById('edit-last').value  = user.lastName  || '';
+      document.getElementById('edit-phone').value = user.phone     || '';
+
+      hideProfileEdit();
+      showToast('Profile updated', 'success');
+    } catch (err) {
+      showToast(err.message || 'Could not update profile', 'error');
+    } finally {
+      setLoadingState(btn, false, 'Save Changes');
     }
   });
+
+  // ── Address form submit ──────────────────────────────────────────────────
+  document.getElementById('address-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var btn   = document.getElementById('addr-save-btn');
+    var errEl = document.getElementById('addr-error');
+    errEl.style.display = 'none';
+
+    var body = {
+      fullName:     document.getElementById('addr-fullName').value.trim(),
+      phone:        document.getElementById('addr-phone').value.trim(),
+      addressLine1: document.getElementById('addr-line1').value.trim(),
+      city:         document.getElementById('addr-city').value.trim(),
+      postalCode:   document.getElementById('addr-postal').value.trim(),
+      country:      document.getElementById('addr-country').value.trim()
+    };
+    var line2 = document.getElementById('addr-line2').value.trim();
+    if (line2) body.addressLine2 = line2;
+    var state = document.getElementById('addr-state').value.trim();
+    if (state) body.state = state;
+
+    setLoadingState(btn, true, 'Saving…');
+    try {
+      if (editingAddressId) {
+        var data    = await apiPatch('/account/addresses/' + editingAddressId, body);
+        var updated = data.address || data;
+        allAddresses = allAddresses.map(function(a) {
+          return a.id === editingAddressId ? updated : a;
+        });
+        showToast('Address updated', 'success');
+      } else {
+        var data2   = await apiPost('/account/addresses', body);
+        var created = data2.address || data2;
+        allAddresses = allAddresses.concat([created]);
+        showToast('Address added', 'success');
+      }
+      renderAddresses();
+      closeAddressModal();
+    } catch (err) {
+      errEl.textContent   = err.message || 'Could not save address. Please check all required fields.';
+      errEl.style.display = 'block';
+    } finally {
+      setLoadingState(btn, false, 'Save Address');
+    }
+  });
+
+  // Close modal when clicking the dark overlay
+  document.getElementById('address-modal').addEventListener('click', function(e) {
+    if (e.target === document.getElementById('address-modal')) closeAddressModal();
+  });
+
+  // Close modal on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeAddressModal();
+  });
+});
 </script>
 
 </body>
