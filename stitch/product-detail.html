@@ -338,6 +338,7 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
 <button class="flex items-center">
 <span class="material-symbols-outlined">search</span>
 </button>
+<a id="auth-nav-btn" href="#" onclick="openAuthModal();return false;" class="font-label text-xs tracking-[0.2em] hover:opacity-60 transition-opacity" style="text-decoration:none;">ACCOUNT</a>
 <a class="flex items-center" href="shopping-bag.html" aria-label="Shopping bag">
 <span class="material-symbols-outlined">shopping_bag</span>
 </a>
@@ -818,6 +819,8 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
 
 <!-- API Helper -->
 <script src="public/js/api.js"></script>
+<script>window.__RAEN_GOOGLE_CLIENT_ID = 'GOOGLE_CLIENT_ID_PLACEHOLDER';</script>
+<script src="public/js/auth-modal.js"></script>
 
 <!-- Product Detail Dynamic Loading -->
 <script>

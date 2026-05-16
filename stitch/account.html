@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Account | RAEN</title>
+<meta name="robots" content="noindex, nofollow"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "surface": "#f9f9f9",
+          "on-surface": "#1a1c1c",
+          "primary": "#000000",
+          "outline-variant": "#c6c6c6",
+          "outline": "#777777",
+          "tertiary": "#3b3b3b",
+          "surface-container-low": "#f3f3f4",
+          "surface-container-highest": "#e2e2e2"
+        },
+        fontFamily: {
+          "headline": ["Newsreader", "serif"],
+          "body": ["Work Sans", "sans-serif"],
+          "label": ["Work Sans", "sans-serif"]
+        },
+        borderRadius: { "DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "9999px" }
+      }
+    }
+  }
+</script>
+<style>
+  body { font-family: 'Work Sans', sans-serif; background-color: #f9f9f9; color: #1a1c1c; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+  .glass-nav { background: #ffffff; border-bottom: 1px solid rgba(0,0,0,0.05); }
+</style>
+<!-- Auth gate: redirect immediately if no token -->
+<script>
+  (function () {
+    var token = localStorage.getItem('raen_auth_token');
+    if (!token) window.location.href = 'index.html';
+  })();
+</script>
+</head>
+<body class="bg-surface text-on-surface">
+
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 glass-nav border-b border-outline-variant/10">
+<div class="max-w-[1800px] mx-auto px-6 lg:px-12 h-20 flex items-center justify-between">
+  <div class="flex items-center gap-12">
+    <a class="font-headline text-2xl tracking-[0.5em] font-light uppercase text-primary transition-opacity hover:opacity-70" href="index.html">
+      <img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height:3em;width:auto;"/>
+    </a>
+    <div class="hidden lg:flex items-center gap-8">
+      <a class="font-label text-xs letter-spaced text-on-surface hover:opacity-70" href="collections.html">Collections</a>
+      <a class="font-label text-xs letter-spaced text-on-surface hover:opacity-70" href="journal.html">Archive</a>
+    </div>
+  </div>
+  <div class="flex items-center gap-6">
+    <a class="font-label text-xs tracking-[0.15em] uppercase text-on-surface hover:opacity-70 transition-opacity" href="account.html" style="text-decoration:none;">MY ACCOUNT</a>
+    <a class="flex items-center gap-2" href="shopping-bag.html" aria-label="Shopping bag">
+      <span class="material-symbols-outlined text-on-surface">shopping_bag</span>
+    </a>
+  </div>
+</div>
+</nav>
+
+<main class="pt-40 pb-32 px-6 max-w-[1800px] mx-auto">
+
+  <!-- Header -->
+  <div class="mb-16">
+    <span class="font-label text-[10px] tracking-[0.3em] uppercase text-tertiary">Member Portal</span>
+    <h1 class="font-headline text-5xl md:text-7xl font-light mt-2 text-primary">My Account</h1>
+  </div>
+
+  <!-- Coming soon card -->
+  <div class="max-w-xl">
+    <div style="border:1px solid #e5e5e5;padding:48px 40px;background:#fff;">
+
+      <div id="account-user-info" style="margin-bottom:32px;">
+        <p class="font-label text-[10px] tracking-[0.2em] uppercase text-tertiary mb-2">Signed in as</p>
+        <p id="account-email" class="font-body text-sm text-on-surface">—</p>
+        <p id="account-name"  class="font-headline text-xl font-light mt-1 text-primary">—</p>
+      </div>
+
+      <div style="width:40px;height:1px;background:#e5e5e5;margin-bottom:32px;"></div>
+
+      <p class="font-label text-[10px] tracking-[0.3em] uppercase text-tertiary mb-3">Coming Soon</p>
+      <h2 class="font-headline text-2xl font-light text-primary mb-4">Full Account Portal</h2>
+      <p class="font-body text-sm text-tertiary leading-relaxed max-w-sm">
+        Order history, saved addresses, and exclusive member benefits are being prepared.
+        You will be notified when your portal is ready.
+      </p>
+
+      <div style="margin-top:40px;padding-top:32px;border-top:1px solid #e5e5e5;">
+        <button onclick="raenSignOut()"
+                class="font-label text-xs tracking-[0.2em] uppercase text-tertiary hover:text-primary transition-colors"
+                style="background:none;border:none;cursor:pointer;padding:0;">
+          Sign Out
+        </button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Footer -->
+<footer class="bg-surface border-t border-outline-variant/10 py-16">
+<div class="max-w-[1800px] mx-auto px-6 lg:px-12">
+  <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+    <p class="font-label text-[10px] tracking-[0.2em] uppercase text-tertiary">© 2026 RAEN. All rights reserved.</p>
+    <div class="flex gap-8">
+      <a class="font-label text-[10px] tracking-[0.2em] uppercase text-tertiary hover:text-primary" href="collections.html">Collections</a>
+      <a class="font-label text-[10px] tracking-[0.2em] uppercase text-tertiary hover:text-primary" href="contact.html">Contact</a>
+    </div>
+  </div>
+</div>
+</footer>
+
+<script src="public/js/api.js"></script>
+<script>
+  function raenSignOut() {
+    localStorage.removeItem('raen_auth_token');
+    window.location.href = 'index.html';
+  }
+
+  document.addEventListener('DOMContentLoaded', async function () {
+    try {
+      const userData = await apiGet('/auth/me');
+      const user = userData.user || userData;
+      const emailEl = document.getElementById('account-email');
+      const nameEl  = document.getElementById('account-name');
+      if (emailEl && user.email) emailEl.textContent = user.email;
+      if (nameEl  && (user.firstName || user.lastName)) {
+        nameEl.textContent = [user.firstName, user.lastName].filter(Boolean).join(' ');
+      }
+    } catch (e) {
+      // Token expired or invalid — redirect to home
+      localStorage.removeItem('raen_auth_token');
+      window.location.href = 'index.html';
+    }
+  });
+</script>
+
+</body>
+</html>

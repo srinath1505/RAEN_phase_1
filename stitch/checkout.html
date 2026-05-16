@@ -240,6 +240,7 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
 </div>
 <div class="flex items-center gap-6">
 <button class="p-2"><span class="material-symbols-outlined text-[20px]">search</span></button>
+<a id="auth-nav-btn" href="#" onclick="openAuthModal();return false;" class="text-[10px] uppercase tracking-[0.15em] font-label hover:opacity-50 transition-opacity" style="text-decoration:none;">ACCOUNT</a>
 <button class="p-2 relative">
 <span class="material-symbols-outlined text-[20px]">shopping_bag</span>
 <span class="absolute top-1 right-1 w-1.5 h-1.5 bg-primary rounded-full"></span>
@@ -265,7 +266,7 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
 <section>
 <div class="flex justify-between items-end mb-8">
 <h2 class="font-headline text-3xl leading-none">VIP Protocol</h2>
-<span class="text-[10px] uppercase tracking-[0.15em] font-label">Already on the list? <a class="border-b border-outline-variant" href="#">Gain Access</a></span>
+<span id="checkout-auth-hint" class="text-[10px] uppercase tracking-[0.15em] font-label">Already a member? <a class="border-b border-outline-variant" href="#" onclick="openAuthModal();return false;">Sign In</a></span>
 </div>
 <div class="atelier-input-container">
 <label class="absolute -top-3 left-0 text-[10px] uppercase tracking-[0.15em] font-label text-outline">Email Address</label>
@@ -414,6 +415,8 @@ Secure Acquisition
 
 <!-- API Helper -->
 <script src="public/js/api.js"></script>
+<script>window.__RAEN_GOOGLE_CLIENT_ID = 'GOOGLE_CLIENT_ID_PLACEHOLDER';</script>
+<script src="public/js/auth-modal.js"></script>
 
 <!-- Checkout Integration -->
 <script>
@@ -653,17 +656,61 @@ Secure Acquisition
         }
     }
     
+    // Auto-fill form fields from logged-in user profile (no reload required)
+    async function fillFromUserProfile() {
+        try {
+            const userData = await apiGet('/auth/me');
+            const user = userData.user || userData;
+            const emailEl     = document.getElementById('email');
+            const firstNameEl = document.getElementById('firstName');
+            const lastNameEl  = document.getElementById('lastName');
+            if (emailEl && user.email) {
+                emailEl.value    = user.email;
+                emailEl.readOnly = true;
+                emailEl.style.opacity = '0.65';
+                emailEl.style.cursor  = 'default';
+            }
+            if (firstNameEl && user.firstName && !firstNameEl.value) firstNameEl.value = user.firstName;
+            if (lastNameEl  && user.lastName  && !lastNameEl.value)  lastNameEl.value  = user.lastName;
+
+            // Update auth hint
+            const hint = document.getElementById('checkout-auth-hint');
+            if (hint && user.email) {
+                hint.innerHTML = `Signed in as <strong style="font-weight:600;">${user.email}</strong>`;
+            }
+            // Update nav button
+            const authBtn = document.getElementById('auth-nav-btn');
+            if (authBtn) {
+                authBtn.textContent = 'MY ACCOUNT';
+                authBtn.href        = 'account.html';
+                authBtn.removeAttribute('onclick');
+            }
+        } catch (e) { /* silent — user profile fetch is best-effort */ }
+    }
+
     // Place order button handler
     placeOrderBtn.addEventListener('click', async () => {
         if (!validateForm()) {
             return;
         }
-        
+
+        // Auth gate: must be signed in before hitting the payment gateway
+        if (!isLoggedIn()) {
+            // After login: close modal and re-trigger payment (no page reload)
+            window.__postLoginCallback = async () => {
+                delete window.__postLoginCallback;
+                await fillFromUserProfile();
+                placeOrderBtn.click();
+            };
+            openAuthModal();
+            return;
+        }
+
         const shippingAddress = getShippingAddress();
         const email = document.getElementById('email').value.trim();
         const phone = document.getElementById('phone').value.trim();
         const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
-        
+
         try {
             setLoadingState(placeOrderBtn, true, 'Creating Order...');
             if (window.__trackCart) window.__trackCart('checkout_started', null, null);
@@ -675,11 +722,11 @@ Secure Acquisition
                 shippingAddress,
                 paymentMethod
             });
-            
+
             // Unwrap the order from response
             const order = response.order || response;
             orderData = order;
-            
+
             // Handle payment based on selected method
             if (paymentMethod === 'RAZORPAY') {
                 await handleRazorpayPayment(order.id);
@@ -688,16 +735,28 @@ Secure Acquisition
             } else if (paymentMethod === 'UPI_MANUAL') {
                 await handleUPIPayment(order.id);
             }
-            
+
         } catch (error) {
             console.error('Checkout error:', error);
             showToast(error.message || 'Checkout failed', 'error');
             setLoadingState(placeOrderBtn, false, 'Secure Acquisition');
         }
     });
-    
+
     // Initial load
     await loadCart();
+
+    // If already logged in, auto-fill and update hint — no reload needed
+    if (isLoggedIn()) {
+        await fillFromUserProfile();
+    }
+
+    // Checkout never reloads after login — set default post-login callback
+    // (overwritten by placeOrderBtn click if triggered from payment gate)
+    window.__postLoginCallback = async () => {
+        delete window.__postLoginCallback;
+        await fillFromUserProfile();
+    };
 })();
 </script>
 

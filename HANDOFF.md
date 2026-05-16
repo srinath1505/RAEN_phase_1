@@ -1,7 +1,7 @@
 # RAEN Phase 1 — Session Handoff Document
 
 **Written:** 2026-05-14
-**Last updated:** 2026-05-16 (Task 8 complete, 202/202 tests pass)
+**Last updated:** 2026-05-16 (Task 9 complete, 161/161 tests pass)
 **Safety repo:** https://github.com/srinath1505/RAEN_phase_1
 **Local path:** `C:\Users\Srinath\Downloads\RAEN_v1`
 
@@ -25,7 +25,8 @@ Building Phase 1 of **RAEN** — a luxury fashion e-commerce platform — by com
 
 ### Git log on `main`:
 ```
-(Task 8 commit — pushed)
+(Task 9 commit — pushed)
+c3242a8  feat(admin): Task 8 complete — full admin dashboard UI (9 pages) + 5 backend fixes
 7eb0672  docs: fix HANDOFF.md — remove stale Task 7 row
 0f134ad  docs: update HANDOFF.md — Task 7 complete
 c7bfc03  feat(api): Task 7 complete — expanded admin backend endpoints
@@ -39,7 +40,7 @@ a24fe4f  feat(api): Task 5 complete — payment webhooks with DB transactions
 75cf62f  feat(db): Task 1 complete — add salePrice/discountPercent, PageView, CartEvent
 ```
 
-### Tasks 1–8: COMPLETE ✅ | Tasks 9–11: NOT STARTED ⏳
+### Tasks 1–9: COMPLETE ✅ | Tasks 10–11: NOT STARTED ⏳
 
 ### Running servers:
 ```bash
@@ -51,15 +52,17 @@ node serve-stitch.js
 ```
 Health check: `curl http://localhost:5000/health`
 
+**IMPORTANT — after every backend code change, kill and restart the backend server to clear the in-memory auth rate limiter and OTP/reset-token stores.**
+
 ### Database: Neon cloud PostgreSQL
 ```
 DATABASE_URL=postgresql://neondb_owner:npg_Xp9wH1KkjbNS@ep-long-cloud-aoe1cbym.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
 ```
 - 12 seeded products, correct prices, 5 images each
-- 48 inventory records (4 sizes × 12 products, initial stock 10 each) — some have been modified by tests, check before trusting counts
+- 48+ inventory records (some modified by tests — some archived test products from task-reports runs)
 - 1 admin user: `admin@raen.design` / `RaenAdmin2024!`
-- 1 test customer registered (email in DB, totalSpent: €0)
-- 1 order in DB (guest order, PENDING status)
+- Multiple test customer users (created by test suites, totalSpent: €0)
+- 1 guest order in PENDING status
 - 5 contact messages in DB
 - 0 early access requests in DB
 
@@ -206,39 +209,146 @@ DATABASE_URL=postgresql://neondb_owner:npg_Xp9wH1KkjbNS@ep-long-cloud-aoe1cbym.c
 | `analytics.html` | Period toggle 7/30/90. 5 funnel stat cards. CSS stepped conversion funnel (5 steps, progressively narrowing, drop-off %, red if >50%). Revenue line chart. Revenue by method cards. Top 5 products by views + by revenue. |
 | `messages.html` | Two tabs (Contact Messages / Early Access). Contact: click row to expand full message + auto-marks NEW→READ. Status dropdown. Reply button opens pre-filled mailto. Early Access: expand shows interest/budget/privacy fields. Status dropdowns for both tabs. |
 
-**Shared across all 8 management pages:**
-- Auth gate: `const _token = localStorage.getItem('raen_auth_token'); if (!_token) window.location.href = 'login.html';`
-- `adminFetch(fn)` wrapper: catches errors with `e.status === 401 || e.status === 403` → clears token → redirects to `login.html`
-- `fmt(n)` = `'€' + (n||0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })`
-- `fmtDate(d)` = `new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })`
-- `logout()` = clears `raen_auth_token` + redirect to `login.html`
-- Active sidebar nav link has gold color + left border
-- Empty state: icon + uppercase text for every table
-- Error state: red message on network failure
-- Chart.js CDN only loaded on `index.html` and `analytics.html`
-
-**Bug found and fixed during testing (Task 8):**
-- `adminFetch` was checking `e.message?.includes('401')` but auth middleware returns `"Authentication required"` / `"Invalid or expired token"` — neither contains "401". Token expiry would silently hang instead of redirecting to login. Fixed by attaching `err.status = response.status` in `api.js` and checking `e.status` in `adminFetch`.
-
-**Test results:** 202/202 passed, 8 skipped (all skips are data-dependent: UPI pending payments, early access requests, top products/revenue with no paid orders — these will pass once real transactions exist). Test runner: `task-reports/test-task8.js`.
-
-**Test categories covered:**
-- A: Health check
-- B: Auth — login, wrong password, no token, invalid token (5 checks)
-- C: Dashboard + analytics — all response fields, all 3 period variants, edge periods (1, 365, non-numeric) (36 checks)
-- D: Orders — full CRUD, invalid status, cancel guard (13 checks)
-- E: Products — list, create, edit, archive, stats, validation, slug uniqueness (18 checks)
-- F: Inventory — list, inline edit, zero stock edge case, negative stock validation (12 checks)
-- G: Payments — list, pending-verification, revenue summary calc (12 checks)
-- H: Customers — list, `totalSpent` field present/typed (6 checks)
-- I: Messages + early access — list, status PATCH, invalid status validation (15 checks)
-- J: HTML static analysis — all 9 files: auth gate, api.js, logout, adminFetch e.status, Chart.js placement, active nav, field name contract (70 checks)
-- K: JS helper logic — fmt(), fmtDate(), image URL encoding, pagination, cancel guard, backward status, XSS escaping, stock colour thresholds (8 checks)
-- L: Edge cases + regression — period extremes, graceful error, discount precedence, backend changes verified in source (12 checks)
+**Test results:** 202/202 passed, 8 skipped. Test runner: `task-reports/test-task8.js`.
 
 ---
 
-## 4. All Gotchas Discovered (G1–G10)
+### Task 9 — Customer Auth Modal ✅
+**Goal:** Customer-facing auth: ACCOUNT nav link on 5 pages, sign-in/register modal with OTP phone verification, Google Sign-In, forgot password flow with magic link recovery.
+
+#### What was built (beyond original spec):
+The spec called for a basic email/password modal. The actual implementation includes:
+1. **Eye toggle** on all password fields (open/close icon, feather-style SVG)
+2. **Confirm password + live match indicator** on register form (green ✓ / red ✗ in real time)
+3. **Google Sign-In** (always-visible custom button; One Tap when Client ID is configured; friendly toast if placeholder)
+4. **Forgot Password full flow** (3 steps inside the modal, plus `reset-password.html` magic link page)
+5. **OTP-verified registration** (SMS or WhatsApp user's choice; Twilio in prod, console log in dev)
+6. **Checkout payment gate** (auth required only at payment click, not on page load; no reload after login — form data preserved)
+
+#### New backend endpoints:
+
+| Endpoint | Purpose |
+|----------|---------|
+| `POST /api/auth/send-otp` | Send 6-digit OTP to phone (SMS or WhatsApp) — step 1 of registration |
+| `POST /api/auth/register-otp` | Verify OTP + create account atomically |
+| `POST /api/auth/google` | Verify Google ID token, find/create user, return RAEN JWT |
+| `POST /api/auth/forgot-password` | Find user by email, send OTP to registered phone |
+| `POST /api/auth/forgot-password-verify` | Verify OTP → generate magic link → send to email |
+| `GET /api/auth/validate-reset-token` | Validate magic link token (called by reset-password.html on load) |
+| `POST /api/auth/reset-password` | Consume token (single-use) + update password hash |
+
+**Existing `/api/auth/register` and `/api/auth/login` are UNCHANGED** — backward compatible with admin panel and all existing tests.
+
+#### New backend services:
+
+**`backend/src/services/otpService.js`:**
+- In-memory Map: `{ phone → { code, expiry, attempts, sentAt, channel } }`
+- 6-digit random OTP, 10-minute expiry, max 3 attempts, 60-second resend cooldown
+- Dev mode: `TWILIO_ACCOUNT_SID` contains `PLACEHOLDER` → logs OTP to console instead of sending
+- Production swap: update 4 `.env` vars — zero code changes needed
+- Supports both SMS (`fromPhone`) and WhatsApp (`whatsapp:fromWhatsApp`)
+
+**`backend/src/services/resetTokenService.js`:**
+- In-memory Map: `{ token → { userId, email, expiry } }`
+- `crypto.randomBytes(32).toString('hex')` — 64-char secure token
+- 1-hour expiry, single-use (`consumeResetToken` deletes after successful use)
+- Invalidates any existing token for the same user when a new one is generated
+- Dev mode: `SMTP_USER` contains `your-email` → logs reset link to console
+- Production swap: implement `emailService.sendPasswordReset()` — already called if available
+
+#### Frontend files:
+
+**`stitch/public/js/auth-modal.js`** (shared, ~460 lines):
+- Self-contained IIFE, injects all HTML into `<body>` at load time
+- 5 modal views: `login`, `register`, `otp`, `forgot-email`, `forgot-otp`
+- Each view scrolls to top on switch
+- `window.__postLoginCallback` — if set, called instead of `window.location.reload()`. Used by checkout.html to continue payment without page reload.
+- Google Identity Services loaded dynamically (non-blocking)
+- `raenGoogleSignIn()` — always visible button; placeholder → toast; real ID + GSI loaded → One Tap
+- OTP boxes: 6 individual inputs, auto-focus next on digit, backspace to previous, paste-aware
+- Shared countdown timer function used for both registration and forgot-password resend
+- Password match check runs on `input` event on both password fields
+
+**ACCOUNT nav link on 5 pages:**
+
+| Page | Tailwind classes |
+|------|-----------------|
+| `index.html` | `font-label text-xs letter-spaced text-on-surface hover:opacity-70` |
+| `collections.html` | `font-label text-xs uppercase tracking-[0.2em] hover:opacity-50` |
+| `product-detail.html` | `font-label text-xs tracking-[0.2em] hover:opacity-60` |
+| `shopping-bag.html` | `text-[10px] uppercase tracking-[0.15em] font-label hover:text-outline` |
+| `checkout.html` | `text-[10px] uppercase tracking-[0.15em] font-label hover:opacity-50` |
+
+Classes match each page's existing nav typography.
+
+**Checkout-specific behaviour:**
+- Anyone can fill delivery form (email, address, phone) without being logged in
+- Clicking "Secure Acquisition" payment button → `if (!isLoggedIn())` → open auth modal
+- After login: `window.__postLoginCallback` closes modal, auto-fills email (read-only) + firstName/lastName from `GET /api/auth/me`, then re-triggers `placeOrderBtn.click()`
+- No page reload on checkout after login — form data is preserved
+- "Gain Access" dead link replaced with "Sign In" → opens auth modal
+
+**`stitch/account.html`** (stub — Task 10 will complete):
+- Auth gate: `localStorage.getItem('raen_auth_token')` → if null, `window.location.href = 'index.html'` (runs before DOM, no flash)
+- Calls `GET /api/auth/me` → displays firstName + lastName + email
+- "Coming soon" messaging for orders/addresses (Task 10)
+- Sign out: clears `raen_auth_token` → redirect to `index.html`
+
+**`stitch/reset-password.html`** (magic link landing page):
+- No auth required (users access via email link)
+- On load: reads `?token=xxx`, calls `GET /api/auth/validate-reset-token`
+- 3 states: `loading`, `invalid` (expired/used), `form` (valid)
+- Form: new password + confirm password (both with eye toggle + match indicator)
+- `POST /api/auth/reset-password` → success state → "Return to RAEN" link
+
+#### New `.env` variables (add to production environment):
+```bash
+# Google OAuth
+GOOGLE_CLIENT_ID=<from console.cloud.google.com → Credentials → OAuth 2.0 Client IDs>
+GOOGLE_CLIENT_SECRET=<same location>
+
+# Twilio SMS / WhatsApp
+TWILIO_ACCOUNT_SID=<from twilio.com → Console Dashboard>
+TWILIO_AUTH_TOKEN=<same location>
+TWILIO_PHONE_NUMBER=+15551234567    # your Twilio number
+TWILIO_WHATSAPP_NUMBER=whatsapp:+14155238886  # sandbox; replace with approved number in prod
+```
+
+#### Activating Google OAuth (step by step):
+1. Go to [console.cloud.google.com](https://console.cloud.google.com) → APIs & Services → Credentials
+2. Create OAuth 2.0 Client ID → Web Application
+3. Authorized JavaScript origins: `http://localhost:4173` (dev) + your production domain
+4. Copy Client ID → replace `GOOGLE_CLIENT_ID_PLACEHOLDER` in `backend/.env`
+5. Replace `window.__RAEN_GOOGLE_CLIENT_ID = 'GOOGLE_CLIENT_ID_PLACEHOLDER'` in each of the 5 pages
+
+#### Activating Twilio:
+1. Sign up at [twilio.com](https://twilio.com)
+2. Get Account SID, Auth Token, and a phone number
+3. For WhatsApp production: complete WhatsApp Business API approval, replace `TWILIO_WHATSAPP_NUMBER`
+4. Replace all 4 Twilio vars in `backend/.env` — zero code changes required
+
+**Test results:** 161/161 passed, 1 skipped (E5 — full OTP registration happy path, requires reading dev console OTP manually — verified manually). Test runner: `task-reports/test-task9.js`.
+
+**Test categories covered:**
+- A: Health (1)
+- B: Admin login, token issued (2)
+- C: Customer login, wrong password, /auth/me with/without token (7)
+- D: send-otp — missing phone, valid, cooldown, WhatsApp, invalid channel (6)
+- E: register-otp — wrong OTP, missing fields, short password; 1 skip (5 + 1 skip)
+- F: Google auth — no credential, invalid token, meaningful error (3)
+- G: All 5 pages: nav link, openAuthModal, auth-modal.js, GOOGLE_CLIENT_ID; modal: all 5 views, GSI, OTP boxes, postLoginCallback, nav update, eye toggle, confirm pwd, match indicator, forgot views (30 + 20 page checks)
+- H: Checkout — auth gate at payment, no reload, auto-fill, re-trigger, Gain Access removed (12)
+- I: account.html — auth gate, token check, sign out, /auth/me, coming soon, no admin links (10)
+- J: Backend static analysis — otpService, authController, authRoutes, packages, .env (19)
+- K: Regression — /register unchanged, /login unchanged, /auth/me, /auth/logout (4)
+- L: Edge cases — new phone, no prior OTP, empty Google credential, garbled token (4)
+- M: Forgot password endpoints — missing email, unknown email, wrong OTP, expired token, short password (10)
+- N: reset-password.html — all 3 states, eye toggle, match indicator, token validation, no forced login (15)
+- O: Backend — resetTokenService, authController methods, routes, dev logging, bcrypt hashing (18)
+
+---
+
+## 4. All Gotchas Discovered (G1–G11)
 
 ### G1 — `prisma migrate dev` requires interactive TTY
 **Problem:** `npx prisma migrate dev` exits with "non-interactive environment" error when run from Claude's bash. Cannot use in any scripted context.
@@ -285,47 +395,54 @@ The briefing document described the analytics response with flat field names at 
 Auth middleware returns `"Authentication required"` and `"Invalid or expired token"` — neither contains "401" or "unauthorized". Checking `e.message.includes('401')` never matches.
 **Solution:** Added `err.status = response.status` to api.js throw. All admin pages check `e.status === 401 || e.status === 403` in adminFetch.
 
-### G10 — In-memory auth rate limiter blocks test runs (Task 8)
+### G10 — In-memory auth rate limiter blocks test runs (Task 8 + 9)
 `authLimiter` is `max: 5 / 15 min` stored in-memory. Running the test suite multiple times in quick succession exhausts the limit and the correct admin login returns 429 instead of 200.
-**Solution:** Restart the backend server between test runs to clear the in-memory rate limiter. In `test-task8.js`, B3 accepts any 4xx (including 429) as valid.
+**Solution:** Restart the backend server between test runs to clear the in-memory rate limiter. Test suite accepts 429 as valid for auth-limited endpoints.
+
+### G11 — bcryptjs vs bcrypt (Task 9)
+`authController.js` initially used `require('bcryptjs')` but the project has `bcrypt` (not `bcryptjs`) installed. This causes a `MODULE_NOT_FOUND` error and prevents the server from starting.
+**Solution:** Changed to `require('bcrypt')`. Always verify package name against `package.json` before adding new requires.
 
 ---
 
-## 5. Exact Next Step — Task 9
+## 5. Exact Next Step — Task 10
 
-### Task 9: Customer Auth Modal
+### Task 10: Customer Account Page
 
-**Add to 5 pages:** `stitch/index.html`, `stitch/collections.html`, `stitch/product-detail.html`, `stitch/shopping-bag.html`, `stitch/checkout.html`
+**File:** `stitch/account.html` — currently a stub ("Coming soon"). Replace with full implementation.
 
-**Nav change on each page:** Before the shopping bag icon in the nav, add:
-```html
-<a id="auth-nav-btn" href="#" onclick="openAuthModal()" style="font-family:Helvetica;font-size:11px;letter-spacing:0.15em;color:inherit;text-decoration:none;">ACCOUNT</a>
-```
+**Auth gate:** Same as current stub — `if (!token) window.location.href = 'index.html'` (runs immediately before DOM).
 
-**Modal HTML** (add before `</body>` on each page):
-- Modal overlay with blur backdrop
-- Two tabs: SIGN IN / CREATE ACCOUNT
-- Login form: email, password → `POST /api/auth/login` → `setAuthToken(data.token)` → reload
-- Register form: first name, last name, email, password (min 8) → `POST /api/auth/register` → `setAuthToken(data.token)` → reload
-- On page load DOMContentLoaded: if token exists, change button to "MY ACCOUNT" linking to `account.html`
+**Sections to build:**
 
-**Auth token key:** `raen_auth_token` (same as admin panel — `setAuthToken()` and `getAuthToken()` from api.js)
+**Profile section:**
+- Show full name + email (from `GET /api/auth/me`)
+- Edit name/phone form → `PUT /api/account/profile`
 
-**Important:** These pages are CUSTOMER-facing. The login modal sends to `POST /api/auth/login`. The JWT returned is a CUSTOMER token. If the user is already logged in, nav shows "MY ACCOUNT" → `account.html`.
+**Order History section:**
+- Table: Order # (links to `order-confirmation.html?orderNumber=X`), date, items summary, total EUR, status badge
+- Fetch from `GET /api/account/orders`
 
-**api.js already loaded** on all 5 target pages (was added in Task 6 or prior). `apiPost` is available globally.
+**Addresses section:**
+- List saved addresses as cards. Add/edit/delete.
+- `POST /api/account/addresses` — body: `{ line1, line2, city, state, country, postcode }`
+- `DELETE /api/account/addresses/:id`
 
-**Full spec in:** `CLAUDE_PHASE1_PROMPT.md` lines 960–1053.
+**Sign Out button:**
+- Clear `raen_auth_token` → redirect to `index.html`
+
+**Style:** Match existing RAEN pages — Work Sans + Newsreader, `#1a1a1a` / `#f9f9f9`, same nav header as `account.html` stub.
+
+**Note on backend:** The account endpoints (`GET /api/account/orders`, `PUT /api/account/profile`, etc.) may already exist in the backend. Check `backend/src/routes/` for an `accountRoutes.js` or similar before writing new endpoints.
 
 ---
 
-## 6. Remaining Tasks (9–11 Summary)
+## 6. Remaining Tasks (10–11 Summary)
 
 | # | Task | Key files | Notes |
 |---|------|-----------|-------|
-| 9 | Customer auth modal | `stitch/index.html`, `collections.html`, `product-detail.html`, `shopping-bag.html`, `checkout.html` | ACCOUNT nav link + modal + login/register JS on all 5 pages. Modal redirects to `account.html` if logged in. |
-| 10 | Customer account page | `stitch/account.html` (new) | Auth gate redirects to `index.html` (not `login.html`). Profile edit (PUT `/api/account/profile`), order history (GET `/api/account/orders`), addresses (POST/DELETE `/api/account/addresses`). Sign out clears token → `index.html`. |
-| 11 | Discount pricing on frontend | `stitch/product-detail.html`, `stitch/collections.html` | `effectivePrice = product.salePrice \|\| (product.discountPercent ? product.price * (1 - product.discountPercent/100) : null)`. If effectivePrice < price: show strikethrough original + gold effective price + "X% OFF" badge. |
+| 10 | Customer account page | `stitch/account.html` | Replace stub. Profile edit, order history, addresses. Auth gate → `index.html`. Sign out → `index.html`. |
+| 11 | Discount pricing on frontend | `stitch/product-detail.html`, `stitch/collections.html` | `effectivePrice = product.salePrice \|\| (product.discountPercent ? product.price * (1 - product.discountPercent/100) : null)`. If effectivePrice < price: strikethrough original + gold effective price + "X% OFF" badge. |
 
 ---
 
@@ -343,59 +460,66 @@ RAEN_v1/
 │   │   │   ├── razorpay.js            ← Razorpay SDK instance
 │   │   │   └── paypal.js              ← PayPal SDK config
 │   │   ├── controllers/
-│   │   │   ├── adminController.js     ← Task 7+8: DONE — 24 methods. Change 1+2 from Task 8 applied.
+│   │   │   ├── adminController.js     ← Task 7+8: DONE — 24 methods
+│   │   │   ├── authController.js      ← Task 9: DONE — register, login, getMe, logout,
+│   │   │   │                              sendOtp, registerWithOtp, googleAuth,
+│   │   │   │                              forgotPassword, forgotPasswordVerify,
+│   │   │   │                              validateResetToken, resetPassword
 │   │   │   ├── paymentController.js   ← Task 5: DONE — full webhook handlers (HMAC + $transaction)
 │   │   │   ├── analyticsController.js ← Task 2: DONE — trackPageView + trackCartEvent
 │   │   │   └── contactController.js   ← Task 6: DONE — POST /api/contact
 │   │   ├── middleware/
-│   │   │   ├── authMiddleware.js      ← sets req.user = {id, email, firstName, lastName, role}. Returns "Authentication required" (401) or "Invalid or expired token" (401).
-│   │   │   └── adminMiddleware.js     ← checks req.user.role === 'ADMIN'. Returns "Admin access required" (403).
+│   │   │   ├── authMiddleware.js      ← sets req.user = {id, email, firstName, lastName, role}
+│   │   │   └── adminMiddleware.js     ← checks req.user.role === 'ADMIN'
 │   │   ├── routes/
-│   │   │   ├── adminRoutes.js         ← Task 7: DONE. All 24 admin endpoints. Uses authMiddleware + adminMiddleware globally via router.use().
-│   │   │   ├── paymentRoutes.js       ← webhook routes registered (express.raw applied in app.js)
+│   │   │   ├── adminRoutes.js         ← Task 7: DONE. All 24 admin endpoints.
+│   │   │   ├── authRoutes.js          ← Task 9: DONE. 11 endpoints total.
+│   │   │   ├── paymentRoutes.js       ← webhook routes registered
 │   │   │   └── analyticsRoutes.js     ← Task 2: DONE
 │   │   ├── prisma/
-│   │   │   ├── schema.prisma          ← Task 1: DONE. All models including PageView, CartEvent, salePrice, discountPercent.
+│   │   │   ├── schema.prisma          ← Task 1: DONE. All models.
 │   │   │   └── migrations/            ← 2 migrations present
 │   │   ├── services/
-│   │   │   ├── paymentService.js      ← Task 8 Change 5: rejectUpiPayment now also calls updateOrderStatus(CANCELLED)
-│   │   │   ├── orderService.js        ← has updateOrderStatus, updatePaymentStatus, getOrderById, getOrderByNumber
-│   │   │   ├── emailService.js        ← has sendOrderConfirmation, sendPaymentPending, sendPaymentFailed
-│   │   │   ├── razorpayService.js     ← has createOrder, verifyPayment — NO refundPayment method
+│   │   │   ├── otpService.js          ← Task 9: NEW — in-memory OTP, Twilio SMS/WhatsApp, dev console fallback
+│   │   │   ├── resetTokenService.js   ← Task 9: NEW — in-memory magic link tokens, single-use, 1hr expiry
+│   │   │   ├── paymentService.js      ← Task 8 Change 5: rejectUpiPayment → updateOrderStatus(CANCELLED)
+│   │   │   ├── orderService.js        ← updateOrderStatus, updatePaymentStatus, getOrderById, getOrderByNumber
+│   │   │   ├── emailService.js        ← sendOrderConfirmation, sendPaymentPending, sendPaymentFailed
+│   │   │   ├── authService.js         ← register, login, generateToken
+│   │   │   ├── razorpayService.js     ← createOrder, verifyPayment — NO refundPayment
 │   │   │   ├── paypalService.js       ← PayPal sandbox
-│   │   │   └── inventoryService.js    ← has reduceStockForOrder
+│   │   │   └── inventoryService.js    ← reduceStockForOrder
 │   │   └── utils/
 │   │       └── apiResponse.js         ← exports { success, error }
-│   └── .env                           ← DB URL, JWT_SECRET, RAZORPAY_*, PAYPAL_*, SMTP_*
+│   ├── .env                           ← DB URL, JWT_SECRET, RAZORPAY_*, PAYPAL_*, SMTP_*,
+│   │                                      GOOGLE_CLIENT_ID/SECRET (placeholder), TWILIO_* (placeholder)
+│   └── package.json                   ← Added: twilio, google-auth-library
 ├── stitch/                            ← all frontend HTML pages
 │   ├── public/
 │   │   └── js/
-│   │       └── api.js                 ← MODIFIED Task 8: added err.status to thrown error. apiGet/apiPost/apiPatch/apiDelete/showToast/setAuthToken/getAuthToken/isLoggedIn
+│   │       ├── api.js                 ← MODIFIED Task 8: err.status on thrown errors
+│   │       └── auth-modal.js          ← Task 9: NEW — shared modal (5 views), eye toggle,
+│   │                                      confirm pwd + match indicator, OTP boxes, forgot password,
+│   │                                      Google Sign-In, __postLoginCallback hook
 │   ├── admin/                         ← Task 8: COMPLETE (9 files)
-│   │   ├── login.html                 ← standalone admin login, no api.js, direct fetch
-│   │   ├── index.html                 ← dashboard (Chart.js, 11 cards, revenue chart, period toggle)
-│   │   ├── orders.html                ← order management (pagination, status, cancel, expand)
-│   │   ├── products.html              ← product CRUD (add/edit modal, stats modal, archive)
-│   │   ├── inventory.html             ← inline stock edit, bulk restock, color coding
-│   │   ├── payments.html              ← UPI verification section, payments table
-│   │   ├── customers.html             ← totalSpent, order expand
-│   │   ├── analytics.html             ← CSS funnel, 3 Chart.js charts, period toggle
-│   │   └── messages.html              ← two tabs (contact + early access), auto-read on expand
-│   ├── product-detail.html            ← Task 4: DONE (bugs G3 fixed, productOverrides for black-pearl)
-│   ├── collections.html               ← Task 4: DONE (links fixed to ?slug= format)
-│   ├── index.html                     ← Task 4: DONE (links fixed)
-│   ├── checkout.html                  ← Task 3: DONE (checkout_started/completed tracking)
-│   ├── contact.html                   ← Task 6: DONE — form + API submit
-│   ├── shopping-bag.html              ← Task 3: DONE (tracking script in head)
-│   ├── order-confirmation.html        ← Task 3: DONE (tracking script)
-│   ├── early-access.html              ← Task 3: DONE (tracking script)
+│   ├── account.html                   ← Task 9: stub (auth gate, coming soon, sign out). Task 10 will complete.
+│   ├── reset-password.html            ← Task 9: NEW — magic link landing (3 states: loading/invalid/form)
+│   ├── product-detail.html            ← Task 4+9: DONE (auth nav link added)
+│   ├── collections.html               ← Task 4+9: DONE (auth nav link added)
+│   ├── index.html                     ← Task 4+9: DONE (auth nav link added)
+│   ├── checkout.html                  ← Task 3+9: DONE (payment gate, auto-fill, __postLoginCallback)
+│   ├── contact.html                   ← Task 6: DONE
+│   ├── shopping-bag.html              ← Task 3+9: DONE (auth nav link added)
+│   ├── order-confirmation.html        ← Task 3: DONE
+│   ├── early-access.html              ← Task 3: DONE
 │   └── [12 product stubs].html        ← Task 4: DONE (redirect stubs)
 ├── task-reports/
-│   ├── TASK_01_REPORT.md through TASK_08_REPORT.md
+│   ├── TASK_01_REPORT.md through TASK_09_REPORT.md
 │   ├── debug-task7.js                 ← Task 7 test runner (84 tests)
-│   └── test-task8.js                  ← Task 8 test runner (202 tests, 8 skipped — see Section 3)
-├── IMPLEMENTATION_PLAN.md             ← full task plan with per-task test cases
-├── CLAUDE_PHASE1_PROMPT.md            ← original spec (reference for tasks 9–11)
+│   ├── test-task8.js                  ← Task 8 test runner (202 tests, 8 skipped)
+│   └── test-task9.js                  ← Task 9 test runner (161 tests, 1 skipped)
+├── IMPLEMENTATION_PLAN.md
+├── CLAUDE_PHASE1_PROMPT.md            ← original spec (reference for tasks 10–11)
 ├── HANDOFF.md                         ← this file
 └── serve-stitch.js                    ← static file server (port 4173)
 ```
@@ -404,71 +528,56 @@ RAEN_v1/
 
 ## 8. Admin Panel — API Shape Reference
 
-This section documents the ACTUAL response shapes from the backend (not the briefing, which had errors). Use these when writing frontend code.
-
 ### GET /api/admin/dashboard-extended
 ```javascript
 data: {
   orders: { total, pending, processing, shipped, delivered },
   revenue: { today, week, month, total },   // ← 'total' not 'allTime'
-  pendingUPIVerifications: number,           // ← not 'pendingVerifications'
+  pendingUPIVerifications: number,
   lowStockItems: [{ id, size, stock, sku, product: { name, slug } }],  // stock <= 5
   recentOrders: [{ id, orderNumber, email, total, status, createdAt, items }],
   topProducts: [{ productId, productName, _sum: { lineTotal, quantity }, _count: { productId } }],
-  customers: { total, newThisMonth }         // ← 'customers' not 'customerCounts'
+  customers: { total, newThisMonth }
 }
 ```
 
 ### GET /api/admin/analytics?period=N
 ```javascript
 data: {
-  summary: {                                 // ← all funnel metrics are nested under summary
+  summary: {
     totalPageViews, uniqueSessions, productPageViews,
-    addToCartEvents, checkoutStarted, checkoutCompleted,  // ← not cartEvents.add_to_cart
-    conversionRate, cartToCheckout           // already percentage strings e.g. "5.20"
+    addToCartEvents, checkoutStarted, checkoutCompleted,
+    conversionRate, cartToCheckout   // already percentage strings e.g. "5.20"
   },
-  revenueByDay: [{ date: "YYYY-MM-DD", revenue: number }],   // ← not 'dailyRevenue'
-  revenueByMethod: [{ provider, _sum: { amount }, _count: { provider } }],  // ← _sum.amount not .total
+  revenueByDay: [{ date: "YYYY-MM-DD", revenue: number }],
+  revenueByMethod: [{ provider, _sum: { amount }, _count: { provider } }],
   topProductsByViews: [{ productId, name, slug, views }],
   topProductsByRevenue: [{ productId, productName, _sum: { lineTotal, quantity }, _count: { productId } }]
 }
 ```
 
-### GET /api/admin/orders (after Task 8 Change 2)
+### Auth endpoints (Task 9 additions)
 ```javascript
-data.orders: [{
-  id, orderNumber, userId, email, phone, status, paymentStatus,
-  subtotal, tax, shipping, total, currency, shippingAddress, createdAt,
-  user: { firstName, lastName } | null,   // null for guest orders (userId = null)
-  items: [{ productName, productSlug, size, quantity, unitPrice, lineTotal, image }],
-  payments: [{ provider, status, amount, upiReferenceId }]
-}]
-```
+POST /api/auth/send-otp         { phone, channel: 'sms'|'whatsapp' }
+  → { phone: maskedPhone, channel }
 
-### GET /api/admin/customers (after Task 8 Change 1)
-```javascript
-data.customers: [{
-  id, firstName, lastName, email, phone, createdAt,
-  _count: { orders: number },
-  totalSpent: number   // ← new field: sum of total on PAID orders, matched by email
-}]
-```
+POST /api/auth/register-otp     { firstName, lastName, email, phone, password, otp }
+  → { token, user }   (same shape as /register)
 
-### GET /api/admin/payments
-```javascript
-data.payments: [{
-  id, orderId, provider, providerOrderId, providerPaymentId, upiReferenceId,
-  amount, currency, status, createdAt,
-  order: { id, orderNumber, email, total, status, paymentStatus, ... }
-}]
-```
+POST /api/auth/google           { credential }
+  → { token, user }
 
-### GET /api/admin/inventory
-```javascript
-data.inventory: [{
-  id, productId, size, stock, reservedStock, sku, updatedAt,
-  product: { id, name, slug, category, price, status, images, ... }
-}]  // sorted by stock ASC
+POST /api/auth/forgot-password  { email }
+  → { maskedPhone }   (masked phone shown to user as confirmation)
+
+POST /api/auth/forgot-password-verify  { email, otp }
+  → { maskedEmail }   (confirmation that email was sent)
+
+GET  /api/auth/validate-reset-token?token=xxx
+  → { email }   (returns 400 if expired/invalid)
+
+POST /api/auth/reset-password   { token, password }
+  → null   (success message only)
 ```
 
 ---
@@ -512,7 +621,12 @@ git push phase1 main
 | Razorpay keys | Placeholders — test with locally computed HMAC |
 | PayPal | Sandbox placeholders |
 | SMTP | Placeholders — emails won't send, errors are non-blocking |
+| Google OAuth | GOOGLE_CLIENT_ID_PLACEHOLDER — see G11 above for activation steps |
+| Twilio | TWILIO_ACCOUNT_SID_PLACEHOLDER — see Task 9 section for activation steps |
 | Auth rate limiter | Max 5 attempts / 15 min — in-memory (reset on server restart) |
+| OTP store | In-memory Map — reset on server restart. OTP logged to console in dev. |
+| Reset token store | In-memory Map — reset on server restart. Link logged to console in dev. |
+| bcrypt package | `bcrypt` (NOT `bcryptjs`) — see G11 |
 | API response format | `{ success: bool, message: string, data: { ... } }` — api.js unwraps `data` automatically |
 | Token localStorage key | `raen_auth_token` |
 | Session localStorage key | `raen_session` (analytics), `raen_session_id` (api.js) |
@@ -522,10 +636,10 @@ git push phase1 main
 ## 11. Known DB State Notes
 
 - 12 products: all ACTIVE, correct prices, 5 images each
-- 14+ inventory records for original 12 products + test products created by task-reports/test-task8.js (all ARCHIVED, status=ARCHIVED, safe to ignore)
-- The test suite creates and archives test products on each run — they accumulate but don't affect production behavior since they're ARCHIVED
+- 14+ inventory records for original 12 products + test products (all ARCHIVED)
+- The test suite creates and archives test products on each run — accumulate but don't affect production
+- Multiple test customer users (created by task 8 + 9 test runs, totalSpent = €0 each)
 - 1 guest order in PENDING state (created during prior testing)
 - 5 contact messages (real test submissions)
 - 0 early access requests
 - 1 admin user
-- 1 customer user (created during Task 8 testing, totalSpent = €0)

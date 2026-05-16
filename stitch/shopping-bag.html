@@ -233,6 +233,7 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
 </div>
 <div class="flex items-center gap-6">
 <button class="p-2"><span class="material-symbols-outlined">search</span></button>
+<a id="auth-nav-btn" href="#" onclick="openAuthModal();return false;" class="text-[10px] uppercase tracking-[0.15em] font-label hover:text-outline transition-colors" style="text-decoration:none;">ACCOUNT</a>
 <a class="p-2 relative" href="shopping-bag.html" aria-label="Shopping bag">
 <span class="material-symbols-outlined">shopping_bag</span>
 <span class="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full"></span>
@@ -423,6 +424,8 @@ document.getElementById('bagNewsletterForm').addEventListener('submit', async (e
 
 <!-- API Helper -->
 <script src="public/js/api.js"></script>
+<script>window.__RAEN_GOOGLE_CLIENT_ID = 'GOOGLE_CLIENT_ID_PLACEHOLDER';</script>
+<script src="public/js/auth-modal.js"></script>
 
 <!-- Shopping Cart Dynamic Loading -->
 <script>
