@@ -37,37 +37,40 @@ class AuthService {
       }
     });
     
-    const token = this.generateToken(user.id);
-    
+    const token = this.generateToken(user);
+
     return { user, token };
   }
-  
+
   async login(email, password) {
     const user = await prisma.user.findUnique({
       where: { email }
     });
-    
+
     if (!user) {
       throw new Error('Invalid email or password');
     }
-    
+
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
-    
+
     if (!isValidPassword) {
       throw new Error('Invalid email or password');
     }
-    
-    const token = this.generateToken(user.id);
-    
+
+    const token = this.generateToken(user);
+
     const { passwordHash, ...userWithoutPassword } = user;
-    
+
     return { user: userWithoutPassword, token };
   }
-  
-  generateToken(userId) {
-    return jwt.sign({ userId }, config.jwt.secret, {
-      expiresIn: config.jwt.expiresIn
-    });
+
+  // N3: embed full user fields so authMiddleware can trust the token without a DB round-trip
+  generateToken(user) {
+    return jwt.sign(
+      { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role },
+      config.jwt.secret,
+      { expiresIn: config.jwt.expiresIn }
+    );
   }
 }
 

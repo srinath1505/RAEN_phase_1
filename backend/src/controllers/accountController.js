@@ -125,21 +125,101 @@ exports.deleteAddress = async (req, res) => {
   try {
     const userId = req.user.id;
     const { id } = req.params;
-    
-    // Verify ownership
+
     const existingAddress = await prisma.address.findFirst({
       where: { id, userId }
     });
-    
+
     if (!existingAddress) {
       return error(res, 'Address not found', 404);
     }
-    
-    await prisma.address.delete({
-      where: { id }
-    });
-    
+
+    await prisma.address.delete({ where: { id } });
+
     return success(res, null, 'Address deleted');
+  } catch (err) {
+    return error(res, err.message, 400);
+  }
+};
+
+exports.cancelOrder = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+
+    // Ownership check: customer can only cancel their own orders
+    const order = await prisma.order.findFirst({
+      where: { id, userId },
+      include: { payments: true, items: true }
+    });
+
+    if (!order) return error(res, 'Order not found', 404);
+
+    if (!['PENDING', 'PAID', 'PROCESSING', 'SHIPPED'].includes(order.status)) {
+      return error(res, `Cannot cancel order with status ${order.status}`, 400);
+    }
+
+    const hoursSinceOrder = (Date.now() - new Date(order.createdAt).getTime()) / 3600000;
+    if (hoursSinceOrder > 48) {
+      return error(res, 'Orders can only be cancelled within 48 hours of placement', 400);
+    }
+
+    const finalPaymentStatus = order.paymentStatus === 'PAID' ? 'REFUNDED' : order.paymentStatus;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id },
+        data: { status: 'CANCELLED', paymentStatus: finalPaymentStatus }
+      });
+
+      for (const item of order.items) {
+        await tx.inventory.updateMany({
+          where: { productId: item.productId, size: item.size },
+          data: { stock: { increment: item.quantity } }
+        });
+      }
+
+      const payment = order.payments?.[0] || null;
+      if (payment?.status === 'SUCCESS') {
+        await tx.payment.update({ where: { id: payment.id }, data: { status: 'REFUNDED' } });
+      }
+
+      // Log as CUSTOMER_CANCEL for admin visibility — adminUserId FK accepts any User.id
+      await tx.adminAuditLog.create({
+        data: {
+          adminUserId: userId,
+          action: 'CUSTOMER_CANCEL',
+          entityType: 'Order',
+          entityId: id,
+          metadata: { previousStatus: order.status, cancelledBy: 'customer' }
+        }
+      });
+    });
+
+    // Non-blocking gateway refund
+    const payment = order.payments?.[0] || null;
+    if (payment?.status === 'SUCCESS' && payment.providerPaymentId) {
+      const razorpayService = require('../services/razorpayService');
+      const paypalService = require('../services/paypalService');
+      if (payment.provider === 'RAZORPAY') {
+        razorpayService.refundPayment(payment.providerPaymentId)
+          .catch(err => console.error('Customer cancel: Razorpay refund error:', err.message));
+      } else if (payment.provider === 'PAYPAL') {
+        paypalService.refundPayment(payment.providerPaymentId)
+          .catch(err => console.error('Customer cancel: PayPal refund error:', err.message));
+      }
+    }
+
+    // Non-blocking cancellation email
+    const emailService = require('../services/emailService');
+    emailService.sendOrderCancellation({
+      email: order.email,
+      orderNumber: order.orderNumber,
+      total: order.total,
+      paymentStatus: finalPaymentStatus
+    }).catch(err => console.error('Customer cancel: email error:', err.message));
+
+    return success(res, null, 'Order cancelled successfully');
   } catch (err) {
     return error(res, err.message, 400);
   }

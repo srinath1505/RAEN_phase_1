@@ -1,7 +1,7 @@
 # RAEN Phase 1 — Session Handoff Document
 
 **Written:** 2026-05-14
-**Last updated:** 2026-05-16 (Task 11 complete — ALL 11 TASKS DONE ✅)
+**Last updated:** 2026-05-16 (QA fixes complete — 120/122 tests pass — all C/M/N findings resolved — M3 remains)
 **Safety repo:** https://github.com/srinath1505/RAEN_phase_1
 **Local path:** `C:\Users\Srinath\Downloads\RAEN_v1`
 
@@ -25,7 +25,9 @@ Building Phase 1 of **RAEN** — a luxury fashion e-commerce platform — by com
 
 ### Git log on `main`:
 ```
-(Task 9 commit — pushed)
+92a1690  feat(frontend): Task 11 complete — discount pricing on product detail and collections pages
+c8d5126  feat(account): Task 10 complete — customer account page, profile edit, order history, addresses CRUD
+8e6867d  feat(auth): Task 9 complete — customer auth modal, OTP registration, Google Sign-In, forgot password
 c3242a8  feat(admin): Task 8 complete — full admin dashboard UI (9 pages) + 5 backend fixes
 7eb0672  docs: fix HANDOFF.md — remove stale Task 7 row
 0f134ad  docs: update HANDOFF.md — Task 7 complete
@@ -175,7 +177,7 @@ DATABASE_URL=postgresql://neondb_owner:npg_Xp9wH1KkjbNS@ep-long-cloud-aoe1cbym.c
 **Key implementation details:**
 - `getDashboardExtended`: UTC midnight (`today.setUTCHours(0,0,0,0)`) for today's revenue. Low stock uses `lte: 5`. Prisma v5 groupBy syntax (`_count: { productId: true }` not `_count: true`).
 - `getAnalytics`: period clamped to 1–365. Returns `summary` object (nested), `revenueByDay` array, `revenueByMethod` array, `topProductsByViews` array, `topProductsByRevenue` array.
-- `cancelOrder`: only cancellable within 48 hours. Cannot cancel SHIPPED/DELIVERED/CANCELLED/REFUNDED.
+- `cancelOrder`: only cancellable within 48 hours. Cannot cancel DELIVERED/CANCELLED/REFUNDED. SHIPPED is now cancellable (N1 amendment).
 - `deleteProduct`: soft-delete only — sets `status: 'ARCHIVED'`, never true deletes.
 - `createProduct`: auto-generates slug from name. Upserts inventory records for each size.
 
@@ -482,11 +484,11 @@ RAEN_v1/
 │   │   ├── services/
 │   │   │   ├── otpService.js          ← Task 9: NEW — in-memory OTP, Twilio SMS/WhatsApp, dev console fallback
 │   │   │   ├── resetTokenService.js   ← Task 9: NEW — in-memory magic link tokens, single-use, 1hr expiry
-│   │   │   ├── paymentService.js      ← Task 8 Change 5: rejectUpiPayment → updateOrderStatus(CANCELLED)
+│   │   │   ├── paymentService.js      ← QA fixes: EUR→INR/USD live rates, $transaction wrapping, payment deduplication
 │   │   │   ├── orderService.js        ← updateOrderStatus, updatePaymentStatus, getOrderById, getOrderByNumber
-│   │   │   ├── emailService.js        ← sendOrderConfirmation, sendPaymentPending, sendPaymentFailed
+│   │   │   ├── emailService.js        ← sendOrderConfirmation, sendPaymentPending, sendPaymentFailed, sendOrderCancellation
 │   │   │   ├── authService.js         ← register, login, generateToken
-│   │   │   ├── razorpayService.js     ← createOrder, verifyPayment — NO refundPayment
+│   │   │   ├── razorpayService.js     ← createOrder, verifyPayment, refundPayment (full refund)
 │   │   │   ├── paypalService.js       ← PayPal sandbox
 │   │   │   └── inventoryService.js    ← reduceStockForOrder
 │   │   └── utils/
@@ -643,3 +645,48 @@ git push phase1 main
 - 5 contact messages (real test submissions)
 - 0 early access requests
 - 1 admin user
+
+---
+
+## 12. QA Findings — Status
+
+Full report: `QA_FINDINGS_REPORT.md`
+
+**All 8 proposal deliverables are now fully complete. One infrastructure item (M3) remains open — not a proposal gap.**
+
+### All Critical and Major findings resolved ✅
+
+| ID | Finding | Resolution |
+|----|---------|------------|
+| C1 | Gateway refund never fired | `razorpayService.refundPayment()` + `paypalService.refundPayment()` implemented; called non-blocking from admin and customer cancel |
+| C2 | PayPal webhook had no signature verification | Custom `verifyPaypalWebhookSignature()` added; placeholder detection matches project pattern |
+| C3 | Cancellation email never sent | `emailService.sendOrderCancellation()` created with refund note; called from both cancel endpoints |
+| C4 | EUR amount passed directly as INR | `getExchangeRate('EUR','INR',90)` via Frankfurter API added to `paymentService.js`; correct for Indian merchant settlement |
+| M1 | verify/capture paths not transactional | `$transaction` wrapping added to both Razorpay verify and PayPal capture paths |
+| M2 | PayPal EUR/USD rate hardcoded | Live rate via same Frankfurter helper; fallback 1.10 |
+| N1 | No status transition guard at API level | `ALLOWED_TRANSITIONS` table in `adminController.updateOrderStatus`; SHIPPED→CANCELLED allowed |
+| N2 | Payment records accumulated per order | `findFirst` for existing CREATED record before creating new one — both Razorpay and PayPal |
+| N3 | Auth middleware DB hit on every request | Dual-path: JWT self-contained (`decoded.id`) for new tokens; DB fallback for old tokens (7-day expiry window) |
+| N4 | Customer self-cancel not on account page | `POST /api/account/orders/:id/cancel` added with ownership check, 48h guard, transaction, refund, email |
+| N5 | HANDOFF git log showed Task 9 as latest | Updated |
+
+### Remaining open item
+
+| ID | Finding | File | Priority |
+|----|---------|------|----------|
+| M3 | OTP and reset-token stores are in-memory Maps — invalidated on any server restart | `otpService.js`, `resetTokenService.js` | **Must fix before production go-live** |
+
+**M3 fix:** Migrate to Redis (`SET phone otp_json EX 600`) or a DB table with `expiresAt` column. Redis preferred — TTL is native, no cleanup job needed.
+
+### Pre-launch configuration
+
+| Item | Dev state | Production action |
+|------|-----------|-------------------|
+| SMTP | Emails silently skipped | Configure credentials |
+| Razorpay keys | Placeholder | C4 fixed — safe to activate |
+| `PAYPAL_WEBHOOK_ID` | `PLACEHOLDER` | Get real ID from PayPal Developer Dashboard |
+| PayPal credentials | Sandbox | C2 fixed — swap to live |
+| Google OAuth | Friendly toast | Replace `GOOGLE_CLIENT_ID_PLACEHOLDER` on 5 pages |
+| Twilio | OTP to console | Activate account, update 4 `.env` vars |
+| JWT secret | Dev string | Rotate to random 64-char secret |
+| In-memory stores | Resets on restart | Fix M3 before go-live |

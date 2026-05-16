@@ -42,6 +42,20 @@ class PaypalService {
     }
   }
   
+  async refundPayment(captureId) {
+    try {
+      // No amount in body = full refund of the captured amount
+      const request = new paypal.payments.CapturesRefundRequest(captureId);
+      request.requestBody({});
+      const response = await paypalClient.client().execute(request);
+      console.log(`PayPal refund initiated for capture ${captureId}`);
+      return response.result;
+    } catch (err) {
+      console.error('PayPal refund error:', err);
+      throw new Error('PayPal refund failed: ' + err.message);
+    }
+  }
+
   async handlePaymentSuccess(orderId, paypalOrderId, captureResult) {
     const payment = await prisma.payment.findFirst({
       where: {

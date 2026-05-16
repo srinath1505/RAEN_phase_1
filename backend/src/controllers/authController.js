@@ -133,8 +133,8 @@ exports.googleAuth = async (req, res) => {
       });
     }
 
-    const token = jwt.sign({ userId: user.id }, config.jwt.secret, { expiresIn: config.jwt.expiresIn || '7d' });
     const { passwordHash: _pw, ...userWithoutPassword } = user;
+    const token = authService.generateToken(userWithoutPassword);
 
     if (sessionId) {
       await cartService.syncGuestCart(user.id, sessionId).catch(() => {});

@@ -195,13 +195,105 @@ exports.razorpayWebhook = async (req, res) => {
   }
 };
 
+// Verifies a PayPal webhook event by calling PayPal's REST verification endpoint.
+// Requires a live access token obtained from PayPal OAuth before the verification call.
+async function verifyPaypalWebhookSignature(headers, rawBody, webhookId, clientId, clientSecret, env) {
+  const https = require('https');
+  const baseHost = env === 'sandbox' ? 'api-m.sandbox.paypal.com' : 'api-m.paypal.com';
+
+  // Step 1: get a short-lived access token via client credentials
+  const tokenPayload = await new Promise((resolve, reject) => {
+    const body = 'grant_type=client_credentials';
+    const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    const tokenReq = https.request(
+      {
+        hostname: baseHost,
+        path: '/v1/oauth2/token',
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${auth}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Length': Buffer.byteLength(body)
+        }
+      },
+      (res) => {
+        let data = '';
+        res.on('data', (chunk) => { data += chunk; });
+        res.on('end', () => {
+          try { resolve(JSON.parse(data)); } catch (e) { reject(new Error('PayPal token parse error')); }
+        });
+      }
+    );
+    tokenReq.on('error', reject);
+    tokenReq.write(body);
+    tokenReq.end();
+  });
+
+  if (!tokenPayload.access_token) {
+    throw new Error('PayPal webhook: could not obtain access token for verification');
+  }
+
+  // Step 2: call verify-webhook-signature
+  const verifyBody = JSON.stringify({
+    auth_algo: headers['paypal-auth-algo'],
+    cert_url: headers['paypal-cert-url'],
+    transmission_id: headers['paypal-transmission-id'],
+    transmission_sig: headers['paypal-transmission-sig'],
+    transmission_time: headers['paypal-transmission-time'],
+    webhook_id: webhookId,
+    webhook_event: JSON.parse(rawBody)
+  });
+
+  const verifyPayload = await new Promise((resolve, reject) => {
+    const verifyReq = https.request(
+      {
+        hostname: baseHost,
+        path: '/v1/notifications/verify-webhook-signature',
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${tokenPayload.access_token}`,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(verifyBody)
+        }
+      },
+      (res) => {
+        let data = '';
+        res.on('data', (chunk) => { data += chunk; });
+        res.on('end', () => {
+          try { resolve(JSON.parse(data)); } catch (e) { reject(new Error('PayPal verify parse error')); }
+        });
+      }
+    );
+    verifyReq.on('error', reject);
+    verifyReq.write(verifyBody);
+    verifyReq.end();
+  });
+
+  return verifyPayload.verification_status === 'SUCCESS';
+}
+
 // PayPal webhook — express.raw() in app.js ensures req.body is a Buffer here
 exports.paypalWebhook = async (req, res) => {
-  // TODO: Full PayPal webhook signature verification
-  // Requires PAYPAL_WEBHOOK_ID in .env and a PayPal SDK round-trip verification call
-  // Implement before going live with real PayPal credentials
-  const sig = req.headers['paypal-transmission-sig'];
-  if (!sig) console.warn('PayPal webhook: missing transmission signature — verify in production');
+  // C2: webhook signature verification — skipped only when PAYPAL_WEBHOOK_ID is a placeholder
+  const webhookId = config.paypal.webhookId;
+  if (webhookId && !webhookId.includes('PLACEHOLDER')) {
+    try {
+      const rawBody = req.body.toString();
+      const isValid = await verifyPaypalWebhookSignature(
+        req.headers, rawBody, webhookId,
+        config.paypal.clientId, config.paypal.clientSecret, config.paypal.env
+      );
+      if (!isValid) {
+        console.error('PayPal webhook: signature verification failed');
+        return res.status(400).json({ error: 'Webhook signature verification failed' });
+      }
+    } catch (verifyErr) {
+      console.error('PayPal webhook: verification error:', verifyErr.message);
+      return res.status(400).json({ error: 'Webhook verification error' });
+    }
+  } else {
+    console.warn('PayPal webhook: verification skipped — PAYPAL_WEBHOOK_ID is placeholder');
+  }
 
   try {
     const body = req.body.toString();

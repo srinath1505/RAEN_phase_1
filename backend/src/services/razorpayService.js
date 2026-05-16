@@ -35,6 +35,18 @@ class RazorpayService {
     return expectedSignature === razorpaySignature;
   }
   
+  async refundPayment(providerPaymentId) {
+    try {
+      // No amount param = full refund of the original captured amount
+      const refund = await razorpay.payments.refund(providerPaymentId, {});
+      console.log(`Razorpay refund initiated: ${refund.id} for payment ${providerPaymentId}`);
+      return refund;
+    } catch (err) {
+      console.error('Razorpay refund error:', err);
+      throw new Error('Razorpay refund failed: ' + (err.error?.description || err.message));
+    }
+  }
+
   async handlePaymentSuccess(orderId, razorpayOrderId, razorpayPaymentId, razorpaySignature) {
     // Verify signature
     const isValid = this.verifySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);

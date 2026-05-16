@@ -1,6 +1,9 @@
 const prisma = require('../config/db');
 const orderService = require('../services/orderService');
 const paymentService = require('../services/paymentService');
+const razorpayService = require('../services/razorpayService');
+const paypalService = require('../services/paypalService');
+const emailService = require('../services/emailService');
 const { success, error } = require('../utils/apiResponse');
 
 // Dashboard
@@ -162,9 +165,28 @@ exports.updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    
+
+    // N1: enforce allowed transitions at the API level — admin UI warns but the API must guard too
+    const ALLOWED_TRANSITIONS = {
+      PENDING:    ['PROCESSING', 'CANCELLED'],
+      PAID:       ['PROCESSING', 'CANCELLED'],
+      PROCESSING: ['SHIPPED', 'CANCELLED'],
+      SHIPPED:    ['DELIVERED', 'CANCELLED'],
+      DELIVERED:  [],
+      CANCELLED:  [],
+      REFUNDED:   []
+    };
+
+    const current = await prisma.order.findUnique({ where: { id }, select: { status: true } });
+    if (!current) return error(res, 'Order not found', 404);
+
+    const allowed = ALLOWED_TRANSITIONS[current.status] || [];
+    if (!allowed.includes(status)) {
+      return error(res, `Cannot move order from ${current.status} to ${status}`, 400);
+    }
+
     const order = await orderService.updateOrderStatus(id, status);
-    
+
     return success(res, { order }, 'Order status updated');
   } catch (err) {
     return error(res, err.message, 400);
@@ -443,7 +465,7 @@ exports.getProductStats = async (req, res) => {
   }
 };
 
-// Cancel order — PENDING and PAID only, within 48 hours
+// Cancel order — PENDING, PAID, PROCESSING, SHIPPED allowed; within 48 hours
 exports.cancelOrder = async (req, res) => {
   try {
     const { id } = req.params;
@@ -454,7 +476,8 @@ exports.cancelOrder = async (req, res) => {
 
     if (!order) return error(res, 'Order not found', 404);
 
-    if (['CANCELLED', 'REFUNDED', 'DELIVERED', 'SHIPPED'].includes(order.status)) {
+    // N1 amendment: SHIPPED is cancellable (lost in transit, customs rejection, warehouse damage)
+    if (['CANCELLED', 'REFUNDED', 'DELIVERED'].includes(order.status)) {
       return error(res, `Cannot cancel order with status ${order.status}`, 400);
     }
 
@@ -495,13 +518,26 @@ exports.cancelOrder = async (req, res) => {
       });
     });
 
-    // Non-blocking Razorpay refund attempt (method may not exist — guarded)
+    // C1: non-blocking gateway refund — provider determined by payment record
     const payment = order.payments?.[0] || null;
-    if (payment?.providerPaymentId && payment.provider === 'RAZORPAY') {
-      const razorpayService = require('../services/razorpayService');
-      razorpayService.refundPayment &&
-        razorpayService.refundPayment(payment.providerPaymentId, order.total).catch(console.error);
+    if (payment?.status === 'SUCCESS' && payment.providerPaymentId) {
+      if (payment.provider === 'RAZORPAY') {
+        razorpayService.refundPayment(payment.providerPaymentId)
+          .catch(err => console.error('Admin cancel: Razorpay refund error:', err.message));
+      } else if (payment.provider === 'PAYPAL') {
+        paypalService.refundPayment(payment.providerPaymentId)
+          .catch(err => console.error('Admin cancel: PayPal refund error:', err.message));
+      }
     }
+
+    // C3: non-blocking cancellation email
+    const finalPaymentStatus = order.paymentStatus === 'PAID' ? 'REFUNDED' : order.paymentStatus;
+    emailService.sendOrderCancellation({
+      email: order.email,
+      orderNumber: order.orderNumber,
+      total: order.total,
+      paymentStatus: finalPaymentStatus
+    }).catch(err => console.error('Admin cancel: cancellation email error:', err.message));
 
     return success(res, null, 'Order cancelled and inventory restored');
   } catch (err) {

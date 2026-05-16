@@ -49,4 +49,6 @@ router.patch('/addresses/:id', accountController.updateAddress);
 
 router.delete('/addresses/:id', accountController.deleteAddress);
 
+router.post('/orders/:id/cancel', accountController.cancelOrder);
+
 module.exports = router;

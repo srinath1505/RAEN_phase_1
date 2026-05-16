@@ -179,6 +179,32 @@ class EmailService {
     return this.sendEmail(email, 'Early Access Request Received - RAEN', html);
   }
   
+  async sendOrderCancellation(order) {
+    const refundNote = order.paymentStatus === 'REFUNDED'
+      ? '<p>A full refund has been initiated to your original payment method. Please allow 5–10 business days for it to appear.</p>'
+      : '';
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <body style="font-family: Arial, sans-serif;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+          <h1 style="text-align: center; letter-spacing: 0.5em;">RAEN</h1>
+          <h2>Order Cancelled</h2>
+          <p>Dear Customer,</p>
+          <p>Your order <strong>${order.orderNumber}</strong> has been cancelled.</p>
+          <p>Order Total: <strong>€${Number(order.total).toFixed(2)}</strong></p>
+          ${refundNote}
+          <p>If you have any questions, please contact us at ${config.email.supportEmail}</p>
+          <p style="margin-top: 40px; text-align: center; font-size: 10px;">© 2026 RAEN</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return this.sendEmail(order.email, `Order Cancelled - ${order.orderNumber}`, html);
+  }
+
   async sendContactAcknowledgment(email, name) {
     const html = `
       <!DOCTYPE html>

@@ -300,6 +300,7 @@
               <th style="text-align:left;padding:10px 16px;font-family:'Work Sans',sans-serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#999;font-weight:500;">Items</th>
               <th style="text-align:left;padding:10px 16px;font-family:'Work Sans',sans-serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#999;font-weight:500;">Total</th>
               <th style="text-align:left;padding:10px 16px;font-family:'Work Sans',sans-serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#999;font-weight:500;">Status</th>
+              <th style="padding:10px 16px;"></th>
             </tr>
           </thead>
           <tbody id="orders-tbody"></tbody>
@@ -549,6 +550,17 @@ async function loadOrders() {
         : '&mdash;';
 
       var badgeClass = 'badge-' + (order.status || 'PENDING');
+      var isCancellable = ['PENDING', 'PAID', 'PROCESSING', 'SHIPPED'].includes(order.status);
+      var withinWindow  = (Date.now() - new Date(order.createdAt).getTime()) < 48 * 3600000;
+      var cancelCell = (isCancellable && withinWindow)
+        ? '<button onclick="cancelOrder(\'' + escHtml(order.id) + '\')"'
+          + ' style="background:none;border:1px solid #c0392b;cursor:pointer;padding:4px 12px;'
+          + 'font-family:\'Work Sans\',sans-serif;font-size:9px;letter-spacing:0.12em;'
+          + 'text-transform:uppercase;color:#c0392b;transition:background 0.18s,color 0.18s;"'
+          + ' onmouseover="this.style.background=\'#c0392b\';this.style.color=\'#fff\'"'
+          + ' onmouseout="this.style.background=\'none\';this.style.color=\'#c0392b\'">'
+          + 'Cancel</button>'
+        : '';
       return '<tr>'
         + '<td style="padding:14px 16px 14px 0;">'
         +   '<a href="order-confirmation.html?orderNumber=' + escHtml(order.orderNumber) + '"'
@@ -562,12 +574,25 @@ async function loadOrders() {
         +   '&euro;' + order.total.toFixed(2)
         + '</td>'
         + '<td style="padding:14px 16px;"><span class="order-badge ' + escHtml(badgeClass) + '">' + escHtml(order.status) + '</span></td>'
+        + '<td style="padding:14px 16px;white-space:nowrap;">' + cancelCell + '</td>'
         + '</tr>';
     }).join('');
 
     document.getElementById('orders-table-wrap').style.display = 'block';
   } catch (e) {
     document.getElementById('orders-loading').textContent = 'Unable to load orders.';
+  }
+}
+
+// ── Customer order cancellation ───────────────────────────────────────────────
+async function cancelOrder(orderId) {
+  if (!confirm('Cancel this order?\n\nThis cannot be undone. A full refund will be initiated if payment was received.')) return;
+  try {
+    await apiPost('/account/orders/' + orderId + '/cancel', {});
+    showToast('Order cancelled. A refund will be processed within 5–10 business days if applicable.', 'success');
+    await loadOrders();
+  } catch (e) {
+    showToast(e.message || 'Could not cancel order. Please contact hello@raen.design', 'error');
   }
 }
 

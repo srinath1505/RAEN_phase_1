@@ -25,7 +25,8 @@ const config = {
   paypal: {
     clientId: process.env.PAYPAL_CLIENT_ID,
     clientSecret: process.env.PAYPAL_CLIENT_SECRET,
-    env: process.env.PAYPAL_ENV || 'sandbox'
+    env: process.env.PAYPAL_ENV || 'sandbox',
+    webhookId: process.env.PAYPAL_WEBHOOK_ID
   },
   
   upi: {
