@@ -96,11 +96,17 @@ Sitemap: https://raen.design/sitemap.xml
 
 #### Sitemap.xml
 
-🔴 **8 ghost pages still listed** — `journal.html`, `about.html`, `faq.html`, `size-guide.html`, `sustainability.html`, `press.html`, `shipping-returns.html`, `care-guide.html` return 404. Google wastes crawl budget on these and loses trust. *(Open — remove or create pages)*
+> ⚠️ **Audit correction (2026-05-17):** The original audit incorrectly flagged 8 pages as "ghost pages returning 404." All 8 files were confirmed to exist on disk (`about.html`, `faq.html`, `size-guide.html`, `sustainability.html`, `press.html`, `shipping-returns.html`, `care-guide.html`, `journal.html`). The sitemap entries for these pages are valid. O3 below has been corrected accordingly.
 
-🔴 **Individual product slug URLs not in sitemap** — Google cannot discover `product-detail.html?slug=*` via sitemap; relies solely on internal links. *(Open — add 12 product URLs or generate dynamically)*
+🟢 **All listed pages exist on disk** — confirmed via filesystem check. No true ghost pages. ✅ *(Corrected — was incorrectly flagged as 🔴)*
 
-🟡 **Stale lastmod** — All URLs show `2026-03-15`. Update to actual last-modified dates.
+🔴 **Generic `product-detail.html` template URL was in sitemap** — replaced with 12 individual slug URLs. *(Fixed — see below)*
+
+🟢 **Individual product slug URLs** — *(Fixed 2026-05-17)* All 12 product pages added to sitemap with correct slug parameters. ✅
+
+🟢 **`privacy-policy.html` and `terms-of-service.html`** — *(Fixed 2026-05-17)* Both files existed but were missing from sitemap. Now added. ✅
+
+🟢 **Stale lastmod** — *(Fixed 2026-05-17)* All URLs updated to `2026-05-17`. ✅
 
 #### Open Graph & Twitter Cards
 
@@ -264,8 +270,8 @@ GEO-optimised: *"RAEN offers free worldwide shipping to 180+ countries. Orders s
 |----|----------|-------|------|-------|--------|
 | O1 | 🔴 | Remove fabricated `aggregateRating` from Product schema | `product-detail.html` | Dev | Low |
 | O2 | 🔴 | Dynamically inject Product JSON-LD schema after API resolves | `product-detail.html` | Dev | Medium |
-| O3 | 🔴 | Remove 8 ghost pages from sitemap.xml | `sitemap.xml` | Dev | Low |
-| O4 | 🔴 | Add 12 product slug URLs to sitemap | `sitemap.xml` | Dev | Low |
+| O3 | ✅ | ~~Remove 8 ghost pages from sitemap.xml~~ — CORRECTED: all 8 pages exist. Generic template URL removed; 12 slug URLs + privacy/terms added; lastmod updated. | `sitemap.xml` | — | Resolved 2026-05-17 |
+| O4 | ✅ | Add 12 product slug URLs to sitemap | `sitemap.xml` | — | Resolved 2026-05-17 |
 | O5 | 🔴 | Create/upload `raen-og-image.jpg` to `/public/images/` | Design | Low | — |
 | O6 | 🔴 | Make collections.html + index.html product grids API-driven | `collections.html`, `index.html` | Dev | High |
 | O7 | 🟡 | Move Meta Pixel to end of `<body>` | All pages | Dev | Low |
@@ -289,7 +295,7 @@ GEO-optimised: *"RAEN offers free worldwide shipping to 180+ countries. Orders s
 |---|---|---|---|---|
 | 🔴 P1 | O1 — Remove fabricated `aggregateRating` | `product-detail.html` | Low | High — penalty risk |
 | 🔴 P1 | O2 — Dynamic Product JSON-LD injection | `product-detail.html` | Medium | High — rich results |
-| 🔴 P1 | O3+O4 — Fix sitemap (remove ghosts, add products) | `sitemap.xml` | Low | High — crawl budget |
+| ✅ Done | O3+O4 — Sitemap fixed: 12 product slugs added, privacy/terms added, lastmod updated, template URL removed | `sitemap.xml` | — | Resolved 2026-05-17 |
 | 🔴 P1 | O5 — Create OG image file | Design asset | Low | High — social sharing |
 | 🔴 P1 | O6 — API-driven product grids | `collections.html`, `index.html` | High | High — new products visible |
 | 🟡 P2 | O7 — Defer Meta Pixel | All pages | Low | Medium — LCP |

@@ -15,10 +15,12 @@
 - [ ] **Dynamic `index.html` featured products** — homepage product carousel/grid also hardcoded. Fetch from API, render same card layout dynamically. *(SEO: O6)*
 - [ ] **Remove fake `aggregateRating` from Product schema** — `product-detail.html` has hardcoded 4.9★ / 28 reviews with no review system. Google's guidelines prohibit fabricated ratings — risk of manual penalty and removal from rich results. Delete the entire `aggregateRating` block from the JSON-LD. *(SEO: O1)*
 - [ ] **Dynamic Product JSON-LD schema** — Product schema in `<head>` is a static placeholder (`The Devastating Silk Column / €1450`) for every product. Inject correct `name`, `description`, `price`, and `availability` via JS after the API call resolves. *(SEO: O2)*
-- [ ] **Fix `sitemap.xml`** — three sub-tasks: *(SEO: O3 + O4)*
-  - [ ] Remove 8 ghost pages that return 404: `journal.html`, `about.html`, `faq.html`, `size-guide.html`, `sustainability.html`, `press.html`, `shipping-returns.html`, `care-guide.html`
-  - [ ] Add 12 individual product slug URLs: `product-detail.html?slug=the-sovereign`, `?slug=bare-obsession`, `?slug=black-pearl`, `?slug=velvet-scandal`, `?slug=crimson-vice`, `?slug=emerald-sin`, `?slug=midnight-venom`, `?slug=poison-kiss`, `?slug=serpentine`, `?slug=taupe-wrap`, `?slug=the-ivory-weapon`, `?slug=the-provocateur`
-  - [ ] Update all `<lastmod>` dates from placeholder `2026-03-15` to actual date
+- [x] **Fix `sitemap.xml`** *(SEO: O3 + O4 — resolved 2026-05-17)*
+  - [x] ~~Remove ghost pages~~ — audit error corrected: all 8 pages (`about`, `faq`, `size-guide`, `sustainability`, `press`, `shipping-returns`, `care-guide`, `journal`) confirmed to exist on disk. Entries are valid and kept.
+  - [x] Removed generic `product-detail.html` template URL
+  - [x] Added 12 individual product slug URLs (`?slug=the-sovereign` through `?slug=the-provocateur`)
+  - [x] Added `privacy-policy.html` and `terms-of-service.html` (existed but were missing)
+  - [x] Updated all `<lastmod>` dates to `2026-05-17`
 - [ ] **Cookie consent banner** — GDPR legally requires explicit opt-in before GA4 and Meta Pixel fire. Selling in EUR to EU customers means EU law applies. Build a banner that: blocks GA4/Pixel until accepted, stores consent in localStorage, shows on first visit only. No third-party cookie SaaS needed — a simple custom banner is sufficient.
 - [ ] **404 page** (`stitch/404.html`) — doesn't exist. Every broken URL, deleted product, or typo dumps the user on a raw browser error with no RAEN branding and no way back. Build a branded 404 with nav header, footer, and a CTA back to collections.
 - [ ] **OG social image** — all pages reference `https://raen.design/images/raen-og-image.jpg` but the file doesn't exist. Design a 1200×630px brand image and save it as `stitch/public/images/raen-og-image.jpg`. Every social share is currently a blank card. *(SEO: O5)*
@@ -130,6 +132,8 @@
 - [x] SEO_REPORT.md — full audit report (72/100)
 - [x] task-reports/test-seo-fixes.js — 55/55 passing test suite
 - [x] task-reports/SEO_FIXES_REPORT.md — detailed test report
+- [x] sitemap.xml — fixed: 12 product slug URLs added, privacy/terms added, template URL removed, lastmod updated
+- [x] Audit correction: O3 "ghost pages" finding was wrong — all 8 pages confirmed to exist
 
 ---
 
