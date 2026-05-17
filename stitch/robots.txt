@@ -1,8 +1,11 @@
 User-agent: *
 Allow: /
 
+Disallow: /admin/
 Disallow: /shopping-bag.html
 Disallow: /checkout.html
 Disallow: /order-confirmation.html
+Disallow: /account.html
+Disallow: /reset-password.html
 
 Sitemap: https://raen.design/sitemap.xml

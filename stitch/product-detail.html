@@ -819,7 +819,7 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
 
 <!-- API Helper -->
 <script src="public/js/api.js"></script>
-<script>window.__RAEN_GOOGLE_CLIENT_ID = 'GOOGLE_CLIENT_ID_PLACEHOLDER';</script>
+<script>window.__RAEN_GOOGLE_CLIENT_ID = '359270964372-cs9ac99f9mdscju9ll8brrt11v97g59b.apps.googleusercontent.com';</script>
 <script src="public/js/auth-modal.js"></script>
 
 <!-- Product Detail Dynamic Loading -->
@@ -850,6 +850,10 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
         if (metaDesc) metaDesc.setAttribute('content', product.description);
         const metaPrice = document.querySelector('meta[property="product:price:amount"]');
         if (metaPrice) metaPrice.setAttribute('content', product.price);
+        const canonical = document.querySelector('link[rel="canonical"]');
+        if (canonical) canonical.href = `https://raen.design/product-detail.html?slug=${slug}`;
+        const ogUrl = document.querySelector('meta[property="og:url"]');
+        if (ogUrl) ogUrl.setAttribute('content', `https://raen.design/product-detail.html?slug=${slug}`);
 
         // Update category label
         const catEl = document.querySelector('span.font-label.text-outline.uppercase.block.mb-6');

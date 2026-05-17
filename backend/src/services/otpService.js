@@ -1,17 +1,14 @@
-const twilio = require('twilio');
+const twilio     = require('twilio');
+const tokenStore = require('./tokenStore');
 
-// In-memory OTP store: { phone: { code, expiry, attempts, channel } }
-// In production, replace with Redis for multi-instance support.
-const otpStore = new Map();
+const OTP_EXPIRY_MS    = 10 * 60 * 1000; // 10 minutes
+const MAX_ATTEMPTS     = 3;
+const RESEND_COOLDOWN_MS = 60 * 1000;    // 60 seconds
 
-const OTP_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
-const MAX_ATTEMPTS = 3;
-const RESEND_COOLDOWN_MS = 60 * 1000; // 60 seconds
-
-const accountSid = process.env.TWILIO_ACCOUNT_SID || '';
-const authToken = process.env.TWILIO_AUTH_TOKEN || '';
-const fromPhone = process.env.TWILIO_PHONE_NUMBER || '';
-const fromWhatsApp = process.env.TWILIO_WHATSAPP_NUMBER || 'whatsapp:+14155238886';
+const accountSid  = process.env.TWILIO_ACCOUNT_SID || '';
+const authToken   = process.env.TWILIO_AUTH_TOKEN  || '';
+const fromPhone   = process.env.TWILIO_PHONE_NUMBER      || '';
+const fromWhatsApp = process.env.TWILIO_WHATSAPP_NUMBER  || 'whatsapp:+14155238886';
 
 const isDevMode = !accountSid || accountSid.includes('PLACEHOLDER');
 
@@ -25,7 +22,6 @@ function generateOtp() {
 }
 
 function normalisePhone(phone) {
-  // Ensure phone starts with +
   const stripped = phone.replace(/\s+/g, '');
   return stripped.startsWith('+') ? stripped : '+' + stripped;
 }
@@ -33,16 +29,15 @@ function normalisePhone(phone) {
 async function sendOtp(phone, channel = 'sms') {
   const normPhone = normalisePhone(phone);
 
-  const existing = otpStore.get(normPhone);
+  const existing = await tokenStore.getOtp(normPhone);
   if (existing && Date.now() < existing.sentAt + RESEND_COOLDOWN_MS) {
     const remainingSecs = Math.ceil((existing.sentAt + RESEND_COOLDOWN_MS - Date.now()) / 1000);
     throw new Error(`Please wait ${remainingSecs} seconds before requesting a new code.`);
   }
 
-  const code = generateOtp();
+  const code   = generateOtp();
   const expiry = Date.now() + OTP_EXPIRY_MS;
-
-  otpStore.set(normPhone, { code, expiry, attempts: 0, channel, sentAt: Date.now() });
+  await tokenStore.setOtp(normPhone, { code, expiry, attempts: 0, channel, sentAt: Date.now() });
 
   if (isDevMode) {
     console.log(`\n[RAEN DEV OTP] ─────────────────────────`);
@@ -57,8 +52,7 @@ async function sendOtp(phone, channel = 'sms') {
   const messageBody = `Your RAEN verification code is: ${code}\nValid for 10 minutes. Do not share this code.`;
 
   if (channel === 'whatsapp') {
-    const toWhatsApp = `whatsapp:${normPhone}`;
-    await twilioClient.messages.create({ body: messageBody, from: fromWhatsApp, to: toWhatsApp });
+    await twilioClient.messages.create({ body: messageBody, from: fromWhatsApp, to: `whatsapp:${normPhone}` });
   } else {
     await twilioClient.messages.create({ body: messageBody, from: fromPhone, to: normPhone });
   }
@@ -66,15 +60,15 @@ async function sendOtp(phone, channel = 'sms') {
   return { success: true };
 }
 
-function verifyOtp(phone, code) {
+async function verifyOtp(phone, code) {
   const normPhone = normalisePhone(phone);
-  const record = otpStore.get(normPhone);
+  const record    = await tokenStore.getOtp(normPhone);
 
   if (!record) {
     return { valid: false, reason: 'No verification code found. Please request a new one.' };
   }
   if (Date.now() > record.expiry) {
-    otpStore.delete(normPhone);
+    await tokenStore.deleteOtp(normPhone);
     return { valid: false, reason: 'Verification code has expired. Please request a new one.' };
   }
   if (record.attempts >= MAX_ATTEMPTS) {
@@ -82,6 +76,7 @@ function verifyOtp(phone, code) {
   }
 
   record.attempts += 1;
+  await tokenStore.setOtp(normPhone, record); // persist incremented attempt count
 
   if (record.code !== String(code).trim()) {
     const remaining = MAX_ATTEMPTS - record.attempts;
@@ -93,12 +88,12 @@ function verifyOtp(phone, code) {
     };
   }
 
-  otpStore.delete(normPhone);
+  await tokenStore.deleteOtp(normPhone);
   return { valid: true };
 }
 
-function clearOtp(phone) {
-  otpStore.delete(normalisePhone(phone));
+async function clearOtp(phone) {
+  await tokenStore.deleteOtp(normalisePhone(phone));
 }
 
 module.exports = { sendOtp, verifyOtp, clearOtp, normalisePhone };

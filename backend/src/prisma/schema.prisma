@@ -305,3 +305,28 @@ model CartEvent {
   @@index([productId])
   @@index([createdAt])
 }
+
+// M3 fix — DB-backed OTP store (survives server restarts)
+model OtpRecord {
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  code      String
+  expiry    DateTime
+  attempts  Int      @default(0)
+  channel   String   @default("sms")
+  sentAt    DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// M3 fix — DB-backed password-reset token store (survives server restarts)
+model ResetTokenRecord {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  email     String
+  expiry    DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}

@@ -1,7 +1,7 @@
 # RAEN Phase 1 — Session Handoff Document
 
 **Written:** 2026-05-14
-**Last updated:** 2026-05-16 (QA fixes complete — 120/122 tests pass — all C/M/N findings resolved — M3 remains)
+**Last updated:** 2026-05-17 (Production prep + SEO/GEO audit complete — 55/55 SEO tests pass)
 **Safety repo:** https://github.com/srinath1505/RAEN_phase_1
 **Local path:** `C:\Users\Srinath\Downloads\RAEN_v1`
 
@@ -25,24 +25,15 @@ Building Phase 1 of **RAEN** — a luxury fashion e-commerce platform — by com
 
 ### Git log on `main`:
 ```
+db623a0  fix(qa): resolve all QA findings — C1–C4, M1–M2, N1–N4, N5 + comprehensive test suite
 92a1690  feat(frontend): Task 11 complete — discount pricing on product detail and collections pages
 c8d5126  feat(account): Task 10 complete — customer account page, profile edit, order history, addresses CRUD
 8e6867d  feat(auth): Task 9 complete — customer auth modal, OTP registration, Google Sign-In, forgot password
 c3242a8  feat(admin): Task 8 complete — full admin dashboard UI (9 pages) + 5 backend fixes
-7eb0672  docs: fix HANDOFF.md — remove stale Task 7 row
-0f134ad  docs: update HANDOFF.md — Task 7 complete
-c7bfc03  feat(api): Task 7 complete — expanded admin backend endpoints
-2d53ad1  docs: update HANDOFF.md — Task 6 complete
-52d3637  feat(frontend): Task 6 complete — contact form integrated
-a24fe4f  feat(api): Task 5 complete — payment webhooks with DB transactions
-05b2162  docs: add session handoff document for context continuity
-91cf328  fix(frontend): Task 4 complete — product links fixed, redirect stubs
-3d3a130  feat(frontend): Task 3 complete — analytics tracking script
-9cb2aee  feat(api): Task 2 complete — analytics tracking endpoints
-75cf62f  feat(db): Task 1 complete — add salePrice/discountPercent, PageView, CartEvent
 ```
 
 ### Tasks 1–11: ALL COMPLETE ✅ — Phase 1 DONE
+### Production Prep + SEO Audit: COMPLETE ✅ (2026-05-17)
 
 ### Running servers:
 ```bash
@@ -448,6 +439,82 @@ Auth middleware returns `"Authentication required"` and `"Invalid or expired tok
 
 ---
 
+## 6b. Production Prep Session (2026-05-17)
+
+### Credentials plugged in (partial — refer to `backend/.env` for current values)
+- PayPal sandbox credentials active
+- UPI ID: `7397262888@pthdfc`
+- Google OAuth Client ID: real credential — Google Sign-In now live
+- Twilio: real SID/auth token — ⚠️ FROM number is a personal number, not a Twilio-purchased number (OTP sends will fail until client buys a Twilio number)
+- SMTP: still placeholder — client must provide Gmail address + App Password
+- JWT_SECRET: rotated to cryptographically secure 128-char random value
+
+### M3 — In-memory token stores: RESOLVED
+- `backend/src/services/tokenStore.js` — new adapter (memory / db / redis)
+- `backend/src/services/otpService.js` — fully async, uses tokenStore
+- `backend/src/services/resetTokenService.js` — fully async, uses tokenStore
+- `backend/src/controllers/authController.js` — 5 missing `await` calls added
+- Schema: `OtpRecord` + `ResetTokenRecord` models added to `schema.prisma` — tables live in Neon
+- `ioredis` installed
+- Switch: set `TOKEN_STORE=db` or `TOKEN_STORE=redis` in `.env` + restart (default: `memory`)
+
+### Google OAuth — frontend wired
+- Real Client ID injected into all 5 customer-facing pages (index, collections, product-detail, shopping-bag, checkout)
+
+### Integration test results (2026-05-17)
+| Integration | Result | Notes |
+|-------------|--------|-------|
+| Health / DB | ✅ | Server starts, Neon connected |
+| Admin login | ✅ | JWT issued correctly |
+| UPI payment intent | ✅ | Correct UPI ID, QR link, DB record |
+| Google OAuth | ✅ | Calling real Google API (was "not configured") |
+| Twilio credentials | ✅ | Valid — FROM number issue flagged |
+| PayPal sandbox | ❌ | `invalid_client` — client may have given live credentials for sandbox env |
+
+### Deployment guide added
+- See section 9 (Git Workflow) for Railway + Vercel deployment plan
+- `stitch/public/js/api.js` updated — `window.__RAEN_API_URL` override for production backend URL
+
+---
+
+## 6c. SEO & GEO Audit Session (2026-05-17)
+
+### Audit scope
+Full frontend codebase — 17 HTML pages, schema, robots.txt, sitemap.xml, public assets.
+
+### Score: 72/100 (post-fix) — was 69/100
+
+| Category | Score |
+|---|---|
+| Technical SEO | 16/20 |
+| Core Web Vitals | 16/20 |
+| E-Commerce SEO | 12/20 |
+| Structured Data | 16/20 |
+| GEO Readiness | 12/20 |
+
+### Fixes applied in this session
+1. `product-detail.html` — dynamic canonical + og:url injection after slug resolves
+2. All 9 `admin/*.html` — `<meta name="robots" content="noindex, nofollow">` added
+3. `robots.txt` — `Disallow: /admin/`, `/account.html`, `/reset-password.html` added
+4. `early-access.html` — canonical tag added
+5. `account.html` — meta description added
+
+### Test suite
+`task-reports/test-seo-fixes.js` — **55/55 passed, 0 failed, 7 warnings (documented open issues)**
+
+### Open issues (carry forward)
+- O1 🔴 Remove fabricated `aggregateRating` from Product schema (manual penalty risk)
+- O2 🔴 Dynamically inject Product JSON-LD schema after API call
+- O3 🔴 Remove 8 ghost pages from `sitemap.xml`; add 12 real product slug URLs
+- O5 🔴 Create `stitch/public/images/raen-og-image.jpg` (social share blank without it)
+- O6 🔴 Make `collections.html` + `index.html` product grids API-driven
+- O7 🟡 Move Meta Pixel to end of `<body>` (render-blocking)
+- O8 🟡 Add H1 to `checkout.html`
+
+Full details: `SEO_REPORT.md`
+
+---
+
 ## 7. Project Structure (current)
 
 ```
@@ -503,26 +570,31 @@ RAEN_v1/
 │   │       └── auth-modal.js          ← Task 9: NEW — shared modal (5 views), eye toggle,
 │   │                                      confirm pwd + match indicator, OTP boxes, forgot password,
 │   │                                      Google Sign-In, __postLoginCallback hook
-│   ├── admin/                         ← Task 8: COMPLETE (9 files)
-│   ├── account.html                   ← Task 9: stub (auth gate, coming soon, sign out). Task 10 will complete.
-│   ├── reset-password.html            ← Task 9: NEW — magic link landing (3 states: loading/invalid/form)
-│   ├── product-detail.html            ← Task 4+9: DONE (auth nav link added)
-│   ├── collections.html               ← Task 4+9: DONE (auth nav link added)
-│   ├── index.html                     ← Task 4+9: DONE (auth nav link added)
-│   ├── checkout.html                  ← Task 3+9: DONE (payment gate, auto-fill, __postLoginCallback)
+│   ├── admin/                         ← Task 8: COMPLETE (9 files — all now have noindex, nofollow)
+│   ├── account.html                   ← Task 10: DONE — profile, order history, addresses CRUD
+│   ├── reset-password.html            ← Task 9: DONE — magic link landing (noindex, nofollow)
+│   ├── product-detail.html            ← Tasks 4+9+SEO: dynamic canonical + og:url injection added
+│   ├── collections.html               ← Tasks 4+9: DONE (product grid hardcoded — see open issue O6)
+│   ├── index.html                     ← Tasks 4+9: DONE
+│   ├── checkout.html                  ← Tasks 3+9: DONE (noindex, nofollow)
 │   ├── contact.html                   ← Task 6: DONE
-│   ├── shopping-bag.html              ← Task 3+9: DONE (auth nav link added)
-│   ├── order-confirmation.html        ← Task 3: DONE
-│   ├── early-access.html              ← Task 3: DONE
+│   ├── shopping-bag.html              ← Tasks 3+9: DONE (noindex)
+│   ├── order-confirmation.html        ← Task 3: DONE (noindex, nofollow)
+│   ├── early-access.html              ← Tasks 3+SEO: canonical added (noindex, follow)
+│   ├── robots.txt                     ← SEO: Disallow /admin/, /account.html, /reset-password.html added
+│   ├── sitemap.xml                    ← SEO: ghost pages still present — see open issue O3
 │   └── [12 product stubs].html        ← Task 4: DONE (redirect stubs)
 ├── task-reports/
 │   ├── TASK_01_REPORT.md through TASK_09_REPORT.md
 │   ├── debug-task7.js                 ← Task 7 test runner (84 tests)
 │   ├── test-task8.js                  ← Task 8 test runner (202 tests, 8 skipped)
-│   └── test-task9.js                  ← Task 9 test runner (161 tests, 1 skipped)
+│   ├── test-task9.js                  ← Task 9 test runner (161 tests, 1 skipped)
+│   └── test-seo-fixes.js              ← SEO audit test runner (55/55 pass, 7 open-issue warnings)
+├── SEO_REPORT.md                      ← Full SEO + GEO audit report (v2, 72/100)
+├── QA_FINDINGS_REPORT.md              ← QA findings (all C/M/N resolved except M3)
 ├── IMPLEMENTATION_PLAN.md
-├── CLAUDE_PHASE1_PROMPT.md            ← original spec (reference for tasks 10–11)
-├── HANDOFF.md                         ← this file
+├── CLAUDE_PHASE1_PROMPT.md            ← original spec
+├── HANDOFF.md                         ← this file (credentials removed — see backend/.env)
 └── serve-stitch.js                    ← static file server (port 4173)
 ```
 
@@ -609,29 +681,23 @@ git push phase1 main
 
 ## 10. Key Environment Facts
 
+> **All credentials, secrets, and environment-specific values are intentionally omitted here.**
+> This file is version-controlled and pushed to GitHub — refer to `backend/.env` for all live values.
+>
+> Non-secret runtime facts that are safe to document:
+
 | Item | Value |
 |------|-------|
 | Node.js | v22.20.0 |
 | Prisma | v5.22.0 — DO NOT upgrade (v7 available but breaking) |
 | Git user.name | Srinath |
-| Git user.email | muhammedriyaz.s2021@vitstudent.ac.in |
-| Co-Authored-By | srinathselvakumar1505@gmail.com |
-| Admin email | admin@raen.design |
-| Admin password | RaenAdmin2024! |
-| JWT secret | raen-dev-secret-change-in-production-2024 |
-| JWT expiry | 7 days (check env.js) |
-| Razorpay keys | Placeholders — test with locally computed HMAC |
-| PayPal | Sandbox placeholders |
-| SMTP | Placeholders — emails won't send, errors are non-blocking |
-| Google OAuth | GOOGLE_CLIENT_ID_PLACEHOLDER — see G11 above for activation steps |
-| Twilio | TWILIO_ACCOUNT_SID_PLACEHOLDER — see Task 9 section for activation steps |
-| Auth rate limiter | Max 5 attempts / 15 min — in-memory (reset on server restart) |
-| OTP store | In-memory Map — reset on server restart. OTP logged to console in dev. |
-| Reset token store | In-memory Map — reset on server restart. Link logged to console in dev. |
+| Co-Authored-By email | srinathselvakumar1505@gmail.com (personal, not VIT email) |
 | bcrypt package | `bcrypt` (NOT `bcryptjs`) — see G11 |
 | API response format | `{ success: bool, message: string, data: { ... } }` — api.js unwraps `data` automatically |
 | Token localStorage key | `raen_auth_token` |
 | Session localStorage key | `raen_session` (analytics), `raen_session_id` (api.js) |
+| Auth rate limiter | Max 5 attempts / 15 min — in-memory (reset on server restart) |
+| TOKEN_STORE | Controlled via `TOKEN_STORE=memory\|db\|redis` in `.env` — default: `memory` |
 
 ---
 

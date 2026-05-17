@@ -83,7 +83,7 @@ exports.registerWithOtp = async (req, res) => {
     }
     if (password.length < 8) return error(res, 'Password must be at least 8 characters', 400);
 
-    const otpResult = otpService.verifyOtp(phone, otp);
+    const otpResult = await otpService.verifyOtp(phone, otp);
     if (!otpResult.valid) return error(res, otpResult.reason, 400);
 
     const result = await authService.register({ firstName, lastName, email, phone, password });
@@ -181,11 +181,11 @@ exports.forgotPasswordVerify = async (req, res) => {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user || !user.phone) return error(res, 'Invalid request.', 400);
 
-    const otpResult = otpService.verifyOtp(user.phone, otp);
+    const otpResult = await otpService.verifyOtp(user.phone, otp);
     if (!otpResult.valid) return error(res, otpResult.reason, 400);
 
     // Generate single-use reset token (1 hour)
-    const resetToken = resetTokenService.generateResetToken(user.id, user.email);
+    const resetToken = await resetTokenService.generateResetToken(user.id, user.email);
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4173';
     const resetLink   = `${frontendUrl}/reset-password.html?token=${resetToken}`;
 
@@ -224,7 +224,7 @@ exports.validateResetToken = async (req, res) => {
   try {
     const { token } = req.query;
     if (!token) return error(res, 'Token is required.', 400);
-    const record = resetTokenService.validateResetToken(token);
+    const record = await resetTokenService.validateResetToken(token);
     if (!record) return error(res, 'This reset link has expired or is invalid. Please request a new one.', 400);
     return success(res, { email: record.email }, 'Token is valid.');
   } catch (err) {
@@ -240,7 +240,7 @@ exports.resetPassword = async (req, res) => {
     if (!token || !password) return error(res, 'Token and new password are required.', 400);
     if (password.length < 8) return error(res, 'Password must be at least 8 characters.', 400);
 
-    const record = resetTokenService.consumeResetToken(token);
+    const record = await resetTokenService.consumeResetToken(token);
     if (!record) return error(res, 'This reset link has expired or is invalid. Please request a new one.', 400);
 
     const passwordHash = await bcrypt.hash(password, 10);

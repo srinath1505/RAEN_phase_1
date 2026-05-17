@@ -1,8 +1,12 @@
 // RAEN Frontend API Helper
 // Base configuration
-const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-  ? 'http://localhost:5000/api'
-  : '/api'; // Change to your production backend URL
+// window.__RAEN_API_URL can be set per-page before this script loads to override the backend URL.
+// In production: add <script>window.__RAEN_API_URL = 'https://your-backend.railway.app/api';</script>
+// before <script src="public/js/api.js"></script> on every page (or just update the fallback below).
+const API_BASE_URL = window.__RAEN_API_URL ||
+  ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:5000/api'
+    : '/api');
 
 // Storage keys
 const TOKEN_KEY = 'raen_auth_token';
