@@ -20,7 +20,8 @@ async function authMiddleware(req, res, next) {
         email: decoded.email,
         firstName: decoded.firstName,
         lastName: decoded.lastName,
-        role: decoded.role
+        role: decoded.role,
+        adminLogin: decoded.adminLogin || false   // forwarded from admin auth token
       };
     } else if (decoded.userId) {
       // Legacy token format (issued before N3 fix) — do DB lookup until it expires (7-day window)

@@ -145,20 +145,19 @@
       btn.textContent = 'Signing in...';
 
       try {
-        const r = await fetch(API + '/api/auth/login', {
+        const r = await fetch(API + '/api/admin/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
         });
         const data = await r.json();
-        if (!data.success || !data.data?.token) throw new Error('Bad credentials');
-        if (data.data.user?.role !== 'ADMIN') throw new Error('Not an admin account');
+        if (!data.success || !data.data?.token) {
+          throw new Error(data.message || 'Invalid credentials');
+        }
         localStorage.setItem('raen_auth_token', data.data.token);
         window.location.href = 'index.html';
       } catch (e) {
-        err.textContent = e.message === 'Not an admin account'
-          ? 'This account does not have admin access.'
-          : 'Invalid email or password. Please try again.';
+        err.textContent = 'Invalid email or password. Please try again.';
         err.style.display = 'block';
         btn.disabled = false;
         btn.textContent = 'Sign In';

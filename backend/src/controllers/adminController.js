@@ -166,24 +166,13 @@ exports.updateOrderStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    // N1: enforce allowed transitions at the API level — admin UI warns but the API must guard too
-    const ALLOWED_TRANSITIONS = {
-      PENDING:    ['PROCESSING', 'CANCELLED'],
-      PAID:       ['PROCESSING', 'CANCELLED'],
-      PROCESSING: ['SHIPPED', 'CANCELLED'],
-      SHIPPED:    ['DELIVERED', 'CANCELLED'],
-      DELIVERED:  [],
-      CANCELLED:  [],
-      REFUNDED:   []
-    };
+    const VALID_STATUSES = ['PENDING', 'PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED'];
+    if (!VALID_STATUSES.includes(status)) {
+      return error(res, `Invalid status: ${status}`, 400);
+    }
 
     const current = await prisma.order.findUnique({ where: { id }, select: { status: true } });
     if (!current) return error(res, 'Order not found', 404);
-
-    const allowed = ALLOWED_TRANSITIONS[current.status] || [];
-    if (!allowed.includes(status)) {
-      return error(res, `Cannot move order from ${current.status} to ${status}`, 400);
-    }
 
     const order = await orderService.updateOrderStatus(id, status);
 
@@ -214,8 +203,9 @@ exports.getAllInventory = async (req, res) => {
 exports.updateInventory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { stock } = req.body;
-    
+    const stock = parseInt(req.body.stock, 10);
+    if (isNaN(stock) || stock < 0) return error(res, 'Stock must be a non-negative integer', 400);
+
     const inventoryItem = await prisma.inventory.update({
       where: { id },
       data: { stock }

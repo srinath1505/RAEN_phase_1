@@ -2,10 +2,23 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const adminController = require('../controllers/adminController');
+const adminAuthController = require('../controllers/adminAuthController');
 const authMiddleware = require('../middleware/authMiddleware');
 const adminMiddleware = require('../middleware/adminMiddleware');
 const validationMiddleware = require('../middleware/validationMiddleware');
 
+// Public admin login — must be declared BEFORE the auth middleware stack
+router.post(
+  '/auth/login',
+  [
+    body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
+    body('password').notEmpty().withMessage('Password required')
+  ],
+  validationMiddleware,
+  adminAuthController.adminLogin
+);
+
+// All routes below this line require a valid admin token
 router.use(authMiddleware);
 router.use(adminMiddleware);
 

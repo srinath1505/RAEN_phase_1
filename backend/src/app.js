@@ -29,6 +29,7 @@ app.use(helmet({
       defaultSrc:      ["'self'"],
       scriptSrc:       ["'self'", "'unsafe-inline'", "'unsafe-eval'",
                         "https://cdn.tailwindcss.com",
+                        "https://cdn.jsdelivr.net",
                         "https://accounts.google.com",
                         "https://apis.google.com",
                         "https://checkout.razorpay.com",

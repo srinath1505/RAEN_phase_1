@@ -289,8 +289,9 @@
     document.getElementById('stat-conversion').textContent = (analyticsData.summary?.conversionRate || 0) + '%';
     document.getElementById('stat-cart-checkout').textContent = (analyticsData.summary?.cartToCheckout || 0) + '%';
 
-    // Revenue chart
-    renderChart(analyticsData.revenueByDay || []);
+    // Revenue chart — isolated so a Chart.js load failure doesn't abort other sections
+    try { renderChart(analyticsData.revenueByDay || []); }
+    catch(chartErr) { console.warn('Chart.js unavailable:', chartErr.message); }
 
     // Low stock
     renderLowStock(dash.lowStockItems || []);
