@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Completing Payment | RAEN</title>
+<meta name="robots" content="noindex, nofollow"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Work Sans', sans-serif; background: #f9f9f9; color: #1a1c1c; }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 2px solid #e2e2e2;
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 24px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body class="min-h-screen flex items-center justify-center px-8">
+<div class="text-center max-w-md">
+  <div id="spinner" class="spinner"></div>
+  <h1 id="statusHeadline" class="text-2xl font-light mb-4" style="font-family:'Newsreader',serif; letter-spacing:-0.02em;">
+    Completing your acquisition...
+  </h1>
+  <p id="statusMsg" class="text-sm text-gray-500 tracking-wide">Please wait while we confirm your payment with PayPal.</p>
+</div>
+
+<script src="public/js/api.js"></script>
+<script>
+(async function () {
+  const params  = new URLSearchParams(window.location.search);
+  const orderNumber  = params.get('orderNumber');
+  const paypalOrderId = params.get('token');   // PayPal passes approved order ID as ?token=
+
+  function setError(msg) {
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('statusHeadline').textContent = 'Payment could not be completed';
+    document.getElementById('statusMsg').textContent = msg || 'Something went wrong. Please try again.';
+    setTimeout(function () {
+      window.location.href = 'checkout.html?paypalError=true';
+    }, 3000);
+  }
+
+  if (!orderNumber || !paypalOrderId) {
+    setError('Missing payment details. Redirecting to checkout...');
+    return;
+  }
+
+  try {
+    await apiPost('/payments/paypal/capture', { orderNumber, paypalOrderId });
+
+    // Track checkout_completed event
+    var sid = localStorage.getItem('raen_session');
+    if (sid) {
+      var base = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:5000' : '';
+      fetch(base + '/api/analytics/cart-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: 'checkout_completed', sessionId: sid, orderId: orderNumber }),
+        keepalive: true
+      }).catch(function () {});
+    }
+
+    document.getElementById('statusHeadline').textContent = 'Acquisition confirmed.';
+    document.getElementById('statusMsg').textContent = 'Redirecting to your order...';
+    setTimeout(function () {
+      window.location.href = 'order-confirmation.html?orderNumber=' + encodeURIComponent(orderNumber);
+    }, 1200);
+
+  } catch (err) {
+    console.error('PayPal capture error:', err);
+    setError(err.message || 'PayPal payment capture failed. Redirecting to checkout...');
+  }
+})();
+</script>
+</body>
+</html>

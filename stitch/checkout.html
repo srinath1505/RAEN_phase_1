@@ -302,8 +302,8 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
 <input id="postalCode" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text" required/>
 </div>
 <div class="atelier-input-container">
-<label class="absolute -top-3 left-0 text-[10px] uppercase tracking-[0.15em] font-label text-outline">State/Province</label>
-<input id="state" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text" required/>
+<label class="absolute -top-3 left-0 text-[10px] uppercase tracking-[0.15em] font-label text-outline">State/Province <span class="normal-case" style="letter-spacing:0;">(optional)</span></label>
+<input id="state" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text"/>
 </div>
 <div class="atelier-input-container">
 <label class="absolute -top-3 left-0 text-[10px] uppercase tracking-[0.15em] font-label text-outline">Country</label>
@@ -457,17 +457,18 @@ Secure Acquisition
         
         items.forEach(item => {
             const product = item.product;
-            const itemTotal = parseFloat(product.price) * item.quantity;
-            
+            if (!product) return;
+            const itemTotal = (parseFloat(product.price) || item.unitPrice || 0) * item.quantity;
+
             const itemHTML = `
             <div class="flex gap-6">
                 <div class="w-24 aspect-[3/4] bg-surface-container overflow-hidden">
-                    <img alt="${product.name}" class="w-full h-full object-cover grayscale hover:scale-105 transition-transform duration-700" 
+                    <img alt="${product.name || 'Product'}" class="w-full h-full object-cover grayscale hover:scale-105 transition-transform duration-700"
                          src="${product.images && product.images.length > 0 ? product.images[0] : 'public/images/placeholder.jpg'}"/>
                 </div>
                 <div class="flex-1 flex flex-col justify-between py-1">
                     <div>
-                        <h4 class="text-sm font-medium">${product.name}</h4>
+                        <h4 class="text-sm font-medium">${product.name || 'Product'}</h4>
                         <p class="text-[10px] uppercase tracking-widest text-outline mt-1 font-label">Size: ${item.size}</p>
                     </div>
                     <div class="flex justify-between items-end">
@@ -522,7 +523,7 @@ Secure Acquisition
         const country = document.getElementById('country').value.trim();
         const phone = document.getElementById('phone').value.trim();
         
-        if (!email || !firstName || !lastName || !streetAddress || !city || !postalCode || !state || !country || !phone) {
+        if (!email || !firstName || !lastName || !streetAddress || !city || !postalCode || !country || !phone) {
             showToast('Please fill in all required fields', 'error');
             return false;
         }
@@ -591,9 +592,9 @@ Secure Acquisition
                     }
                 },
                 prefill: {
-                    name: `${orderData.shippingAddress.firstName} ${orderData.shippingAddress.lastName}`,
-                    email: orderData.shippingAddress.email,
-                    contact: orderData.shippingAddress.phone
+                    name: orderData.shippingAddress.fullName || '',
+                    email: orderData.email || document.getElementById('email').value.trim(),
+                    contact: orderData.phone || document.getElementById('phone').value.trim()
                 },
                 theme: {
                     color: '#000000'
@@ -757,6 +758,14 @@ Secure Acquisition
         delete window.__postLoginCallback;
         await fillFromUserProfile();
     };
+
+    // Show feedback when user returns from a cancelled or failed PayPal session
+    const _urlParams = new URLSearchParams(window.location.search);
+    if (_urlParams.get('paypalCancelled') === 'true') {
+        showToast('PayPal payment was cancelled. You can try again or choose a different method.', 'error');
+    } else if (_urlParams.get('paypalError') === 'true') {
+        showToast('PayPal payment could not be completed. Please try again.', 'error');
+    }
 })();
 </script>
 

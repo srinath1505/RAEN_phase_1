@@ -1,10 +1,19 @@
 const paypalClient = require('../config/paypal');
 const paypal = require('@paypal/checkout-server-sdk');
 const prisma = require('../config/db');
+const config = require('../config/env');
 
 class PaypalService {
   async createOrder(orderTotal, orderNumber, currency = 'USD') {
     try {
+      // Determine the app's public base URL for PayPal return/cancel redirects.
+      // RAILWAY_PUBLIC_DOMAIN is auto-set by Railway. Falls back to FRONTEND_URL env var.
+      const appBase = process.env.RAILWAY_PUBLIC_DOMAIN
+        ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+        : (config.frontendUrl && config.frontendUrl !== 'http://localhost:3000'
+          ? config.frontendUrl
+          : 'http://localhost:5000');
+
       const request = new paypal.orders.OrdersCreateRequest();
       request.prefer('return=representation');
       request.requestBody({
@@ -16,7 +25,14 @@ class PaypalService {
             value: orderTotal.toFixed(2)
           },
           description: `RAEN Order ${orderNumber}`
-        }]
+        }],
+        application_context: {
+          brand_name: 'RAEN',
+          landing_page: 'LOGIN',
+          user_action: 'PAY_NOW',
+          return_url: `${appBase}/paypal-return.html?orderNumber=${orderNumber}`,
+          cancel_url: `${appBase}/checkout.html?paypalCancelled=true`
+        }
       });
       
       const response = await paypalClient.client().execute(request);

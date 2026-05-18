@@ -464,21 +464,22 @@ document.getElementById('bagNewsletterForm').addEventListener('submit', async (e
         
         items.forEach(item => {
             const product = item.product;
-            const itemTotal = parseFloat(product.price) * item.quantity;
-            
+            if (!product) return;
+            const itemTotal = (parseFloat(product.price) || item.unitPrice || 0) * item.quantity;
+
             const itemHTML = `
             <div class="flex flex-col md:flex-row gap-8 pb-12 border-b border-outline-variant/30" data-item-id="${item.id}">
-                <div class="w-full md:w-64 aspect-[3/4] overflow-hidden bg-surface-container-low group cursor-pointer" onclick="window.location.href='product-detail.html?slug=${product.slug}'">
-                    <img class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700 hover:scale-105" 
-                         src="${product.images && product.images.length > 0 ? product.images[0] : 'public/images/placeholder.jpg'}" 
-                         alt="${product.name}"/>
+                <div class="w-full md:w-64 aspect-[3/4] overflow-hidden bg-surface-container-low group cursor-pointer" onclick="window.location.href='product-detail.html?slug=${product.slug || ''}'">
+                    <img class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700 hover:scale-105"
+                         src="${product.images && product.images.length > 0 ? product.images[0] : 'public/images/placeholder.jpg'}"
+                         alt="${product.name || 'Product'}"/>
                 </div>
                 <div class="flex-1 flex flex-col justify-between py-2">
                     <div>
                         <div class="flex justify-between items-start mb-4">
                             <div>
                                 <p class="text-[10px] uppercase tracking-[0.2em] font-label text-outline mb-2">RAEN Collection</p>
-                                <h2 class="font-headline text-3xl">${product.name}</h2>
+                                <h2 class="font-headline text-3xl">${product.name || 'Product'}</h2>
                             </div>
                             <p class="font-headline text-2xl">€${itemTotal.toLocaleString()}</p>
                         </div>
