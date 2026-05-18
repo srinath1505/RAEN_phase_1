@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const path = require('path');
 const config = require('./config/env');
 const errorMiddleware = require('./middleware/errorMiddleware');
 
@@ -44,29 +45,31 @@ if (config.nodeEnv === 'development') {
   app.use(morgan('dev'));
 }
 
-// Root route
-app.get('/', (req, res) => {
-  res.json({
-    success: true,
-    message: 'RAEN E-commerce API',
-    version: '1.0.0',
-    endpoints: {
-      health: '/health',
-      auth: '/api/auth',
-      products: '/api/products',
-      cart: '/api/cart',
-      checkout: '/api/checkout',
-      payments: '/api/payments',
-      orders: '/api/orders',
-      account: '/api/account',
-      newsletter: '/api/newsletter',
-      earlyAccess: '/api/early-access',
-      contact: '/api/contact',
-      admin: '/api/admin',
-      analytics: '/api/analytics'
-    }
+// Root route — only shown in development (production serves stitch/index.html)
+if (config.nodeEnv !== 'production') {
+  app.get('/', (req, res) => {
+    res.json({
+      success: true,
+      message: 'RAEN E-commerce API',
+      version: '1.0.0',
+      endpoints: {
+        health: '/health',
+        auth: '/api/auth',
+        products: '/api/products',
+        cart: '/api/cart',
+        checkout: '/api/checkout',
+        payments: '/api/payments',
+        orders: '/api/orders',
+        account: '/api/account',
+        newsletter: '/api/newsletter',
+        earlyAccess: '/api/early-access',
+        contact: '/api/contact',
+        admin: '/api/admin',
+        analytics: '/api/analytics'
+      }
+    });
   });
-});
+}
 
 // Health check
 app.get('/health', (req, res) => {
@@ -86,6 +89,11 @@ app.use('/api/early-access', earlyAccessRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/analytics', analyticsRoutes);
+
+// Serve static frontend in production — after API routes so /api/* takes precedence
+if (config.nodeEnv === 'production') {
+  app.use(express.static(path.join(__dirname, '../../stitch')));
+}
 
 // 404 handler
 app.use((req, res) => {

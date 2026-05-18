@@ -25,7 +25,7 @@ if (config.email.provider === 'sendgrid') {
   transporter = nodemailer.createTransport({
     host: config.email.smtp.host,
     port: config.email.smtp.port,
-    secure: false,
+    secure: config.email.smtp.port === 465, // true for SSL (port 465), false for STARTTLS (587)
     auth: {
       user: config.email.smtp.user,
       pass: config.email.smtp.pass

@@ -4,6 +4,8 @@
   "description": "RAEN Luxury Fashion E-commerce Platform",
   "scripts": {
     "install": "cd backend && npm install",
+    "start": "node backend/src/server.js",
+    "build": "cd backend && npm install && npx prisma generate --schema=./src/prisma/schema.prisma",
     "backend": "cd backend && npm run dev",
     "frontend": "node serve-stitch.js",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",

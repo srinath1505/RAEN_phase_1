@@ -241,14 +241,21 @@
                      checked style="display:none;" onchange="raenUpdateChannelUI()"/>SMS
             </label>
             <label id="raen-ch-wa-label"
-                   style="flex:1;text-align:center;padding:11px 4px;cursor:pointer;
+                   style="flex:1;text-align:center;padding:8px 4px;cursor:not-allowed;
                           font-family:${F};font-size:10px;letter-spacing:0.18em;
-                          text-transform:uppercase;background:#fff;color:#777;
-                          transition:all 0.2s;border-left:1px solid #e0e0e0;">
-              <input type="radio" name="raen-otp-channel" value="whatsapp" id="raen-ch-wa"
-                     style="display:none;" onchange="raenUpdateChannelUI()"/>WhatsApp
+                          text-transform:uppercase;background:#fff;color:#c0c0c0;
+                          transition:all 0.2s;border-left:1px solid #e0e0e0;"
+                   onclick="raenWaComingSoon();return false;">
+              WhatsApp
+              <span style="display:block;font-size:7px;letter-spacing:0.12em;
+                           color:#b8960c;margin-top:2px;">COMING SOON</span>
             </label>
           </div>
+          <p id="raen-wa-soon-note"
+             style="font-family:${F};font-size:11px;color:#b8960c;margin:8px 0 0;
+                    display:none;text-align:center;letter-spacing:0.06em;">
+            WhatsApp verification will be available soon.
+          </p>
         </div>
 
         <p id="raen-register-error"
@@ -521,11 +528,15 @@
 
   // ─── Channel toggle ───────────────────────────────────────────────────────
   window.raenUpdateChannelUI = function () {
-    const sms = document.getElementById('raen-ch-sms').checked;
-    document.getElementById('raen-ch-sms-label').style.background = sms ? '#1a1a1a' : '#fff';
-    document.getElementById('raen-ch-sms-label').style.color      = sms ? '#fff'    : '#777';
-    document.getElementById('raen-ch-wa-label').style.background  = sms ? '#fff'    : '#1a1a1a';
-    document.getElementById('raen-ch-wa-label').style.color       = sms ? '#777'    : '#fff';
+    // WhatsApp is disabled — SMS is always active, no UI toggle needed
+  };
+
+  window.raenWaComingSoon = function () {
+    const note = document.getElementById('raen-wa-soon-note');
+    if (!note) return;
+    note.style.display = 'block';
+    clearTimeout(window._raenWaTimer);
+    window._raenWaTimer = setTimeout(function () { note.style.display = 'none'; }, 2500);
   };
 
   // ─── Post-login handler ───────────────────────────────────────────────────
