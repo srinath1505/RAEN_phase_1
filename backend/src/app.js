@@ -22,8 +22,34 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 
 const app = express();
 
-// Security middleware
-app.use(helmet());
+// Security middleware — CSP configured to allow Tailwind CDN + Google Fonts used by frontend
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc:      ["'self'"],
+      scriptSrc:       ["'self'", "'unsafe-inline'", "'unsafe-eval'",
+                        "https://cdn.tailwindcss.com",
+                        "https://accounts.google.com",
+                        "https://apis.google.com",
+                        "https://checkout.razorpay.com",
+                        "https://www.paypal.com",
+                        "https://www.sandbox.paypal.com"],
+      styleSrc:        ["'self'", "'unsafe-inline'",
+                        "https://fonts.googleapis.com"],
+      fontSrc:         ["'self'",
+                        "https://fonts.gstatic.com"],
+      imgSrc:          ["'self'", "data:", "blob:", "https:"],
+      connectSrc:      ["'self'", "https:"],
+      frameSrc:        ["'self'",
+                        "https://accounts.google.com",
+                        "https://www.paypal.com",
+                        "https://www.sandbox.paypal.com"],
+      objectSrc:       ["'none'"],
+      upgradeInsecureRequests: [],
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+}));
 
 // CORS configuration
 app.use(cors({
