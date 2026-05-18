@@ -12,57 +12,65 @@ exports.adminLogin = async (req, res) => {
       return error(res, 'Email and password are required', 400);
     }
 
-    let adminUser = null;
-
-    // ── Path A: env-var credentials are configured ────────────────────────
-    // ADMIN_EMAIL + ADMIN_PASSWORD set in Railway → validate against them
-    if (config.admin.email && config.admin.password) {
-      if (email.toLowerCase() !== config.admin.email.toLowerCase()) {
-        return error(res, 'Invalid credentials', 401);
+    // ── Primary path: DB lookup + bcrypt ─────────────────────────────────
+    // The admin user is created by seed.js with role=ADMIN and a bcrypt hash.
+    // We look up any admin user matching the submitted email (case-insensitive).
+    const adminUser = await prisma.user.findFirst({
+      where: {
+        email: { equals: email, mode: 'insensitive' },
+        role: 'ADMIN'
       }
-      if (password !== config.admin.password) {
-        return error(res, 'Invalid credentials', 401);
-      }
-      // Fetch DB record only for the id (audit logs) — not for auth
-      adminUser = await prisma.user.findFirst({
-        where: { email: config.admin.email, role: 'ADMIN' },
-        select: { id: true, email: true, firstName: true, lastName: true }
-      });
+    });
 
-    // ── Path B: env vars not set → fall back to DB + bcrypt ──────────────
-    // This covers Railway deployments where ADMIN_EMAIL/ADMIN_PASSWORD are
-    // not yet configured as env vars. The admin user must have role='ADMIN'.
-    } else {
-      adminUser = await prisma.user.findFirst({
-        where: { email: email.toLowerCase(), role: 'ADMIN' },
-        select: { id: true, email: true, firstName: true, lastName: true, passwordHash: true }
-      });
-
-      if (!adminUser) {
-        return error(res, 'Invalid credentials', 401);
+    if (adminUser) {
+      const valid = await bcrypt.compare(password, adminUser.passwordHash);
+      if (!valid) {
+        return error(res, 'Invalid email or password', 401);
       }
 
-      const passwordMatch = await bcrypt.compare(password, adminUser.passwordHash);
-      if (!passwordMatch) {
-        return error(res, 'Invalid credentials', 401);
-      }
+      const token = jwt.sign(
+        {
+          id: adminUser.id,
+          email: adminUser.email,
+          firstName: adminUser.firstName,
+          lastName: adminUser.lastName,
+          role: 'ADMIN',
+          adminLogin: true
+        },
+        config.jwt.secret,
+        { expiresIn: '12h' }
+      );
+
+      return success(res, {
+        token,
+        user: { email: adminUser.email, role: 'ADMIN' }
+      }, 'Admin login successful');
     }
 
-    const payload = {
-      id: adminUser?.id || 'admin',
-      email: adminUser?.email || email,
-      firstName: adminUser?.firstName || 'Admin',
-      lastName: adminUser?.lastName || '',
-      role: 'ADMIN',
-      adminLogin: true
-    };
+    // ── Fallback: env-var credentials (for when DB has no admin user yet) ─
+    // This covers a fresh Railway deployment where seed hasn't been run.
+    if (config.admin.email && config.admin.password) {
+      const emailOk = email.toLowerCase() === config.admin.email.toLowerCase();
+      const passOk  = password === config.admin.password;
 
-    const token = jwt.sign(payload, config.jwt.secret, { expiresIn: '12h' });
+      if (!emailOk || !passOk) {
+        return error(res, 'Invalid email or password', 401);
+      }
 
-    return success(res, {
-      token,
-      user: { email: payload.email, role: 'ADMIN' }
-    }, 'Admin login successful');
+      const token = jwt.sign(
+        { id: 'admin', email: config.admin.email, firstName: 'Admin', lastName: '', role: 'ADMIN', adminLogin: true },
+        config.jwt.secret,
+        { expiresIn: '12h' }
+      );
+
+      return success(res, {
+        token,
+        user: { email: config.admin.email, role: 'ADMIN' }
+      }, 'Admin login successful');
+    }
+
+    // No admin user in DB and no env-var credentials configured
+    return error(res, 'No admin account found. Please run the database seed (npm run prisma:seed).', 503);
 
   } catch (err) {
     console.error('Admin login error:', err.message);

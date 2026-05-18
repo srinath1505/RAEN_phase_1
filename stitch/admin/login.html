@@ -46,6 +46,9 @@
       text-transform: uppercase;
       margin-bottom: 6px;
     }
+    .input-wrap {
+      position: relative;
+    }
     input {
       width: 100%;
       padding: 11px 12px;
@@ -56,6 +59,21 @@
       background: #fff;
     }
     input:focus { border-color: #1a1a1a; }
+    .toggle-pw {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 11px;
+      color: #999;
+      padding: 0 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .toggle-pw:hover { color: #555; }
     .field { margin-bottom: 20px; }
     .btn {
       width: 100%;
@@ -72,22 +90,17 @@
     }
     .btn:hover:not(:disabled) { background: #333; }
     .btn:disabled { background: #999; cursor: not-allowed; }
-    .err {
+    .msg {
       font-size: 12px;
-      margin-top: 14px;
-      padding: 12px 14px;
-      text-align: center;
+      margin-top: 16px;
+      padding: 13px 16px;
       display: none;
-      letter-spacing: 0.03em;
+      line-height: 1.5;
       border-radius: 2px;
     }
-    .err.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-    .err.info  { background: #fef9c3; color: #92400e; border: 1px solid #fcd34d; }
-    .divider {
-      height: 1px;
-      background: #f0f0f0;
-      margin: 32px 0 28px;
-    }
+    .msg.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .msg.info  { background: #fef9c3; color: #92400e; border: 1px solid #fcd34d; }
+    .divider { height: 1px; background: #f0f0f0; margin: 32px 0 28px; }
     .hint {
       font-size: 10px;
       letter-spacing: 0.1em;
@@ -108,64 +121,81 @@
     </div>
     <div class="field">
       <label>Password</label>
-      <input type="password" id="password" autocomplete="current-password" placeholder="••••••••">
+      <div class="input-wrap">
+        <input type="password" id="password" autocomplete="current-password" placeholder="••••••••" style="padding-right:46px;">
+        <button type="button" class="toggle-pw" id="toggle-pw" onclick="togglePassword()">Show</button>
+      </div>
     </div>
 
     <button class="btn" id="btn" onclick="doLogin()">Sign In</button>
-    <p class="err" id="err"></p>
+    <div class="msg" id="msg"></div>
 
     <div class="divider"></div>
     <div class="hint">Restricted access &mdash; authorised personnel only</div>
   </div>
 
   <script>
-    const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+    var API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
       ? 'http://localhost:5000'
       : '';
 
-    // If a valid admin token is already stored, go straight to the dashboard.
-    // Old tokens (without adminLogin:true) will be rejected by the dashboard,
-    // which clears the token and redirects back here — so we do NOT loop.
-    const _existingToken = localStorage.getItem('raen_auth_token');
-    if (_existingToken) {
+    // If already have an admin token, go straight to the dashboard.
+    var _tok = localStorage.getItem('raen_auth_token');
+    if (_tok) {
       window.location.replace('index.html');
-      // Stop executing — the page is navigating away.
-      // Using a throw to prevent the rest of the script from running during
-      // the navigation delay (avoids confusing console noise).
-      throw new Error('Redirecting to dashboard');
+    } else {
+      // Only set up the page when we're NOT redirecting
+      init();
     }
 
-    // Show a session-expired notice if we were bounced back here by a failed
-    // admin API call (index.html removes the token before redirecting here).
-    if (document.referrer && document.referrer.includes('index.html')) {
-      const errEl = document.getElementById('err');
-      errEl.textContent = 'Your session expired. Please sign in again.';
-      errEl.className = 'err info';
-      errEl.style.display = 'block';
+    function init() {
+      // Show session-expired notice if bounced back from dashboard
+      if (document.referrer && document.referrer.indexOf('index.html') !== -1) {
+        showMsg('Your session has expired. Please sign in again.', 'info');
+      }
+
+      document.getElementById('email').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('password').focus(); }
+      });
+      document.getElementById('password').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); doLogin(); }
+      });
     }
 
-    document.getElementById('password').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') doLogin();
-    });
-    document.getElementById('email').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') doLogin();
-    });
+    function togglePassword() {
+      var pw = document.getElementById('password');
+      var btn = document.getElementById('toggle-pw');
+      if (pw.type === 'password') {
+        pw.type = 'text';
+        btn.textContent = 'Hide';
+      } else {
+        pw.type = 'password';
+        btn.textContent = 'Show';
+      }
+    }
+
+    function showMsg(text, type) {
+      var el = document.getElementById('msg');
+      el.textContent = text;
+      el.className = 'msg ' + type;
+      el.style.display = 'block';
+    }
+
+    function hideMsg() {
+      document.getElementById('msg').style.display = 'none';
+    }
 
     async function doLogin() {
-      const emailEl = document.getElementById('email');
-      const passwordEl = document.getElementById('password');
-      const btn = document.getElementById('btn');
-      const errEl = document.getElementById('err');
+      var btn = document.getElementById('btn');
+      if (btn.disabled) return; // prevent double-submit
 
-      const email = emailEl.value.trim();
-      const password = passwordEl.value;
+      var email    = document.getElementById('email').value.trim();
+      var password = document.getElementById('password').value;
 
-      errEl.style.display = 'none';
+      hideMsg();
 
       if (!email || !password) {
-        errEl.textContent = 'Please enter your email and password.';
-        errEl.className = 'err error';
-        errEl.style.display = 'block';
+        showMsg('Please enter your email and password.', 'error');
         return;
       }
 
@@ -173,20 +203,20 @@
       btn.textContent = 'Signing In...';
 
       try {
-        const r = await fetch(API + '/api/admin/auth/login', {
+        var r = await fetch(API + '/api/admin/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ email: email, password: password })
         });
 
-        let data;
+        var data;
         try {
           data = await r.json();
-        } catch {
-          throw new Error('Server returned an unexpected response. Please try again.');
+        } catch(_) {
+          throw new Error('Server returned an unexpected response.');
         }
 
-        if (!r.ok || !data.success || !data.data?.token) {
+        if (!r.ok || !data.success || !data.data || !data.data.token) {
           throw new Error(data.message || 'Invalid email or password.');
         }
 
@@ -194,12 +224,10 @@
         window.location.replace('index.html');
 
       } catch (e) {
-        errEl.textContent = e.message || 'Sign in failed. Please try again.';
-        errEl.className = 'err error';
-        errEl.style.display = 'block';
+        showMsg(e.message || 'Sign in failed. Please check your credentials and try again.', 'error');
         btn.disabled = false;
         btn.textContent = 'Sign In';
-        emailEl.focus();
+        document.getElementById('password').focus();
       }
     }
   </script>

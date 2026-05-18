@@ -11,7 +11,7 @@ const validationMiddleware = require('../middleware/validationMiddleware');
 router.post(
   '/auth/login',
   [
-    body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
+    body('email').isEmail().withMessage('Valid email required'),
     body('password').notEmpty().withMessage('Password required')
   ],
   validationMiddleware,
