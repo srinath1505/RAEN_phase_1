@@ -62,6 +62,19 @@
     .btn-secondary { padding: 9px 20px; background: #fff; color: #555; border: 1px solid #ddd; cursor: pointer; font-size: 11px; letter-spacing: 0.1em; }
     .btn-submit { padding: 9px 24px; background: #1a1a1a; color: #fff; border: none; cursor: pointer; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; }
     .btn-submit:disabled { background: #999; cursor: not-allowed; }
+    /* Image upload zone */
+    .upload-zone { border: 2px dashed #ddd; padding: 20px 16px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; background: #fafafa; border-radius: 2px; }
+    .upload-zone:hover { border-color: #1a1a1a; }
+    .upload-zone.drag-over { border-color: #b8960c; background: #fffbeb; }
+    .upload-icon { font-size: 28px; margin-bottom: 6px; }
+    .upload-text { font-size: 12px; color: #555; margin-bottom: 3px; }
+    .upload-sub { font-size: 10px; color: #aaa; }
+    .upload-previews { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; min-height: 0; }
+    .preview-item { position: relative; width: 68px; height: 88px; border: 1px solid #eee; }
+    .preview-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .preview-remove { position: absolute; top: -7px; right: -7px; background: #dc2626; color: #fff; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; padding: 0; }
+    .upload-manual { margin-top: 8px; }
+    .upload-manual-label { font-size: 10px; color: #aaa; margin-bottom: 4px; letter-spacing: 0.05em; }
     /* Stats modal */
     .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px; }
     .stats-item { background: #f8f8f8; padding: 14px; text-align: center; }
@@ -177,9 +190,18 @@
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Image Paths (one per line)</label>
-        <textarea class="form-input" id="f-images" rows="3" style="resize:vertical;" placeholder="public/images/product/1.avif"></textarea>
-        <div style="font-size:10px;color:#aaa;margin-top:4px;">Paths are relative to the stitch/ folder</div>
+        <label class="form-label">Product Images</label>
+        <input type="file" id="img-file-input" multiple accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('img-file-input').click()">
+          <div class="upload-icon">🖼</div>
+          <div class="upload-text">Click to upload or drag &amp; drop images here</div>
+          <div class="upload-sub">JPG · PNG · WEBP · AVIF — max 5 MB each</div>
+        </div>
+        <div class="upload-previews" id="upload-previews"></div>
+        <div class="upload-manual">
+          <div class="upload-manual-label">Or enter existing image paths manually (one per line):</div>
+          <textarea class="form-input" id="f-images" rows="2" style="resize:vertical;" placeholder="public/images/product/1.avif"></textarea>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn-secondary" onclick="closeProductModal()">Cancel</button>
@@ -298,6 +320,91 @@
       `<table><thead><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th>Sale Price</th><th>Status</th><th>Stock</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
 
+  // ── Image upload helpers ──────────────────────────────────────────────────
+  let uploadedImages = []; // each entry: base64 data URL or null (removed)
+
+  function resetUpload() {
+    uploadedImages = [];
+    document.getElementById('upload-previews').innerHTML = '';
+    document.getElementById('f-images').value = '';
+    const fi = document.getElementById('img-file-input');
+    if (fi) fi.value = '';
+  }
+
+  function handleFileSelect(e) {
+    processFiles(Array.from(e.target.files));
+    e.target.value = '';
+  }
+
+  async function processFiles(files) {
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) continue;
+      if (file.size > 5 * 1024 * 1024) { showToast('"' + file.name + '" exceeds 5 MB limit', 'error'); continue; }
+      try {
+        const b64 = await compressImage(file);
+        const idx = uploadedImages.length;
+        uploadedImages.push(b64);
+        addPreview(b64, idx);
+      } catch { showToast('Failed to process "' + file.name + '"', 'error'); }
+    }
+  }
+
+  function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX_W = 1000, MAX_H = 1400;
+          let w = img.width, h = img.height;
+          if (w > MAX_W) { h = Math.round(h * MAX_W / w); w = MAX_W; }
+          if (h > MAX_H) { w = Math.round(w * MAX_H / h); h = MAX_H; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.82));
+        };
+        img.onerror = reject;
+        img.src = ev.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function addPreview(src, idx) {
+    const div = document.createElement('div');
+    div.className = 'preview-item';
+    div.dataset.idx = idx;
+    div.innerHTML = '<img src="' + src + '"><button type="button" class="preview-remove" onclick="removePreview(' + idx + ')">&#x2715;</button>';
+    document.getElementById('upload-previews').appendChild(div);
+  }
+
+  function removePreview(idx) {
+    uploadedImages[idx] = null;
+    const el = document.querySelector('.preview-item[data-idx="' + idx + '"]');
+    if (el) el.remove();
+  }
+
+  function getImages() {
+    const uploaded = uploadedImages.filter(Boolean);
+    const manual = document.getElementById('f-images').value.trim();
+    const manualPaths = manual ? manual.split('\n').map(l => l.trim()).filter(Boolean) : [];
+    return [...uploaded, ...manualPaths];
+  }
+
+  (function initDragDrop() {
+    const zone = document.getElementById('upload-zone');
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      processFiles(Array.from(e.dataTransfer.files));
+    });
+  })();
+  // ─────────────────────────────────────────────────────────────────────────
+
   function autoSlug() {
     if (editingId) return;
     const name = document.getElementById('f-name').value;
@@ -310,6 +417,7 @@
     document.getElementById('modal-submit-btn').textContent = 'Create Product';
     document.getElementById('product-form').reset();
     document.querySelectorAll('.sizes-wrap input[type=checkbox]').forEach(c => c.checked = true);
+    resetUpload();
     document.getElementById('product-modal').classList.add('open');
   }
 
@@ -327,12 +435,17 @@
     document.getElementById('f-price').value = p.price || '';
     document.getElementById('f-sale-price').value = p.salePrice || '';
     document.getElementById('f-discount').value = p.discountPercent || '';
-    const imgs = parseImages(p);
-    document.getElementById('f-images').value = imgs.join('\n');
     const sizes = Array.isArray(p.sizes) ? p.sizes : (typeof p.sizes === 'string' ? JSON.parse(p.sizes || '[]') : []);
     document.querySelectorAll('.sizes-wrap input[type=checkbox]').forEach(c => {
       c.checked = sizes.includes(c.value);
     });
+    // Populate image previews
+    resetUpload();
+    const imgs = parseImages(p);
+    const b64s = imgs.filter(img => img.startsWith('data:'));
+    const paths = imgs.filter(img => !img.startsWith('data:'));
+    b64s.forEach(src => { const idx = uploadedImages.length; uploadedImages.push(src); addPreview(src, idx); });
+    document.getElementById('f-images').value = paths.join('\n');
     document.getElementById('product-modal').classList.add('open');
   }
 
@@ -351,8 +464,7 @@
     if (!valid) return;
 
     const sizes = [...document.querySelectorAll('.sizes-wrap input[type=checkbox]:checked')].map(c => c.value);
-    const imagesRaw = document.getElementById('f-images').value.trim();
-    const images = imagesRaw ? imagesRaw.split('\n').map(l => l.trim()).filter(Boolean) : [];
+    const images = getImages();
     const salePriceVal = document.getElementById('f-sale-price').value;
     const discountVal = document.getElementById('f-discount').value;
 
