@@ -865,14 +865,15 @@ document.getElementById('newsletterForm').addEventListener('submit', async (e) =
 <script>
 (async function() {
     try {
-        // Fetch products from API
-        const products = await apiGet('/products');
-        
-        if (!products || products.length === 0) {
+        // Fetch products from API — response is {products:[...]} after api.js unwraps data
+        const _productsResult = await apiGet('/products');
+        const products = (_productsResult.products || _productsResult || []);
+
+        if (!Array.isArray(products) || products.length === 0) {
             console.log('No products found');
             return;
         }
-        
+
         // Map database products to the existing hardcoded ones by slug
         const productMap = {};
         products.forEach(p => {

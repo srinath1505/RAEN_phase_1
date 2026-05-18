@@ -806,6 +806,23 @@
       authBtn.href        = 'account.html';
       authBtn.onclick     = null;
       authBtn.removeAttribute('onclick');
+
+      // Inject SIGN OUT button next to MY ACCOUNT on all public pages
+      if (authBtn.parentNode && !document.getElementById('raen-nav-signout')) {
+        const so = document.createElement('button');
+        so.id        = 'raen-nav-signout';
+        so.type      = 'button';
+        so.textContent = 'SIGN OUT';
+        // Inherit the same visual style as the auth button
+        so.className = authBtn.className;
+        so.style.cssText = 'background:none;border:none;cursor:pointer;padding:0;margin-left:16px;';
+        so.addEventListener('click', function () {
+          localStorage.removeItem('raen_auth_token');
+          localStorage.removeItem('raen_session_id');
+          window.location.replace('index.html');
+        });
+        authBtn.parentNode.insertBefore(so, authBtn.nextSibling);
+      }
     }
   });
 

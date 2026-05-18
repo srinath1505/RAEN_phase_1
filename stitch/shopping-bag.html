@@ -508,7 +508,7 @@ document.getElementById('bagNewsletterForm').addEventListener('submit', async (e
         });
         
         // Calculate totals from items
-        const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.product.price) * item.quantity), 0);
+        const subtotal = items.reduce((sum, item) => sum + (parseFloat((item.product && item.product.price) || item.unitPrice || 0) * item.quantity), 0);
         const shipping = subtotal > 0 ? 0 : 0; // Free shipping
         const tax = 0; // No tax for now
         const total = subtotal + shipping + tax;

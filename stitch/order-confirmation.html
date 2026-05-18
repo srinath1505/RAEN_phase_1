@@ -459,7 +459,7 @@ Demand immediate intervention whenever necessary. Our operatives await at <span 
         const summaryContainer = document.getElementById('order-summary-container');
         let itemsHTML = '';
         
-        order.items.forEach(item => {
+        (order.items || []).forEach(item => {
             const productName  = (item.product && item.product.name) || item.productName || 'Product';
             const productImage = (item.product && item.product.images && item.product.images.length > 0)
                 ? item.product.images[0]
@@ -493,19 +493,19 @@ Demand immediate intervention whenever necessary. Our operatives await at <span 
                 <div class="space-y-4 pt-8">
                     <div class="flex justify-between items-center text-[10px] tracking-[0.15em] uppercase font-label">
                         <span class="text-outline">Subtotal</span>
-                        <span>€${order.subtotal.toLocaleString()}</span>
+                        <span>€${(order.subtotal || 0).toLocaleString()}</span>
                     </div>
                     <div class="flex justify-between items-center text-[10px] tracking-[0.15em] uppercase font-label">
                         <span class="text-outline">Tax</span>
-                        <span>€${order.tax.toLocaleString()}</span>
+                        <span>€${(order.tax || 0).toLocaleString()}</span>
                     </div>
                     <div class="flex justify-between items-center text-[10px] tracking-[0.15em] uppercase font-label">
                         <span class="text-outline">Shipping</span>
-                        <span>${order.shipping > 0 ? '€' + order.shipping.toLocaleString() : 'Complimentary'}</span>
+                        <span>${(order.shipping || 0) > 0 ? '€' + order.shipping.toLocaleString() : 'Complimentary'}</span>
                     </div>
                     <div class="flex justify-between items-center pt-6 text-[12px] tracking-[0.2em] uppercase font-label font-semibold">
                         <span>Total</span>
-                        <span>€${order.total.toLocaleString()}</span>
+                        <span>€${(order.total || 0).toLocaleString()}</span>
                     </div>
                 </div>
             </div>

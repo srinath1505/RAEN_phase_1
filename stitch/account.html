@@ -202,7 +202,7 @@
       <a class="flex items-center gap-2" href="shopping-bag.html" aria-label="Shopping bag">
         <span class="material-symbols-outlined text-on-surface">shopping_bag</span>
       </a>
-      <button onclick="raenSignOut()" class="font-label text-xs tracking-[0.15em] uppercase text-on-surface hover:opacity-70 transition-opacity" style="background:none;border:none;cursor:pointer;padding:0;">Sign Out</button>
+      <button type="button" onclick="raenSignOut()" class="font-label text-xs tracking-[0.15em] uppercase text-on-surface hover:opacity-70 transition-opacity" style="background:none;border:none;cursor:pointer;padding:0;">Sign Out</button>
     </div>
   </div>
 </nav>
@@ -338,7 +338,7 @@
 
     <!-- ============ SIGN OUT (bottom) ============ -->
     <div style="padding-top:32px;border-top:1px solid #e8e8e8;max-width:580px;">
-      <button onclick="raenSignOut()" class="font-label"
+      <button type="button" onclick="raenSignOut()" class="font-label"
               style="background:none;border:none;cursor:pointer;padding:0;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#aaa;transition:color 0.2s;"
               onmouseover="this.style.color='#1a1c1c'" onmouseout="this.style.color='#aaa'">
         Sign Out
@@ -462,7 +462,8 @@ var editingAddressId = null;
 // ── Utilities ────────────────────────────────────────────────────────────────
 function raenSignOut() {
   localStorage.removeItem('raen_auth_token');
-  window.location.href = 'index.html';
+  localStorage.removeItem('raen_session_id');
+  window.location.replace('index.html');
 }
 
 function escHtml(str) {
@@ -543,7 +544,7 @@ async function loadOrders() {
 
     var tbody = document.getElementById('orders-tbody');
     tbody.innerHTML = orders.map(function(order) {
-      var first   = order.items[0];
+      var first   = (order.items || [])[0];
       var summary = first
         ? (order.items.length === 1
             ? escHtml(first.productName) + ' (' + escHtml(first.size) + ') &times; ' + first.quantity
@@ -572,7 +573,7 @@ async function loadOrders() {
         + '<td style="padding:14px 16px;font-size:13px;color:#666;">' + fmtDate(order.createdAt) + '</td>'
         + '<td style="padding:14px 16px;font-size:13px;color:#555;max-width:250px;">' + summary + '</td>'
         + '<td style="padding:14px 16px;font-family:\'Work Sans\',sans-serif;font-size:12px;letter-spacing:0.05em;color:#1a1c1c;white-space:nowrap;">'
-        +   '&euro;' + order.total.toFixed(2)
+        +   '&euro;' + (order.total || 0).toFixed(2)
         + '</td>'
         + '<td style="padding:14px 16px;"><span class="order-badge ' + escHtml(badgeClass) + '">' + escHtml(order.status) + '</span></td>'
         + '<td style="padding:14px 16px;white-space:nowrap;">' + cancelCell + '</td>'
