@@ -70,16 +70,19 @@
       margin-top: 8px;
       transition: background 0.15s;
     }
-    .btn:hover { background: #333; }
+    .btn:hover:not(:disabled) { background: #333; }
     .btn:disabled { background: #999; cursor: not-allowed; }
     .err {
-      color: #dc2626;
       font-size: 12px;
       margin-top: 14px;
+      padding: 12px 14px;
       text-align: center;
       display: none;
       letter-spacing: 0.03em;
+      border-radius: 2px;
     }
+    .err.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .err.info  { background: #fef9c3; color: #92400e; border: 1px solid #fcd34d; }
     .divider {
       height: 1px;
       background: #f0f0f0;
@@ -109,7 +112,7 @@
     </div>
 
     <button class="btn" id="btn" onclick="doLogin()">Sign In</button>
-    <p class="err" id="err">Invalid email or password. Please try again.</p>
+    <p class="err" id="err"></p>
 
     <div class="divider"></div>
     <div class="hint">Restricted access &mdash; authorised personnel only</div>
@@ -120,29 +123,54 @@
       ? 'http://localhost:5000'
       : '';
 
-    if (localStorage.getItem('raen_auth_token')) {
-      window.location.href = 'index.html';
+    // If a valid admin token is already stored, go straight to the dashboard.
+    // Old tokens (without adminLogin:true) will be rejected by the dashboard,
+    // which clears the token and redirects back here — so we do NOT loop.
+    const _existingToken = localStorage.getItem('raen_auth_token');
+    if (_existingToken) {
+      window.location.replace('index.html');
+      // Stop executing — the page is navigating away.
+      // Using a throw to prevent the rest of the script from running during
+      // the navigation delay (avoids confusing console noise).
+      throw new Error('Redirecting to dashboard');
     }
 
-    document.addEventListener('keydown', function(e) {
+    // Show a session-expired notice if we were bounced back here by a failed
+    // admin API call (index.html removes the token before redirecting here).
+    if (document.referrer && document.referrer.includes('index.html')) {
+      const errEl = document.getElementById('err');
+      errEl.textContent = 'Your session expired. Please sign in again.';
+      errEl.className = 'err info';
+      errEl.style.display = 'block';
+    }
+
+    document.getElementById('password').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') doLogin();
+    });
+    document.getElementById('email').addEventListener('keydown', function(e) {
       if (e.key === 'Enter') doLogin();
     });
 
     async function doLogin() {
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
+      const emailEl = document.getElementById('email');
+      const passwordEl = document.getElementById('password');
       const btn = document.getElementById('btn');
-      const err = document.getElementById('err');
+      const errEl = document.getElementById('err');
+
+      const email = emailEl.value.trim();
+      const password = passwordEl.value;
+
+      errEl.style.display = 'none';
 
       if (!email || !password) {
-        err.textContent = 'Please enter your email and password.';
-        err.style.display = 'block';
+        errEl.textContent = 'Please enter your email and password.';
+        errEl.className = 'err error';
+        errEl.style.display = 'block';
         return;
       }
 
-      err.style.display = 'none';
       btn.disabled = true;
-      btn.textContent = 'Signing in...';
+      btn.textContent = 'Signing In...';
 
       try {
         const r = await fetch(API + '/api/admin/auth/login', {
@@ -150,17 +178,28 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
         });
-        const data = await r.json();
-        if (!data.success || !data.data?.token) {
-          throw new Error(data.message || 'Invalid credentials');
+
+        let data;
+        try {
+          data = await r.json();
+        } catch {
+          throw new Error('Server returned an unexpected response. Please try again.');
         }
+
+        if (!r.ok || !data.success || !data.data?.token) {
+          throw new Error(data.message || 'Invalid email or password.');
+        }
+
         localStorage.setItem('raen_auth_token', data.data.token);
-        window.location.href = 'index.html';
+        window.location.replace('index.html');
+
       } catch (e) {
-        err.textContent = 'Invalid email or password. Please try again.';
-        err.style.display = 'block';
+        errEl.textContent = e.message || 'Sign in failed. Please try again.';
+        errEl.className = 'err error';
+        errEl.style.display = 'block';
         btn.disabled = false;
         btn.textContent = 'Sign In';
+        emailEl.focus();
       }
     }
   </script>
