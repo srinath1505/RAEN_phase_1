@@ -105,6 +105,7 @@
 
   <div class="filters">
     <input class="filter-input" type="text" id="search" placeholder="Search by name or email..." oninput="applyFilters()">
+    <span style="font-size:11px;color:#888;align-self:center;letter-spacing:0.05em;" id="cust-count"></span>
   </div>
 
   <div class="card">
@@ -174,6 +175,10 @@
       return name.includes(search) || (c.email || '').toLowerCase().includes(search);
     });
     filtered = sortItems(filtered);
+    const countEl = document.getElementById('cust-count');
+    if (countEl) countEl.textContent = search
+      ? `Showing ${filtered.length} of ${allCustomers.length} customers`
+      : `${allCustomers.length} customer${allCustomers.length !== 1 ? 's' : ''}`;
     renderTable(filtered);
   }
 
@@ -211,6 +216,7 @@
     let rows = '';
     customers.forEach(c => {
       const name = ((c.firstName || '') + ' ' + (c.lastName || '')).trim() || '—';
+      const safeId = c.email.replace(/[^a-zA-Z0-9]/g, '_');
       rows += `<tr data-email="${c.email}">
         <td style="font-weight:600;">${name}</td>
         <td style="color:#666;">${c.email}</td>
@@ -218,9 +224,9 @@
         <td style="font-weight:600;cursor:pointer;" onclick="setSort('orders')">${c._count?.orders || 0}</td>
         <td style="font-weight:600;">${fmt(c.totalSpent)}</td>
         <td style="color:#888;font-size:11px;">${fmtDate(c.createdAt)}</td>
-        <td><button class="btn-view" onclick="toggleExpand('${c.email}')">View Orders</button></td>
+        <td><button class="btn-view" onclick="toggleExpand('${safeId}')">View Orders</button></td>
       </tr>
-      <tr class="expand-row" id="expand-${CSS.escape(c.email)}" style="display:none;">
+      <tr class="expand-row" id="expand-${safeId}" style="display:none;">
         <td colspan="7">${buildOrderExpand(c.email)}</td>
       </tr>`;
     });
@@ -268,17 +274,18 @@
     </div>`;
   }
 
-  function toggleExpand(email) {
-    const id = 'expand-' + CSS.escape(email);
-    const row = document.getElementById(id);
+  function safeEmailId(email) { return email.replace(/[^a-zA-Z0-9]/g, '_'); }
+
+  function toggleExpand(safeId) {
+    const row = document.getElementById('expand-' + safeId);
     if (!row) return;
     const isOpen = row.style.display !== 'none';
-    if (expandedEmail && expandedEmail !== email) {
-      const prev = document.getElementById('expand-' + CSS.escape(expandedEmail));
+    if (expandedEmail && expandedEmail !== safeId) {
+      const prev = document.getElementById('expand-' + expandedEmail);
       if (prev) prev.style.display = 'none';
     }
     row.style.display = isOpen ? 'none' : 'table-row';
-    expandedEmail = isOpen ? null : email;
+    expandedEmail = isOpen ? null : safeId;
   }
 
   load();

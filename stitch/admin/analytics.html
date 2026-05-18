@@ -234,7 +234,8 @@
     }).join('');
     document.getElementById('funnel-steps').innerHTML = funnelHtml;
 
-    // Revenue chart
+    // Revenue chart — isolated so a Chart.js failure doesn't abort method cards / tables
+    try {
     const ctx = document.getElementById('revenue-chart').getContext('2d');
     if (revenueChart) revenueChart.destroy();
     revenueChart = new Chart(ctx, {
@@ -264,6 +265,8 @@
         }
       }
     });
+
+    } catch(ce) { console.warn('Analytics chart render error:', ce.message); }
 
     // Revenue by method cards
     const methodColors = { RAZORPAY: '#3b82f6', PAYPAL: '#f59e0b', UPI_MANUAL: '#10b981' };

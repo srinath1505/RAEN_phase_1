@@ -126,6 +126,7 @@
     <div class="card-header">
       <span class="card-title">All Payments</span>
       <div class="filters">
+        <span style="font-size:11px;color:#888;align-self:center;letter-spacing:0.05em;" id="pay-count"></span>
         <select class="filter-select" id="provider-filter" onchange="applyFilters()">
           <option value="">All Providers</option>
           <option value="RAZORPAY">Razorpay</option>
@@ -239,6 +240,10 @@
       if (statusF && p.status !== statusF) return false;
       return true;
     });
+    const countEl = document.getElementById('pay-count');
+    if (countEl) countEl.textContent = (providerF || statusF)
+      ? `Showing ${filtered.length} of ${allPayments.length} payments`
+      : '';
     renderTable(filtered);
   }
 

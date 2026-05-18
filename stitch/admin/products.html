@@ -108,7 +108,10 @@
 
 <div class="main">
   <div class="page-header">
-    <div class="page-title">Products</div>
+    <div>
+      <div class="page-title">Products</div>
+      <div style="font-size:11px;color:#888;margin-top:3px;letter-spacing:0.05em;" id="product-count"></div>
+    </div>
     <button class="btn-primary" onclick="openCreateModal()">+ Add Product</button>
   </div>
 
@@ -275,9 +278,14 @@
     const statusF = document.getElementById('status-filter').value;
     const filtered = allProducts.filter(p => {
       if (statusF && p.status !== statusF) return false;
-      if (search && !p.name?.toLowerCase().includes(search)) return false;
+      if (search && !(p.name || '').toLowerCase().includes(search)) return false;
       return true;
     });
+    const isFiltering = search || statusF;
+    const countEl = document.getElementById('product-count');
+    if (countEl) countEl.textContent = isFiltering
+      ? `Showing ${filtered.length} of ${allProducts.length} products`
+      : `${allProducts.length} product${allProducts.length !== 1 ? 's' : ''}`;
     renderTable(filtered);
   }
 
@@ -310,8 +318,8 @@
         <td style="font-weight:600;${totalStock <= 5 ? 'color:#d97706;' : ''}">${totalStock}</td>
         <td style="white-space:nowrap;">
           <button class="action-btn" onclick="openEditModal('${p.id}')">Edit</button>
-          <button class="action-btn gold" onclick="openStatsModal('${p.id}','${p.name.replace(/'/g,"\\'")}')">Stats</button>
-          <button class="action-btn danger" onclick="archiveProduct('${p.id}','${p.name.replace(/'/g,"\\'")}')">Archive</button>
+          <button class="action-btn gold" onclick="openStatsModal('${p.id}','${(p.name||'Product').replace(/'/g,"\\'")}')">Stats</button>
+          <button class="action-btn danger" onclick="archiveProduct('${p.id}','${(p.name||'Product').replace(/'/g,"\\'")}')">Archive</button>
         </td>
       </tr>`;
     }).join('');

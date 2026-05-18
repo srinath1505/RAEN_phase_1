@@ -344,10 +344,14 @@
 
   async function switchPeriod(days) {
     document.querySelectorAll('.period-btn').forEach(b => b.classList.toggle('active', +b.dataset.period === days));
-    const data = await adminFetch(() => apiGet('/admin/analytics?period=' + days));
-    renderChart(data.revenueByDay || []);
-    document.getElementById('stat-conversion').textContent = (data.summary?.conversionRate || 0) + '%';
-    document.getElementById('stat-cart-checkout').textContent = (data.summary?.cartToCheckout || 0) + '%';
+    try {
+      const data = await adminFetch(() => apiGet('/admin/analytics?period=' + days));
+      try { renderChart(data.revenueByDay || []); } catch(ce) { console.warn('Chart render error:', ce.message); }
+      document.getElementById('stat-conversion').textContent = (data.summary?.conversionRate || 0) + '%';
+      document.getElementById('stat-cart-checkout').textContent = (data.summary?.cartToCheckout || 0) + '%';
+    } catch(e) {
+      console.error('switchPeriod error:', e.message);
+    }
   }
 
   function renderLowStock(items) {

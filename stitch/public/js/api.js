@@ -172,12 +172,14 @@ function showToast(message, type = 'info') {
   
   container.appendChild(toast);
   
+  // Errors stay 8 s so admins can read them; success/info stay 4 s
+  const duration = type === 'error' ? 8000 : 4000;
   setTimeout(() => {
     toast.style.animation = 'slideOut 0.3s ease';
     setTimeout(() => {
-      container.removeChild(toast);
+      if (container.contains(toast)) container.removeChild(toast);
     }, 300);
-  }, 3000);
+  }, duration);
 }
 
 // Add animations to document

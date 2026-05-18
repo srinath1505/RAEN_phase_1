@@ -193,8 +193,10 @@
       return true;
     });
 
-    document.getElementById('order-count').textContent =
-      filtered.length + ' of ' + allOrders.length + ' order' + (allOrders.length !== 1 ? 's' : '');
+    const countText = search || statusF || days
+      ? `Showing ${filtered.length} of ${allOrders.length} orders`
+      : `${allOrders.length} order${allOrders.length !== 1 ? 's' : ''}`;
+    document.getElementById('order-count').textContent = countText;
     currentPage = 1;
     renderTable();
   }

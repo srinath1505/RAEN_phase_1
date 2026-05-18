@@ -98,6 +98,7 @@
 
   <div class="filters">
     <input class="filter-input" type="text" id="search" placeholder="Search by product name or SKU..." oninput="applyFilters()">
+    <span style="font-size:11px;color:#888;align-self:center;letter-spacing:0.05em;" id="inv-count"></span>
   </div>
 
   <div class="card">
@@ -162,6 +163,10 @@
       return i.product?.name?.toLowerCase().includes(search) || i.sku?.toLowerCase().includes(search);
     });
     filtered = sortItems(filtered);
+    const countEl = document.getElementById('inv-count');
+    if (countEl) countEl.textContent = search
+      ? `Showing ${filtered.length} of ${allInventory.length} items`
+      : `${allInventory.length} item${allInventory.length !== 1 ? 's' : ''}`;
     renderTable(filtered);
   }
 

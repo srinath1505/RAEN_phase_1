@@ -107,6 +107,7 @@
         <option value="READ">Read</option>
         <option value="REPLIED">Replied</option>
       </select>
+      <span style="font-size:11px;color:#888;align-self:center;letter-spacing:0.05em;" id="contact-count"></span>
     </div>
     <div class="card">
       <div id="contact-table-wrap"><div class="spinner">Loading messages...</div></div>
@@ -123,6 +124,7 @@
         <option value="APPROVED">Approved</option>
         <option value="REJECTED">Rejected</option>
       </select>
+      <span style="font-size:11px;color:#888;align-self:center;letter-spacing:0.05em;" id="early-count"></span>
     </div>
     <div class="card">
       <div id="early-table-wrap"><div class="spinner">Loading requests...</div></div>
@@ -196,12 +198,20 @@
   function filterContact() {
     const sf = document.getElementById('contact-status-filter').value;
     const filtered = allMessages.filter(m => !sf || m.status === sf);
+    const countEl = document.getElementById('contact-count');
+    if (countEl) countEl.textContent = sf
+      ? `Showing ${filtered.length} of ${allMessages.length}`
+      : `${allMessages.length} message${allMessages.length !== 1 ? 's' : ''}`;
     renderContactTable(filtered);
   }
 
   function filterEarly() {
     const sf = document.getElementById('early-status-filter').value;
     const filtered = allRequests.filter(r => !sf || r.status === sf);
+    const countEl = document.getElementById('early-count');
+    if (countEl) countEl.textContent = sf
+      ? `Showing ${filtered.length} of ${allRequests.length}`
+      : `${allRequests.length} request${allRequests.length !== 1 ? 's' : ''}`;
     renderEarlyTable(filtered);
   }
 
@@ -358,10 +368,10 @@
       if (badge) { badge.className = 'badge badge-' + newStatus.toLowerCase(); badge.textContent = newStatus; }
       const sel = document.getElementById('msg-status-' + id);
       if (sel) sel.value = newStatus;
-      // Remove unread styling
       const row = badge?.closest('tr');
       if (row) row.classList.remove('unread-row');
       updateCounts();
+      if (!forcedStatus) showToast('Status updated to ' + newStatus, 'success');
     } catch(e) {
       showToast('Status update failed: ' + e.message, 'error');
       if (selectEl) selectEl.value = msg.status;
@@ -379,6 +389,7 @@
       const badge = document.getElementById('ea-badge-' + id);
       if (badge) { badge.className = 'badge badge-' + newStatus.toLowerCase(); badge.textContent = newStatus; }
       updateCounts();
+      showToast('Status updated to ' + newStatus, 'success');
     } catch(e) {
       showToast('Status update failed: ' + e.message, 'error');
       selectEl.value = req.status;
