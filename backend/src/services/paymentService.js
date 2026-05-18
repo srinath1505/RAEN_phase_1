@@ -152,12 +152,15 @@ class PaymentService {
 
     const paypalOrder = await paypalService.createOrder(usdAmount, order.orderNumber, 'USD');
 
+    // Extract the approval URL from PayPal's links array
+    const approvalUrl = (paypalOrder.links || []).find(l => l.rel === 'approve')?.href || null;
+
     if (existingPayment) {
       const updated = await prisma.payment.update({
         where: { id: existingPayment.id },
         data: { providerOrderId: paypalOrder.id }
       });
-      return { paypalOrderId: paypalOrder.id, payment: updated };
+      return { paypalOrderId: paypalOrder.id, approvalUrl, payment: updated };
     }
 
     const payment = await prisma.payment.create({
@@ -171,7 +174,7 @@ class PaymentService {
       }
     });
 
-    return { paypalOrderId: paypalOrder.id, payment };
+    return { paypalOrderId: paypalOrder.id, approvalUrl, payment };
   }
 
   async capturePaypalPayment(orderNumber, paypalOrderId, userId, sessionId) {

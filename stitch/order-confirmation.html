@@ -389,7 +389,8 @@ Demand immediate intervention whenever necessary. Our operatives await at <span 
     
     try {
         // Fetch order details from backend
-        const order = await apiGet(`/orders/${orderNumber}`);
+        const _orderResult = await apiGet(`/orders/${orderNumber}`);
+        const order = _orderResult.order || _orderResult;
         
         // Update order number
         document.getElementById('orderNumber').textContent = order.orderNumber;
@@ -429,13 +430,16 @@ Demand immediate intervention whenever necessary. Our operatives await at <span 
         deliveryEl.textContent = `${formatDate(estimatedDelivery)} — ${formatDate(endDate)}, ${endDate.getFullYear()}`;
         
         // Update shipping address
-        const addr = order.shippingAddress;
+        const addr = order.shippingAddress || {};
         const addressEl = document.getElementById('shippingAddress');
+        const addrName  = addr.fullName || ((addr.firstName || '') + ' ' + (addr.lastName || '')).trim() || '';
+        const addrLine1 = addr.addressLine1 || addr.streetAddress || '';
+        const addrLine2 = addr.addressLine2 || addr.apartment || '';
         addressEl.innerHTML = `
-            ${addr.firstName} ${addr.lastName}<br/>
-            ${addr.streetAddress}${addr.apartment ? ', ' + addr.apartment : ''}<br/>
-            ${addr.city}, ${addr.state} ${addr.postalCode}<br/>
-            ${addr.country}
+            ${addrName}<br/>
+            ${addrLine1}${addrLine2 ? ', ' + addrLine2 : ''}<br/>
+            ${addr.city || ''}, ${addr.state || ''} ${addr.postalCode || ''}<br/>
+            ${addr.country || ''}
         `;
         
         // Update payment method
@@ -445,9 +449,10 @@ Demand immediate intervention whenever necessary. Our operatives await at <span 
             'PAYPAL': 'PayPal',
             'UPI_MANUAL': 'UPI (Manual Verification)'
         };
+        const provider = (order.payments && order.payments[0] && order.payments[0].provider) || order.paymentMethod || '';
         paymentEl.innerHTML = `
-            ${paymentMethodMap[order.paymentMethod] || order.paymentMethod}<br/>
-            Status: ${order.paymentStatus.replace(/_/g, ' ')}
+            ${paymentMethodMap[provider] || provider || 'N/A'}<br/>
+            Status: ${(order.paymentStatus || '').replace(/_/g, ' ')}
         `;
         
         // Render order items
@@ -455,19 +460,22 @@ Demand immediate intervention whenever necessary. Our operatives await at <span 
         let itemsHTML = '';
         
         order.items.forEach(item => {
-            const product = item.product;
-            const lineTotal = parseFloat(product.price) * item.quantity;
-            
+            const productName  = (item.product && item.product.name) || item.productName || 'Product';
+            const productImage = (item.product && item.product.images && item.product.images.length > 0)
+                ? item.product.images[0]
+                : (item.image || 'public/images/placeholder.jpg');
+            const lineTotal = item.lineTotal || (parseFloat(item.unitPrice) * item.quantity) || 0;
+
             itemsHTML += `
             <div class="w-full lg:max-w-md bg-surface-container-low p-1 shadow-sm mb-8">
                 <div class="overflow-hidden bg-surface-container aspect-[3/4]">
-                    <img class="w-full h-full object-cover object-top transition-transform duration-700 hover:scale-105 grayscale hover:grayscale-0 transition-all duration-700" 
-                         alt="${product.name}" 
-                         src="${product.images && product.images.length > 0 ? product.images[0] : 'public/images/placeholder.jpg'}"/>
+                    <img class="w-full h-full object-cover object-top transition-transform duration-700 hover:scale-105 grayscale hover:grayscale-0 transition-all duration-700"
+                         alt="${productName}"
+                         src="${productImage}"/>
                 </div>
                 <div class="p-10 bg-surface-container-lowest">
                     <div>
-                        <h3 class="font-headline text-3xl mb-1 italic">${product.name}</h3>
+                        <h3 class="font-headline text-3xl mb-1 italic">${productName}</h3>
                         <p class="text-[10px] tracking-[0.15em] uppercase font-label text-outline">Size: ${item.size} | QTY: ${item.quantity}</p>
                     </div>
                 </div>
