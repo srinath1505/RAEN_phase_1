@@ -1,0 +1,42 @@
+# Dependencies — never copy into image; npm ci installs fresh
+node_modules
+backend/node_modules
+
+# Secrets — injected via Railway Variables, never baked into image
+.env
+backend/.env
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+**/.DS_Store
+__MACOSX
+
+# Logs
+*.log
+stitch-server.out.log
+stitch-server.err.log
+
+# Build artifacts
+dist
+build
+backend/src/prisma/generated
+
+# Dev tools
+serve-stitch.js
+backend/src/prisma/seed.js
+
+# Python scripts (local tooling)
+*.py
+
+# Docker files themselves don't need to be in the image
+docker-compose.yml
+Dockerfile
+.dockerignore
