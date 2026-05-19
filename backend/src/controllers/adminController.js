@@ -52,7 +52,7 @@ exports.getAllProducts = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, category, price, salePrice, discountPercent, status, images, sizes, specifications } = req.body;
+    const { name, description, category, price, salePrice, discountPercent, status, isAvailable, images, sizes, specifications } = req.body;
     const slug = req.body.slug || name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
     const product = await prisma.product.create({
@@ -65,6 +65,7 @@ exports.createProduct = async (req, res) => {
         salePrice: salePrice ? parseFloat(salePrice) : null,
         discountPercent: discountPercent ? parseInt(discountPercent) : null,
         status: status || 'ACTIVE',
+        isAvailable: isAvailable !== false,
         images: images || [],
         sizes: sizes || ['CUSTOM'],
         specifications: specifications || null
@@ -93,7 +94,7 @@ exports.createProduct = async (req, res) => {
 exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, category, price, salePrice, discountPercent, status, images, sizes, specifications } = req.body;
+    const { name, description, category, price, salePrice, discountPercent, status, isAvailable, images, sizes, specifications } = req.body;
 
     const data = {};
     if (name !== undefined) data.name = name;
@@ -103,6 +104,7 @@ exports.updateProduct = async (req, res) => {
     if (salePrice !== undefined) data.salePrice = salePrice ? parseFloat(salePrice) : null;
     if (discountPercent !== undefined) data.discountPercent = discountPercent ? parseInt(discountPercent) : null;
     if (status !== undefined) data.status = status;
+    if (isAvailable !== undefined) data.isAvailable = isAvailable;
     if (images !== undefined) data.images = images;
     if (sizes !== undefined) data.sizes = sizes;
     if (specifications !== undefined) data.specifications = specifications || null;
@@ -114,6 +116,22 @@ exports.updateProduct = async (req, res) => {
     });
 
     return success(res, { product }, 'Product updated');
+  } catch (err) {
+    return error(res, err.message, 400);
+  }
+};
+
+exports.toggleProductAvailability = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const current = await prisma.product.findUnique({ where: { id }, select: { isAvailable: true } });
+    if (!current) return error(res, 'Product not found', 404);
+    const isAvailable = !current.isAvailable;
+    const product = await prisma.product.update({ where: { id }, data: { isAvailable } });
+    await prisma.adminAuditLog.create({
+      data: { adminUserId: req.user.id, action: isAvailable ? 'MARK_AVAILABLE' : 'MARK_UNAVAILABLE', entityType: 'Product', entityId: id }
+    });
+    return success(res, { product }, `Product marked ${isAvailable ? 'available' : 'unavailable'}`);
   } catch (err) {
     return error(res, err.message, 400);
   }

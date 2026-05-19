@@ -95,7 +95,7 @@
     <a href="index.html" class="nav-link">Dashboard</a>
     <a href="orders.html" class="nav-link">Orders</a>
     <a href="products.html" class="nav-link active">Products</a>
-    <a href="inventory.html" class="nav-link">Inventory</a>
+    <a href="inventory.html" class="nav-link" style="display:none;">Inventory</a>
     <a href="payments.html" class="nav-link">Payments</a>
     <a href="customers.html" class="nav-link">Customers</a>
     <a href="analytics.html" class="nav-link">Analytics</a>
@@ -165,6 +165,10 @@
             <option value="ARCHIVED">Archived</option>
           </select>
         </div>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f9f9f9;border:1px solid #e8e8e8;">
+        <input type="checkbox" id="f-available" checked style="width:16px;height:16px;cursor:pointer;accent-color:#000;">
+        <label for="f-available" style="cursor:pointer;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#333;user-select:none;">Available for purchase <span style="font-weight:400;color:#888;font-size:10px;text-transform:none;">(uncheck to show Out of Stock)</span></label>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -322,13 +326,13 @@
   function renderTable(products) {
     if (!products.length) {
       document.getElementById('table-wrap').innerHTML =
-        `<table><thead><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th>Sale Price</th><th>Status</th><th>Stock</th><th>Actions</th></tr></thead>
+        `<table><thead><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th>Sale Price</th><th>Status</th><th>Available</th><th>Actions</th></tr></thead>
         <tbody><tr class="empty-row"><td colspan="8"><div class="empty-icon">📦</div><div class="empty-text">No products found</div></td></tr></tbody></table>`;
       return;
     }
 
     const rows = products.map(p => {
-      const totalStock = (p.inventory || []).reduce((s, inv) => s + inv.stock, 0);
+      const avail = p.isAvailable !== false;
       const src = imgSrc(p);
       const thumb = src
         ? `<img src="${src}" onerror="this.style.display='none'" style="width:40px;height:50px;object-fit:cover;">`
@@ -345,7 +349,13 @@
         <td style="font-weight:600;">${fmt(p.price)}</td>
         <td>${salePriceDisplay}</td>
         <td><span class="badge badge-${(p.status||'').toLowerCase()}">${p.status}</span></td>
-        <td style="font-weight:600;${totalStock <= 5 ? 'color:#d97706;' : ''}">${totalStock}</td>
+        <td>
+          <button class="action-btn" onclick="toggleAvailability('${p.id}',${avail})"
+            style="${avail ? 'border-color:#16a34a;color:#16a34a;' : 'border-color:#dc2626;color:#dc2626;'}"
+            title="${avail ? 'Click to mark unavailable' : 'Click to mark available'}">
+            ${avail ? 'Available' : 'Out of Stock'}
+          </button>
+        </td>
         <td style="white-space:nowrap;">
           <button class="action-btn" onclick="openEditModal('${p.id}')">Edit</button>
           <button class="action-btn gold" onclick="openStatsModal('${p.id}','${(p.name||'Product').replace(/'/g,"\\'")}')">Stats</button>
@@ -356,7 +366,7 @@
     }).join('');
 
     document.getElementById('table-wrap').innerHTML =
-      `<table><thead><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th>Sale Price</th><th>Status</th><th>Stock</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
+      `<table><thead><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th>Sale Price</th><th>Status</th><th>Available</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
 
   // ── Image upload helpers ──────────────────────────────────────────────────
@@ -471,6 +481,7 @@
     document.getElementById('f-desc').value = p.description || '';
     document.getElementById('f-category').value = p.category || '';
     document.getElementById('f-status').value = p.status || 'ACTIVE';
+    document.getElementById('f-available').checked = p.isAvailable !== false;
     document.getElementById('f-price').value = p.price || '';
     document.getElementById('f-sale-price').value = p.salePrice || '';
     document.getElementById('f-discount').value = p.discountPercent || '';
@@ -527,6 +538,7 @@
       description: document.getElementById('f-desc').value.trim(),
       category: document.getElementById('f-category').value.trim(),
       status: document.getElementById('f-status').value,
+      isAvailable: document.getElementById('f-available').checked,
       price,
       salePrice: salePriceVal ? parseFloat(salePriceVal) : null,
       discountPercent: discountVal ? parseInt(discountVal) : null,
@@ -554,6 +566,16 @@
     } finally {
       btn.disabled = false;
       btn.textContent = editingId ? 'Save Changes' : 'Create Product';
+    }
+  }
+
+  async function toggleAvailability(id, currentIsAvailable) {
+    try {
+      await adminFetch(() => apiPatch('/admin/products/' + id + '/availability', {}));
+      showToast(currentIsAvailable ? 'Marked as Out of Stock.' : 'Marked as Available.', 'success');
+      await load();
+    } catch(e) {
+      showToast('Failed: ' + e.message, 'error');
     }
   }
 

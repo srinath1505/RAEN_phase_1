@@ -938,11 +938,15 @@ document.getElementById('newsletterForm').addEventListener('submit', async (e) =
             : '€' + _fmt(p.price);
         var name = (p.name || '').replace(/"/g, '&quot;');
         var cat = (p.category || '').toUpperCase();
+        var oosBadge = p.isAvailable === false
+            ? '<div style="position:absolute;top:10px;left:10px;background:rgba(0,0,0,0.72);color:#fff;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;padding:5px 10px;pointer-events:none;z-index:2;">Out of Stock</div>'
+            : '';
         return '<a href="product-detail.html?slug=' + p.slug + '" class="tove-product">'
             + '<div class="tove-product-img" data-images=\'' + di + '\'>'
             + '<img class="carousel-active" alt="' + name + ' by RAEN" src="' + i1 + '"/>'
             + '<img class="carousel-inactive" alt="" src="' + i2 + '" aria-hidden="true"/>'
             + '<div class="carousel-dots"></div>'
+            + oosBadge
             + '</div>'
             + '<div class="tove-product-info">'
             + '<div><div class="product-name">' + (p.name || '') + '</div>'

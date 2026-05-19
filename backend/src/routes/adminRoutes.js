@@ -43,6 +43,7 @@ router.post(
   adminController.createProduct
 );
 router.get('/products/:id/stats', adminController.getProductStats);
+router.patch('/products/:id/availability', adminController.toggleProductAvailability);
 router.get('/products/:id', adminController.getProduct);
 router.patch(
   '/products/:id',

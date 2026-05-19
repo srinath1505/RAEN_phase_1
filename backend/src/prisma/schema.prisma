@@ -114,6 +114,7 @@ model Product {
   discountPercent Int?
   currency        String        @default("EUR")
   status          ProductStatus @default(ACTIVE)
+  isAvailable     Boolean       @default(true)
   images          Json          // Array of image paths
   sizes           Json          // Array of available sizes
   specifications  Json?         // { fabric, weight, lining, care, origin, construction }

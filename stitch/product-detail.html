@@ -1057,6 +1057,14 @@ function toggleAccordion(btn) {
         // Add to Cart — measurements-based
         const addToCartBtn = document.querySelector('a.satin-cta');
         if (addToCartBtn) {
+            if (product.isAvailable === false) {
+                addToCartBtn.textContent = 'Out of Stock';
+                addToCartBtn.style.opacity = '0.45';
+                addToCartBtn.style.cursor = 'not-allowed';
+                addToCartBtn.style.pointerEvents = 'none';
+                addToCartBtn.setAttribute('aria-disabled', 'true');
+                addToCartBtn.removeAttribute('href');
+            } else {
             addToCartBtn.href = '#';
             addToCartBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
@@ -1088,6 +1096,7 @@ function toggleAccordion(btn) {
                     setLoadingState(addToCartBtn, false, 'Claim This Piece');
                 }
             });
+            } // end else (isAvailable)
         }
 
     } catch (error) {

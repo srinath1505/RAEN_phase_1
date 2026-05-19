@@ -80,7 +80,7 @@
     <a href="index.html" class="nav-link active">Dashboard</a>
     <a href="orders.html" class="nav-link">Orders</a>
     <a href="products.html" class="nav-link">Products</a>
-    <a href="inventory.html" class="nav-link">Inventory</a>
+    <a href="inventory.html" class="nav-link" style="display:none;">Inventory</a>
     <a href="payments.html" class="nav-link">Payments</a>
     <a href="customers.html" class="nav-link">Customers</a>
     <a href="analytics.html" class="nav-link">Analytics</a>
@@ -260,8 +260,27 @@
         </div>
       </div>
       <div>
-        <label style="display:block;font-size:10px;letter-spacing:0.12em;color:#888;text-transform:uppercase;margin-bottom:6px;">Image URL * <span style="font-style:italic;font-size:10px;letter-spacing:0;text-transform:none;">(relative or absolute)</span></label>
-        <input id="hero-modal-image" type="text" placeholder="public/images/hero (1).jpeg or https://..." style="width:100%;border:1px solid #e0e0e0;padding:8px 12px;font-size:12px;outline:none;font-family:monospace;" onfocus="this.style.borderColor='#000'" onblur="this.style.borderColor='#e0e0e0'"/>
+        <label style="display:block;font-size:10px;letter-spacing:0.12em;color:#888;text-transform:uppercase;margin-bottom:6px;">Image *</label>
+        <input type="file" id="hero-img-file" accept="image/*" style="display:none;" onchange="heroHandleFileSelect(event)">
+        <div id="hero-upload-zone" style="border:2px dashed #d0d0d0;padding:18px 12px;text-align:center;cursor:pointer;background:#fafafa;transition:border-color 0.2s;"
+          onclick="document.getElementById('hero-img-file').click()"
+          ondragover="event.preventDefault();this.style.borderColor='#000';"
+          ondragleave="this.style.borderColor='#d0d0d0';"
+          ondrop="event.preventDefault();this.style.borderColor='#d0d0d0';heroProcessDrop(event);">
+          <div id="hero-upload-hint">
+            <div style="font-size:22px;margin-bottom:6px;">🖼</div>
+            <div style="font-size:11px;font-weight:600;letter-spacing:0.05em;color:#555;">Click to upload or drag &amp; drop</div>
+            <div style="font-size:10px;color:#aaa;margin-top:3px;">JPG · PNG · WEBP · AVIF — max 5 MB</div>
+          </div>
+          <div id="hero-upload-preview" style="display:none;position:relative;">
+            <img id="hero-preview-img" style="max-height:130px;max-width:100%;object-fit:contain;border:1px solid #e8e8e8;" src="" alt="">
+            <button type="button" onclick="heroClearImage(event)" style="position:absolute;top:-8px;right:-8px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1;">✕</button>
+          </div>
+        </div>
+        <div style="margin-top:8px;">
+          <div style="font-size:10px;color:#aaa;margin-bottom:4px;letter-spacing:0.05em;">Or enter an existing path / URL:</div>
+          <input id="hero-modal-image" type="text" placeholder="public/images/hero (1).jpeg or https://..." style="width:100%;border:1px solid #e0e0e0;padding:8px 12px;font-size:12px;outline:none;font-family:monospace;" onfocus="this.style.borderColor='#000'" onblur="this.style.borderColor='#e0e0e0'"/>
+        </div>
       </div>
       <div>
         <label style="display:block;font-size:10px;letter-spacing:0.12em;color:#888;text-transform:uppercase;margin-bottom:6px;">Tag <span style="font-style:italic;font-size:10px;letter-spacing:0;text-transform:none;">(small label above headline)</span></label>
@@ -477,6 +496,63 @@
 
   /* ── Hero Carousel ── */
   var _heroEditId = null;
+  var _heroUploadedB64 = null;
+
+  async function heroCompressImage(file) {
+    return new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var img = new Image();
+        img.onload = function() {
+          var canvas = document.createElement('canvas');
+          var MAX_W = 1920, MAX_H = 1080;
+          var w = img.width, h = img.height;
+          if (w > MAX_W) { h = Math.round(h * MAX_W / w); w = MAX_W; }
+          if (h > MAX_H) { w = Math.round(w * MAX_H / h); h = MAX_H; }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function heroSetPreview(b64) {
+    _heroUploadedB64 = b64;
+    document.getElementById('hero-upload-hint').style.display = 'none';
+    document.getElementById('hero-upload-preview').style.display = 'block';
+    document.getElementById('hero-preview-img').src = b64;
+    document.getElementById('hero-modal-image').value = '';
+  }
+
+  function heroHandleFileSelect(e) {
+    var file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { showToast('Please select an image file', 'error'); return; }
+    if (file.size > 5 * 1024 * 1024) { showToast('Image exceeds 5 MB limit', 'error'); return; }
+    heroCompressImage(file).then(heroSetPreview).catch(function() { showToast('Failed to process image', 'error'); });
+  }
+
+  function heroProcessDrop(e) {
+    var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { showToast('Please drop an image file', 'error'); return; }
+    if (file.size > 5 * 1024 * 1024) { showToast('Image exceeds 5 MB limit', 'error'); return; }
+    heroCompressImage(file).then(heroSetPreview).catch(function() { showToast('Failed to process image', 'error'); });
+  }
+
+  function heroClearImage(e) {
+    e.stopPropagation();
+    _heroUploadedB64 = null;
+    document.getElementById('hero-upload-hint').style.display = 'block';
+    document.getElementById('hero-upload-preview').style.display = 'none';
+    document.getElementById('hero-preview-img').src = '';
+  }
 
   async function loadHero() {
     try {
@@ -519,9 +595,13 @@
 
   function openHeroModal(pos) {
     _heroEditId = null;
+    _heroUploadedB64 = null;
     document.getElementById('hero-modal-title').textContent = 'Add Hero Slide';
     document.getElementById('hero-modal-position').value = pos || 1;
     document.getElementById('hero-modal-image').value = '';
+    document.getElementById('hero-upload-hint').style.display = 'block';
+    document.getElementById('hero-upload-preview').style.display = 'none';
+    document.getElementById('hero-preview-img').src = '';
     document.getElementById('hero-modal-tag').value = '';
     document.getElementById('hero-modal-headline').value = '';
     document.getElementById('hero-modal-sub').value = '';
@@ -538,7 +618,19 @@
     if (!s) return;
     document.getElementById('hero-modal-title').textContent = 'Edit Hero Slide';
     document.getElementById('hero-modal-position').value = s.position;
-    document.getElementById('hero-modal-image').value = s.imageUrl;
+    if (s.imageUrl && s.imageUrl.startsWith('data:')) {
+      _heroUploadedB64 = s.imageUrl;
+      document.getElementById('hero-upload-hint').style.display = 'none';
+      document.getElementById('hero-upload-preview').style.display = 'block';
+      document.getElementById('hero-preview-img').src = s.imageUrl;
+      document.getElementById('hero-modal-image').value = '';
+    } else {
+      _heroUploadedB64 = null;
+      document.getElementById('hero-modal-image').value = s.imageUrl;
+      document.getElementById('hero-upload-hint').style.display = 'block';
+      document.getElementById('hero-upload-preview').style.display = 'none';
+      document.getElementById('hero-preview-img').src = '';
+    }
     document.getElementById('hero-modal-tag').value = s.tag;
     document.getElementById('hero-modal-headline').value = s.headline;
     document.getElementById('hero-modal-sub').value = s.sub;
@@ -551,12 +643,18 @@
   function closeHeroModal() {
     document.getElementById('hero-modal').style.display = 'none';
     _heroEditId = null;
+    _heroUploadedB64 = null;
+    document.getElementById('hero-upload-hint').style.display = 'block';
+    document.getElementById('hero-upload-preview').style.display = 'none';
+    document.getElementById('hero-preview-img').src = '';
+    document.getElementById('hero-modal-image').value = '';
   }
 
   async function saveHeroSlide() {
+    const imageUrl = _heroUploadedB64 || document.getElementById('hero-modal-image').value.trim();
     const data = {
       position: parseInt(document.getElementById('hero-modal-position').value) || 1,
-      imageUrl: document.getElementById('hero-modal-image').value.trim(),
+      imageUrl,
       tag: document.getElementById('hero-modal-tag').value.trim(),
       headline: document.getElementById('hero-modal-headline').value.trim(),
       sub: document.getElementById('hero-modal-sub').value.trim(),
@@ -564,7 +662,7 @@
       ctaUrl: document.getElementById('hero-modal-cta-url').value.trim() || 'collections.html',
       isActive: document.getElementById('hero-modal-active').checked
     };
-    if (!data.imageUrl || !data.headline) { showToast('Image URL and headline are required', 'error'); return; }
+    if (!data.imageUrl || !data.headline) { showToast('Image and headline are required', 'error'); return; }
     const saveBtn = document.querySelector('#hero-modal button[onclick="saveHeroSlide()"]');
     if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
     try {
