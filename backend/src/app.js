@@ -19,6 +19,7 @@ const earlyAccessRoutes = require('./routes/earlyAccessRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const heroRoutes = require('./routes/heroRoutes');
 
 const app = express();
 
@@ -116,6 +117,7 @@ app.use('/api/early-access', earlyAccessRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/hero', heroRoutes);
 
 // Serve static frontend in production — after API routes so /api/* takes precedence
 if (config.nodeEnv === 'production') {

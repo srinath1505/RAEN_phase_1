@@ -224,3 +224,35 @@ exports.cancelOrder = async (req, res) => {
     return error(res, err.message, 400);
   }
 };
+
+exports.getMeasurements = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const record = await prisma.userMeasurements.findUnique({ where: { userId } });
+    return success(res, { measurements: record || null }, 'Measurements retrieved');
+  } catch (err) {
+    return error(res, err.message, 400);
+  }
+};
+
+exports.saveMeasurements = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { bust, waist, hip, shoulderToFloor } = req.body;
+    const data = {
+      bust: bust !== undefined ? parseFloat(bust) || null : undefined,
+      waist: waist !== undefined ? parseFloat(waist) || null : undefined,
+      hip: hip !== undefined ? parseFloat(hip) || null : undefined,
+      shoulderToFloor: shoulderToFloor !== undefined ? parseFloat(shoulderToFloor) || null : undefined
+    };
+    const cleaned = Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined));
+    const record = await prisma.userMeasurements.upsert({
+      where: { userId },
+      create: { userId, ...cleaned },
+      update: cleaned
+    });
+    return success(res, { measurements: record }, 'Measurements saved');
+  } catch (err) {
+    return error(res, err.message, 400);
+  }
+};

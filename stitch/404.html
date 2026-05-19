@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Page Not Found | RAEN</title>
+<meta name="description" content="The page you were looking for has moved on. Explore the RAEN collection instead."/>
+<meta name="robots" content="noindex, follow"/>
+<link rel="canonical" href="https://raen.design/404.html"/>
+
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            colors: {
+                "background": "#f9f9f9", "surface": "#f9f9f9",
+                "on-surface": "#1a1c1c", "primary": "#000000",
+                "on-primary": "#e2e2e2", "outline": "#777777",
+                "outline-variant": "#c6c6c6", "surface-container-low": "#f3f3f4"
+            },
+            fontFamily: {
+                "headline": ["Newsreader", "serif"],
+                "body": ["Work Sans", "sans-serif"],
+                "label": ["Work Sans", "sans-serif"]
+            },
+            borderRadius: { "DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "9999px" }
+        }
+    }
+}
+</script>
+<style>
+    .glass-nav { background: #ffffff; border-bottom: 1px solid rgba(0,0,0,0.05); }
+    .satin-button { background: linear-gradient(45deg, #000000 0%, #3b3b3b 100%); }
+</style>
+</head>
+<body class="bg-surface text-on-surface font-body min-h-screen flex flex-col">
+
+<!-- Navigation -->
+<nav class="fixed top-0 w-full z-50 glass-nav border-b border-outline-variant/10">
+<div class="max-w-[1440px] mx-auto px-8 h-20 flex items-center justify-between">
+    <div class="flex items-center gap-12">
+        <a class="font-headline text-3xl tracking-[0.8em] font-light uppercase" href="index.html">
+            <img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height:3em;width:auto;"/>
+        </a>
+        <div class="hidden md:flex gap-8">
+            <a class="font-label text-xs uppercase tracking-[0.2em] hover:opacity-50 transition-opacity" href="collections.html">Collections</a>
+            <a class="font-label text-xs uppercase tracking-[0.2em] hover:opacity-50 transition-opacity" href="journal.html">Archive</a>
+        </div>
+    </div>
+    <div class="flex items-center gap-6">
+        <a class="p-2 hover:opacity-50 transition-opacity" href="shopping-bag.html" aria-label="Shopping bag">
+            <span class="material-symbols-outlined">shopping_bag</span>
+        </a>
+    </div>
+</div>
+</nav>
+
+<!-- 404 Content -->
+<main class="flex-1 flex items-center justify-center pt-20">
+    <div class="max-w-[1440px] mx-auto px-8 py-40 text-center w-full">
+
+        <!-- Large editorial 404 number -->
+        <p class="font-headline font-light leading-none text-outline-variant/20 select-none"
+           style="font-size:clamp(8rem,25vw,22rem);letter-spacing:-0.04em;">
+            404
+        </p>
+
+        <div class="mt-[-4rem] relative z-10">
+            <h1 class="font-headline text-4xl md:text-6xl tracking-tighter mb-6">
+                This piece has left the room.
+            </h1>
+            <p class="font-body text-sm text-outline max-w-md mx-auto leading-relaxed mb-12">
+                The page you were looking for no longer exists — or perhaps it never did.
+                The collection awaits.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <a href="collections.html"
+                   class="satin-button text-on-primary font-label text-xs tracking-[0.3em] uppercase px-10 py-4 inline-block hover:opacity-80 transition-opacity">
+                    Explore the Collection
+                </a>
+                <a href="index.html"
+                   class="font-label text-xs uppercase tracking-[0.2em] border-b border-outline-variant hover:border-primary transition-colors pb-1">
+                    Return Home
+                </a>
+            </div>
+        </div>
+
+        <!-- Suggested pages -->
+        <div class="mt-24 pt-12 border-t border-outline-variant/20">
+            <p class="font-label text-[10px] uppercase tracking-[0.3em] text-outline mb-8">You might be looking for</p>
+            <div class="flex flex-wrap justify-center gap-6">
+                <a href="collections.html" class="font-label text-xs uppercase tracking-[0.15em] text-outline hover:text-primary transition-colors">Collections</a>
+                <a href="product-detail.html?slug=the-sovereign" class="font-label text-xs uppercase tracking-[0.15em] text-outline hover:text-primary transition-colors">The Sovereign</a>
+                <a href="shopping-bag.html" class="font-label text-xs uppercase tracking-[0.15em] text-outline hover:text-primary transition-colors">Your Bag</a>
+                <a href="contact.html" class="font-label text-xs uppercase tracking-[0.15em] text-outline hover:text-primary transition-colors">Contact</a>
+                <a href="size-guide.html" class="font-label text-xs uppercase tracking-[0.15em] text-outline hover:text-primary transition-colors">Size Guide</a>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="border-t border-outline-variant/10 py-8 px-8">
+    <div class="max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+        <p class="font-label text-[10px] uppercase tracking-[0.2em] text-outline">© 2026 RAEN. Total Domination.</p>
+        <div class="flex gap-8">
+            <a href="privacy-policy.html" class="font-label text-[10px] uppercase tracking-[0.15em] text-outline hover:text-primary transition-colors">Privacy</a>
+            <a href="terms-of-service.html" class="font-label text-[10px] uppercase tracking-[0.15em] text-outline hover:text-primary transition-colors">Terms</a>
+            <a href="contact.html" class="font-label text-[10px] uppercase tracking-[0.15em] text-outline hover:text-primary transition-colors">Contact</a>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

@@ -51,4 +51,8 @@ router.delete('/addresses/:id', accountController.deleteAddress);
 
 router.post('/orders/:id/cancel', accountController.cancelOrder);
 
+router.get('/measurements', accountController.getMeasurements);
+router.put('/measurements', accountController.saveMeasurements);
+router.patch('/measurements', accountController.saveMeasurements);
+
 module.exports = router;

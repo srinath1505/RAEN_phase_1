@@ -79,6 +79,9 @@
 }
 </script>
 
+<script>/* RAEN Cookie Guard - must run before GA4/Pixel */
+(function(){if(localStorage.getItem('raen_cookie_consent')!=='accepted'){var noop=function(){};window.dataLayer={push:noop};window.gtag=noop;window.fbq=noop;window._fbq=noop;}}());
+</script>
 <!-- Google Analytics 4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
@@ -88,22 +91,7 @@
   gtag('config', 'G-XXXXXXXXXX');
 </script>
 
-<!-- Meta Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1234567890');
-fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
-/></noscript>
+
 
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,300;0,400;0,600;1,400&amp;family=Work+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -190,6 +178,27 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
       .atelier-input-container:focus-within {
         border-bottom: 1px solid #000000;
       }
+      .atelier-input-container.field-error {
+        border-bottom: 1px solid #ba1a1a;
+      }
+      .atelier-input-container.field-error label {
+        color: #ba1a1a;
+      }
+      .field-error-msg {
+        font-size: 10px;
+        color: #ba1a1a;
+        letter-spacing: 0.05em;
+        margin-top: 4px;
+        display: none;
+      }
+      .field-error .field-error-msg {
+        display: block;
+      }
+      /* Payment method selected state */
+      .payment-method-option.is-selected {
+        border-color: #000000;
+        background: #f9f9f9;
+      }
     </style>
 <script>
 /* RAEN Analytics — session tracking and cart event telemetry */
@@ -249,6 +258,7 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
 </div>
 </nav>
 <main class="pt-32 pb-24 px-8 max-w-7xl mx-auto">
+<h1 class="sr-only">Checkout</h1>
 <!-- Breadcrumbs (Linear Process Protocol: SideNav hidden) -->
 <div class="mb-16">
 <nav class="flex items-center gap-4">
@@ -259,7 +269,7 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
 <span class="text-[10px] uppercase tracking-[0.15em] font-label text-outline">Payment</span>
 </nav>
 </div>
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-20">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-20">
 <!-- Left Column: Shipping & Payment -->
 <div class="lg:col-span-7 space-y-20">
 <!-- Contact Section -->
@@ -268,50 +278,58 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
 <h2 class="font-headline text-3xl leading-none">VIP Protocol</h2>
 <span id="checkout-auth-hint" class="text-[10px] uppercase tracking-[0.15em] font-label">Already a member? <a class="border-b border-outline-variant" href="#" onclick="openAuthModal();return false;">Sign In</a></span>
 </div>
-<div class="atelier-input-container">
+<div class="atelier-input-container" id="wrap-email">
 <label class="absolute -top-3 left-0 text-[10px] uppercase tracking-[0.15em] font-label text-outline">Email Address</label>
-<input id="email" class="w-full bg-transparent border-none py-4 px-0 text-sm" placeholder="email@example.com" type="email" required/>
+<input id="email" class="w-full bg-transparent border-none py-4 px-0 text-sm" placeholder="email@example.com" type="email" required oninput="clearFieldError('wrap-email')"/>
+<span class="field-error-msg">Valid email address required</span>
 </div>
 </section>
 <!-- Shipping Address Section -->
 <section>
 <h2 class="font-headline text-3xl leading-none mb-10">Extraction Coordinates</h2>
 <div class="grid grid-cols-2 gap-x-8 gap-y-12">
-<div class="atelier-input-container">
+<div class="atelier-input-container" id="wrap-firstName">
 <label class="absolute -top-3 left-0 text-[10px] uppercase tracking-[0.15em] font-label text-outline">First Name</label>
-<input id="firstName" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text" required/>
+<input id="firstName" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text" required oninput="clearFieldError('wrap-firstName')"/>
+<span class="field-error-msg">First name required</span>
 </div>
-<div class="atelier-input-container">
+<div class="atelier-input-container" id="wrap-lastName">
 <label class="absolute -top-3 left-0 text-[10px] uppercase tracking-[0.15em] font-label text-outline">Last Name</label>
-<input id="lastName" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text" required/>
+<input id="lastName" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text" required oninput="clearFieldError('wrap-lastName')"/>
+<span class="field-error-msg">Last name required</span>
 </div>
-<div class="atelier-input-container col-span-2">
+<div class="atelier-input-container col-span-2" id="wrap-streetAddress">
 <label class="absolute -top-3 left-0 text-[10px] uppercase tracking-[0.15em] font-label text-outline">Address</label>
-<input id="streetAddress" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text" required/>
+<input id="streetAddress" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text" required oninput="clearFieldError('wrap-streetAddress')"/>
+<span class="field-error-msg">Street address required</span>
 </div>
 <div class="atelier-input-container col-span-2">
 <label class="absolute -top-3 left-0 text-[10px] uppercase tracking-[0.15em] font-label text-outline">Apartment, suite, etc. (optional)</label>
 <input id="apartment" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text"/>
 </div>
-<div class="atelier-input-container">
+<div class="atelier-input-container" id="wrap-city">
 <label class="absolute -top-3 left-0 text-[10px] uppercase tracking-[0.15em] font-label text-outline">City</label>
-<input id="city" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text" required/>
+<input id="city" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text" required oninput="clearFieldError('wrap-city')"/>
+<span class="field-error-msg">City required</span>
 </div>
-<div class="atelier-input-container">
+<div class="atelier-input-container" id="wrap-postalCode">
 <label class="absolute -top-3 left-0 text-[10px] uppercase tracking-[0.15em] font-label text-outline">Postal Code</label>
-<input id="postalCode" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text" required/>
+<input id="postalCode" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text" required oninput="clearFieldError('wrap-postalCode')"/>
+<span class="field-error-msg">Postal code required</span>
 </div>
 <div class="atelier-input-container">
 <label class="absolute -top-3 left-0 text-[10px] uppercase tracking-[0.15em] font-label text-outline">State/Province <span class="normal-case" style="letter-spacing:0;">(optional)</span></label>
 <input id="state" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text"/>
 </div>
-<div class="atelier-input-container">
+<div class="atelier-input-container" id="wrap-country">
 <label class="absolute -top-3 left-0 text-[10px] uppercase tracking-[0.15em] font-label text-outline">Country</label>
-<input id="country" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text" required/>
+<input id="country" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text" required oninput="clearFieldError('wrap-country')"/>
+<span class="field-error-msg">Country required</span>
 </div>
-<div class="atelier-input-container col-span-2">
+<div class="atelier-input-container col-span-2" id="wrap-phone">
 <label class="absolute -top-3 left-0 text-[10px] uppercase tracking-[0.15em] font-label text-outline">Phone</label>
-<input id="phone" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="tel" required/>
+<input id="phone" class="w-full bg-transparent border-none py-4 px-0 text-sm" type="tel" required oninput="clearFieldError('wrap-phone')"/>
+<span class="field-error-msg">Phone number required</span>
 </div>
 </div>
 </section>
@@ -350,6 +368,21 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
 </label>
 </div>
 </section>
+<script>
+(function() {
+    // Highlight selected payment method on change
+    function updatePaymentSelection() {
+        document.querySelectorAll('.payment-method-option').forEach(function(label) {
+            const radio = label.querySelector('input[type="radio"]');
+            label.classList.toggle('is-selected', radio && radio.checked);
+        });
+    }
+    document.querySelectorAll('.payment-method-option input[type="radio"]').forEach(function(radio) {
+        radio.addEventListener('change', updatePaymentSelection);
+    });
+    updatePaymentSelection(); // set initial state
+})();
+</script>
 <div class="pt-10">
 <button id="placeOrderBtn" class="w-full py-6 bg-gradient-to-r from-primary to-primary-container text-on-primary text-[12px] uppercase tracking-[0.2em] font-label font-medium shadow-2xl shadow-primary/10 hover:opacity-90 transition-opacity" type="button">
 Secure Acquisition
@@ -383,12 +416,14 @@ Secure Acquisition
 </div>
 </div>
 <!-- Discount Field -->
-<div class="mt-12 atelier-input-container">
-<label class="absolute -top-3 left-0 text-[10px] uppercase tracking-[0.15em] font-label text-outline">Discount Code</label>
-<div class="flex items-center">
-<input class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text"/>
-<button class="text-[10px] uppercase tracking-[0.15em] font-label font-bold text-primary ml-4">Apply</button>
-</div>
+<div class="mt-12">
+  <div class="atelier-input-container" style="opacity:0.5;pointer-events:none;">
+    <label class="absolute -top-3 left-0 text-[10px] uppercase tracking-[0.15em] font-label text-outline">Discount Code</label>
+    <div class="flex items-center">
+      <input class="w-full bg-transparent border-none py-4 px-0 text-sm" type="text" placeholder="Coming soon" disabled/>
+    </div>
+  </div>
+  <p class="font-label text-[9px] uppercase tracking-[0.1em] text-outline mt-2">Discount codes available at launch</p>
 </div>
 </div>
 </div>
@@ -511,30 +546,42 @@ Secure Acquisition
         });
     }
     
-    // Validate form
+    // Inline field error helpers
+    window.clearFieldError = function(wrapId) {
+        const el = document.getElementById(wrapId);
+        if (el) el.classList.remove('field-error');
+    };
+    function markError(wrapId) {
+        const el = document.getElementById(wrapId);
+        if (el) { el.classList.add('field-error'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    }
+
+    // Validate form — highlights first failing field inline
     function validateForm() {
-        const email = document.getElementById('email').value.trim();
-        const firstName = document.getElementById('firstName').value.trim();
-        const lastName = document.getElementById('lastName').value.trim();
-        const streetAddress = document.getElementById('streetAddress').value.trim();
-        const city = document.getElementById('city').value.trim();
-        const postalCode = document.getElementById('postalCode').value.trim();
-        const state = document.getElementById('state').value.trim();
-        const country = document.getElementById('country').value.trim();
-        const phone = document.getElementById('phone').value.trim();
-        
-        if (!email || !firstName || !lastName || !streetAddress || !city || !postalCode || !country || !phone) {
-            showToast('Please fill in all required fields', 'error');
-            return false;
+        const fields = [
+            { id: 'email', wrap: 'wrap-email', label: 'email address' },
+            { id: 'firstName', wrap: 'wrap-firstName', label: 'first name' },
+            { id: 'lastName', wrap: 'wrap-lastName', label: 'last name' },
+            { id: 'streetAddress', wrap: 'wrap-streetAddress', label: 'street address' },
+            { id: 'city', wrap: 'wrap-city', label: 'city' },
+            { id: 'postalCode', wrap: 'wrap-postalCode', label: 'postal code' },
+            { id: 'country', wrap: 'wrap-country', label: 'country' },
+            { id: 'phone', wrap: 'wrap-phone', label: 'phone' }
+        ];
+        for (const f of fields) {
+            if (!document.getElementById(f.id).value.trim()) {
+                markError(f.wrap);
+                showToast('Please enter your ' + f.label, 'error');
+                return false;
+            }
         }
-        
-        // Email validation
+        const email = document.getElementById('email').value.trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
+            markError('wrap-email');
             showToast('Please enter a valid email address', 'error');
             return false;
         }
-        
         return true;
     }
     
@@ -769,5 +816,22 @@ Secure Acquisition
 })();
 </script>
 
+<script src="public/js/cookie-consent.js"></script>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1234567890');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
+/></noscript>
 </body></html>
 

@@ -78,10 +78,11 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   
-  addresses    Address[]
-  carts        Cart[]
-  orders       Order[]
-  auditLogs    AdminAuditLog[]
+  addresses        Address[]
+  carts            Cart[]
+  orders           Order[]
+  auditLogs        AdminAuditLog[]
+  userMeasurements UserMeasurements?
 }
 
 model Address {
@@ -115,6 +116,7 @@ model Product {
   status          ProductStatus @default(ACTIVE)
   images          Json          // Array of image paths
   sizes           Json          // Array of available sizes
+  specifications  Json?         // { fabric, weight, lining, care, origin, construction }
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -153,18 +155,19 @@ model Cart {
 }
 
 model CartItem {
-  id        String   @id @default(uuid())
-  cartId    String
-  productId String
-  size      String
-  quantity  Int      @default(1)
-  unitPrice Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  id           String   @id @default(uuid())
+  cartId       String
+  productId    String
+  size         String
+  measurements Json?
+  quantity     Int      @default(1)
+  unitPrice    Float
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
+
   @@unique([cartId, productId, size])
 }
 
@@ -196,18 +199,19 @@ model Order {
 }
 
 model OrderItem {
-  id          String   @id @default(uuid())
-  orderId     String
-  productId   String
-  productName String
-  productSlug String
-  size        String
-  quantity    Int
-  unitPrice   Float
-  lineTotal   Float
-  image       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(uuid())
+  orderId      String
+  productId    String
+  productName  String
+  productSlug  String
+  size         String
+  measurements Json?
+  quantity     Int
+  unitPrice    Float
+  lineTotal    Float
+  image        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   
   order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product     Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
@@ -329,4 +333,34 @@ model ResetTokenRecord {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+// Saved measurements per customer account — auto-filled on product-detail
+model UserMeasurements {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  bust            Float?
+  waist           Float?
+  hip             Float?
+  shoulderToFloor Float?
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Hero carousel slides — admin-managed, shown on homepage
+model HeroSlide {
+  id        String   @id @default(uuid())
+  position  Int
+  imageUrl  String
+  tag       String   @default("")
+  headline  String
+  sub       String   @default("")
+  ctaText   String   @default("Discover the Piece")
+  ctaUrl    String   @default("collections.html")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([position])
 }

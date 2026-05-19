@@ -192,6 +192,36 @@
           </div>
         </div>
       </div>
+      <!-- Specifications -->
+      <div class="form-group">
+        <label class="form-label">Specifications <span style="font-weight:400;font-style:italic;font-size:10px;">(shown as collapsible on product page)</span></label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <label style="display:block;font-size:10px;letter-spacing:0.1em;color:#888;text-transform:uppercase;margin-bottom:4px;">Fabric Composition</label>
+            <input class="form-input" type="text" id="f-spec-fabric" placeholder="e.g. 100% Italian Silk Crepe"/>
+          </div>
+          <div>
+            <label style="display:block;font-size:10px;letter-spacing:0.1em;color:#888;text-transform:uppercase;margin-bottom:4px;">Weight</label>
+            <input class="form-input" type="text" id="f-spec-weight" placeholder="e.g. 180 gsm"/>
+          </div>
+          <div>
+            <label style="display:block;font-size:10px;letter-spacing:0.1em;color:#888;text-transform:uppercase;margin-bottom:4px;">Lining</label>
+            <input class="form-input" type="text" id="f-spec-lining" placeholder="e.g. Fully lined in silk charmeuse"/>
+          </div>
+          <div>
+            <label style="display:block;font-size:10px;letter-spacing:0.1em;color:#888;text-transform:uppercase;margin-bottom:4px;">Care Instructions</label>
+            <input class="form-input" type="text" id="f-spec-care" placeholder="e.g. Dry clean only"/>
+          </div>
+          <div>
+            <label style="display:block;font-size:10px;letter-spacing:0.1em;color:#888;text-transform:uppercase;margin-bottom:4px;">Country of Origin</label>
+            <input class="form-input" type="text" id="f-spec-origin" placeholder="e.g. Italy"/>
+          </div>
+          <div>
+            <label style="display:block;font-size:10px;letter-spacing:0.1em;color:#888;text-transform:uppercase;margin-bottom:4px;">Construction</label>
+            <input class="form-input" type="text" id="f-spec-construction" placeholder="e.g. Hand-finished edges"/>
+          </div>
+        </div>
+      </div>
       <div class="form-group">
         <label class="form-label">Product Images</label>
         <input type="file" id="img-file-input" multiple accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
@@ -319,6 +349,7 @@
         <td style="white-space:nowrap;">
           <button class="action-btn" onclick="openEditModal('${p.id}')">Edit</button>
           <button class="action-btn gold" onclick="openStatsModal('${p.id}','${(p.name||'Product').replace(/'/g,"\\'")}')">Stats</button>
+          <button class="action-btn" style="border-color:#5e5e5e;color:#5e5e5e;" title="Pin to Hero Carousel" onclick="pinToHero('${p.id}','${(p.name||'').replace(/'/g,"\\'")}','${(p.images&&p.images[0]||'').replace(/'/g,"\\'")}','${(p.slug||'').replace(/'/g,"\\'")}')">🖼 Hero</button>
           <button class="action-btn danger" onclick="archiveProduct('${p.id}','${(p.name||'Product').replace(/'/g,"\\'")}')">Archive</button>
         </td>
       </tr>`;
@@ -443,6 +474,13 @@
     document.getElementById('f-price').value = p.price || '';
     document.getElementById('f-sale-price').value = p.salePrice || '';
     document.getElementById('f-discount').value = p.discountPercent || '';
+    const specs = p.specifications || {};
+    document.getElementById('f-spec-fabric').value = specs.fabric || '';
+    document.getElementById('f-spec-weight').value = specs.weight || '';
+    document.getElementById('f-spec-lining').value = specs.lining || '';
+    document.getElementById('f-spec-care').value = specs.care || '';
+    document.getElementById('f-spec-origin').value = specs.origin || '';
+    document.getElementById('f-spec-construction').value = specs.construction || '';
     const sizes = Array.isArray(p.sizes) ? p.sizes : (typeof p.sizes === 'string' ? JSON.parse(p.sizes || '[]') : []);
     document.querySelectorAll('.sizes-wrap input[type=checkbox]').forEach(c => {
       c.checked = sizes.includes(c.value);
@@ -476,6 +514,13 @@
     const salePriceVal = document.getElementById('f-sale-price').value;
     const discountVal = document.getElementById('f-discount').value;
 
+    // Build specifications object (only include non-empty fields)
+    const specObj = {};
+    ['fabric','weight','lining','care','origin','construction'].forEach(function(k) {
+      const v = document.getElementById('f-spec-' + k).value.trim();
+      if (v) specObj[k] = v;
+    });
+
     const payload = {
       name,
       slug: document.getElementById('f-slug').value.trim(),
@@ -486,7 +531,8 @@
       salePrice: salePriceVal ? parseFloat(salePriceVal) : null,
       discountPercent: discountVal ? parseInt(discountVal) : null,
       images,
-      sizes
+      sizes,
+      specifications: Object.keys(specObj).length > 0 ? specObj : null
     };
 
     const btn = document.getElementById('modal-submit-btn');
@@ -545,6 +591,35 @@
 
   function closeStatsModal() {
     document.getElementById('stats-modal').classList.remove('open');
+  }
+
+  /* ── Pin to Hero ── */
+  async function pinToHero(productId, name, imageUrl, slug) {
+    const pos = prompt(
+      'Pin "' + name + '" to Hero Carousel\n\nEnter slide position (1–5):\n(Check admin Dashboard > Hero Carousel to see which slots are empty)',
+      '1'
+    );
+    if (!pos) return;
+    const position = parseInt(pos);
+    if (isNaN(position) || position < 1 || position > 5) { alert('Position must be between 1 and 5'); return; }
+    const ctaText = prompt('CTA button text:', 'Discover the Piece') || 'Discover the Piece';
+    const tag = prompt('Tag line (small text above headline):', 'RAEN Collection') || '';
+    const sub = prompt('Subtitle (below headline):', '') || '';
+    try {
+      await adminFetch(() => apiPost('/admin/hero', {
+        position,
+        imageUrl: imageUrl || '',
+        tag,
+        headline: name,
+        sub,
+        ctaText,
+        ctaUrl: 'product-detail.html?slug=' + slug,
+        isActive: true
+      }));
+      showToast('"' + name + '" pinned to slide ' + position, 'success');
+    } catch(e) {
+      showToast('Failed to pin to hero: ' + (e.message || 'Unknown error'), 'error');
+    }
   }
 
   load();

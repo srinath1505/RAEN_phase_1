@@ -193,6 +193,9 @@
 }
 </script>
 
+<script>/* RAEN Cookie Guard - must run before GA4/Pixel */
+(function(){if(localStorage.getItem('raen_cookie_consent')!=='accepted'){var noop=function(){};window.dataLayer={push:noop};window.gtag=noop;window.fbq=noop;window._fbq=noop;}}());
+</script>
 <!-- Google Analytics 4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
@@ -202,22 +205,7 @@
   gtag('config', 'G-XXXXXXXXXX');
 </script>
 
-<!-- Meta Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1234567890');
-fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
-/></noscript>
+
 
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Work+Sans:wght@100..900&amp;display=swap" rel="stylesheet"/>
@@ -1595,6 +1583,30 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
 <script src="public/js/auth-modal.js"></script>
 
 <script>
+/* ── Hero Carousel — load slides from API, update in-place ── */
+(async function() {
+    try {
+        var result = await apiGet('/hero');
+        var slides = result.slides || [];
+        if (!slides.length) return; // keep hardcoded fallback
+        var domSlides = document.querySelectorAll('.rh-slide');
+        slides.forEach(function(s, i) {
+            if (i >= domSlides.length) return;
+            var el = domSlides[i];
+            var img = el.querySelector('.rh-slide__img');
+            if (img) { img.src = s.imageUrl; img.alt = s.headline + ' — RAEN'; }
+            var tag = el.querySelector('.rh-slide__tag');
+            if (tag) tag.textContent = s.tag;
+            var hl = el.querySelector('.rh-slide__headline');
+            if (hl) hl.textContent = s.headline;
+            var sub = el.querySelector('.rh-slide__sub');
+            if (sub) sub.textContent = s.sub;
+            var cta = el.querySelector('.rh-slide__cta');
+            if (cta) { cta.textContent = s.ctaText; cta.href = s.ctaUrl; }
+        });
+    } catch(e) { /* fail silently — hardcoded fallback stays */ }
+})();
+
 document.getElementById('indexNewsletterForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const emailInput = document.getElementById('indexNewsletterEmail');
@@ -1675,5 +1687,22 @@ document.getElementById('indexNewsletterForm').addEventListener('submit', async 
 </div>
 </div>
 </footer>
+<script src="public/js/cookie-consent.js"></script>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1234567890');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
+/></noscript>
 </body></html>
 

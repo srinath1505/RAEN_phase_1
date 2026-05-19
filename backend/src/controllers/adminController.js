@@ -52,7 +52,7 @@ exports.getAllProducts = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, category, price, salePrice, discountPercent, status, images, sizes } = req.body;
+    const { name, description, category, price, salePrice, discountPercent, status, images, sizes, specifications } = req.body;
     const slug = req.body.slug || name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
     const product = await prisma.product.create({
@@ -66,7 +66,8 @@ exports.createProduct = async (req, res) => {
         discountPercent: discountPercent ? parseInt(discountPercent) : null,
         status: status || 'ACTIVE',
         images: images || [],
-        sizes: sizes || ['XS', 'S', 'M', 'L']
+        sizes: sizes || ['CUSTOM'],
+        specifications: specifications || null
       }
     });
 
@@ -92,7 +93,7 @@ exports.createProduct = async (req, res) => {
 exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, category, price, salePrice, discountPercent, status, images, sizes } = req.body;
+    const { name, description, category, price, salePrice, discountPercent, status, images, sizes, specifications } = req.body;
 
     const data = {};
     if (name !== undefined) data.name = name;
@@ -104,6 +105,7 @@ exports.updateProduct = async (req, res) => {
     if (status !== undefined) data.status = status;
     if (images !== undefined) data.images = images;
     if (sizes !== undefined) data.sizes = sizes;
+    if (specifications !== undefined) data.specifications = specifications || null;
 
     const product = await prisma.product.update({ where: { id }, data });
 

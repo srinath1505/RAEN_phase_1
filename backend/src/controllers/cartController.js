@@ -18,10 +18,10 @@ exports.addItem = async (req, res) => {
   try {
     const userId = req.user?.id || null;
     const sessionId = req.headers['x-session-id'] || null;
-    const { productId, size, quantity } = req.body;
-    
-    const item = await cartService.addItem(userId, sessionId, productId, size, quantity || 1);
-    
+    const { productId, size, quantity, measurements } = req.body;
+    const effectiveSize = size || (measurements ? 'CUSTOM' : null);
+    if (!effectiveSize) return error(res, 'size or measurements is required', 400);
+    const item = await cartService.addItem(userId, sessionId, productId, effectiveSize, quantity || 1, measurements || null);
     return success(res, { item }, 'Item added to cart', 201);
   } catch (err) {
     return error(res, err.message, 400);

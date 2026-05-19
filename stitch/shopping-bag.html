@@ -79,6 +79,9 @@
 }
 </script>
 
+<script>/* RAEN Cookie Guard - must run before GA4/Pixel */
+(function(){if(localStorage.getItem('raen_cookie_consent')!=='accepted'){var noop=function(){};window.dataLayer={push:noop};window.gtag=noop;window.fbq=noop;window._fbq=noop;}}());
+</script>
 <!-- Google Analytics 4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
@@ -88,22 +91,7 @@
   gtag('config', 'G-XXXXXXXXXX');
 </script>
 
-<!-- Meta Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1234567890');
-fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
-/></noscript>
+
 
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Work+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -452,7 +440,15 @@ document.getElementById('bagNewsletterForm').addEventListener('submit', async (e
         const items = cart.items || [];
         
         if (items.length === 0) {
-            cartContainer.innerHTML = '<p class="text-outline-variant italic">Your selection is empty. <a href="collections.html" class="border-b border-primary text-primary pb-1 ml-2">Browse the Collection</a></p>';
+            cartContainer.innerHTML = `
+                <div style="text-align:center;padding:60px 20px 80px;">
+                    <div style="width:48px;height:48px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;border:1px solid #c6c6c6;border-radius:50%;">
+                        <span class="material-symbols-outlined" style="font-size:22px;color:#777;">shopping_bag</span>
+                    </div>
+                    <p class="font-headline text-2xl mb-3" style="color:#1a1c1c;">Your selection is empty.</p>
+                    <p class="font-body text-sm text-outline-variant mb-8">Nothing chosen yet — the collection awaits.</p>
+                    <a href="collections.html" style="display:inline-block;padding:14px 32px;background:#000;color:#fff;font-family:'Work Sans',sans-serif;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">Browse the Collection</a>
+                </div>`;
             updateTotals(0, 0, 0, 0);
             if (checkoutBtn) checkoutBtn.style.pointerEvents = 'none';
             return;
@@ -484,23 +480,28 @@ document.getElementById('bagNewsletterForm').addEventListener('submit', async (e
                             <p class="font-headline text-2xl">€${itemTotal.toLocaleString()}</p>
                         </div>
                         <p class="text-sm text-outline-variant mb-6 max-w-md">${product.description ? product.description.substring(0, 100) + '...' : ''}</p>
-                        <div class="flex items-center gap-12">
+                        <div class="flex items-center gap-12 flex-wrap">
                             <div class="flex flex-col gap-1">
-                                <label class="text-[9px] uppercase tracking-[0.1em] text-outline font-label">Size</label>
-                                <span class="text-sm">${item.size}</span>
+                                <label class="text-[9px] uppercase tracking-[0.1em] text-outline font-label">Measurements</label>
+                                ${item.measurements ? `<div class="text-xs text-on-surface-variant leading-relaxed">
+                                    ${item.measurements.bust ? 'Bust: ' + item.measurements.bust + '" &nbsp;' : ''}
+                                    ${item.measurements.waist ? 'Waist: ' + item.measurements.waist + '" &nbsp;' : ''}
+                                    ${item.measurements.hip ? 'Hip: ' + item.measurements.hip + '"' : ''}
+                                    ${item.measurements.shoulderToFloor ? '<br>Shoulder–Floor: ' + item.measurements.shoulderToFloor + '"' : ''}
+                                </div>` : `<span class="text-sm">${item.size}</span>`}
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label class="text-[9px] uppercase tracking-[0.1em] text-outline font-label">Quantity</label>
                                 <div class="flex items-center gap-4 border-b border-outline-variant pb-1">
-                                    <button onclick="window.updateCartQuantity(${item.id}, ${item.quantity - 1})" class="hover:text-primary transition-colors"><span class="material-symbols-outlined !text-sm">remove</span></button>
+                                    <button onclick="window.updateCartQuantity('${item.id}', ${item.quantity - 1})" class="hover:text-primary transition-colors"><span class="material-symbols-outlined !text-sm">remove</span></button>
                                     <span class="text-sm font-medium w-4 text-center">${item.quantity}</span>
-                                    <button onclick="window.updateCartQuantity(${item.id}, ${item.quantity + 1})" class="hover:text-primary transition-colors"><span class="material-symbols-outlined !text-sm">add</span></button>
+                                    <button onclick="window.updateCartQuantity('${item.id}', ${item.quantity + 1})" class="hover:text-primary transition-colors"><span class="material-symbols-outlined !text-sm">add</span></button>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="mt-8 flex gap-8">
-                        <button onclick="window.removeCartItem(${item.id})" class="text-[10px] uppercase tracking-[0.15em] font-label border-b border-outline-variant hover:border-primary transition-all pb-1">Remove</button>
+                        <button onclick="window.removeCartItem('${item.id}')" class="text-[10px] uppercase tracking-[0.15em] font-label border-b border-outline-variant hover:border-primary transition-all pb-1">Remove</button>
                     </div>
                 </div>
             </div>`;
@@ -574,6 +575,23 @@ document.getElementById('bagNewsletterForm').addEventListener('submit', async (e
 })();
 </script>
 
+<script src="public/js/cookie-consent.js"></script>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1234567890');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
+/></noscript>
 </body></html>
 
 

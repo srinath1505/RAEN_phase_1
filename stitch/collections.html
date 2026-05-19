@@ -132,6 +132,9 @@
 }
 </script>
 
+<script>/* RAEN Cookie Guard - must run before GA4/Pixel */
+(function(){if(localStorage.getItem('raen_cookie_consent')!=='accepted'){var noop=function(){};window.dataLayer={push:noop};window.gtag=noop;window.fbq=noop;window._fbq=noop;}}());
+</script>
 <!-- Google Analytics 4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
@@ -141,22 +144,7 @@
   gtag('config', 'G-XXXXXXXXXX');
 </script>
 
-<!-- Meta Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1234567890');
-fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
-/></noscript>
+
 
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Work+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -333,17 +321,69 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
                 </p>
 </div>
 </header>
-<!-- Filtering & Sorting Shell -->
+<!-- Filtering & Sorting Bar -->
 <section class="sticky top-20 z-40 bg-surface/90 backdrop-blur-md border-b border-outline-variant/20">
 <div class="max-w-[1440px] mx-auto px-8 h-14 flex items-center justify-between">
-<button class="font-label text-[11px] uppercase tracking-[0.15em] hover:opacity-60 transition-opacity">Filter</button>
-<div class="flex items-center gap-3">
-<span class="font-label text-[11px] uppercase tracking-[0.15em] text-outline">View:</span>
-<button class="font-label text-[11px] uppercase tracking-[0.15em] text-primary font-medium" id="view-grid">1</button>
-<button class="font-label text-[11px] uppercase tracking-[0.15em] text-outline hover:text-primary transition-colors" id="view-list">2</button>
-</div>
+  <div class="flex items-center gap-6">
+    <button id="filter-btn" onclick="openFilters()" class="font-label text-[11px] uppercase tracking-[0.15em] hover:opacity-60 transition-opacity flex items-center gap-2">
+      FILTER
+      <span id="filter-badge" style="display:none;background:#000;color:#fff;font-size:9px;line-height:1;width:16px;height:16px;border-radius:50%;align-items:center;justify-content:center;"></span>
+    </button>
+    <span id="result-count" class="font-label text-[11px] uppercase tracking-[0.15em] text-outline"></span>
+  </div>
+  <select id="sort-select" onchange="sortChanged()" class="font-label text-[11px] uppercase tracking-[0.15em] bg-transparent border-none focus:ring-0 cursor-pointer">
+    <option value="featured">SORT: FEATURED</option>
+    <option value="newest">SORT: NEWEST</option>
+    <option value="price_asc">PRICE: LOW — HIGH</option>
+    <option value="price_desc">PRICE: HIGH — LOW</option>
+  </select>
 </div>
 </section>
+
+<!-- Filter Overlay -->
+<div id="filter-overlay" onclick="closeFilters()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:100;opacity:0;transition:opacity 0.3s;"></div>
+
+<!-- Filter Panel -->
+<div id="filter-panel" style="display:none;position:fixed;top:0;left:0;height:100%;width:320px;max-width:90vw;background:#fff;z-index:101;overflow-y:auto;transform:translateX(-100%);transition:transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94);box-shadow:4px 0 24px rgba(0,0,0,0.12);">
+  <div style="padding:24px;border-bottom:1px solid #e2e2e2;display:flex;align-items:center;justify-content:space-between;">
+    <span class="font-label text-[10px] uppercase tracking-[0.3em]">REFINE</span>
+    <button onclick="closeFilters()" style="font-size:20px;line-height:1;background:none;border:none;cursor:pointer;color:#777;padding:0;" aria-label="Close">×</button>
+  </div>
+  <!-- Category -->
+  <div style="padding:24px;border-bottom:1px solid #f0f0f0;">
+    <h4 class="font-label text-[10px] uppercase tracking-[0.3em] mb-4" style="color:#777;">Category</h4>
+    <div id="filter-categories" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+  <!-- Price Range -->
+  <div style="padding:24px;border-bottom:1px solid #f0f0f0;">
+    <h4 class="font-label text-[10px] uppercase tracking-[0.3em] mb-4" style="color:#777;">Price Range (EUR)</h4>
+    <div style="display:flex;gap:12px;align-items:center;">
+      <input id="filter-min-price" type="number" placeholder="Min" min="0" style="width:50%;border:none;border-bottom:1px solid #c6c6c6;padding:6px 0;font-family:'Work Sans',sans-serif;font-size:12px;background:transparent;outline:none;" onfocus="this.style.borderBottomColor='#000'" onblur="this.style.borderBottomColor='#c6c6c6'"/>
+      <span style="color:#777;font-size:12px;">—</span>
+      <input id="filter-max-price" type="number" placeholder="Max" min="0" style="width:50%;border:none;border-bottom:1px solid #c6c6c6;padding:6px 0;font-family:'Work Sans',sans-serif;font-size:12px;background:transparent;outline:none;" onfocus="this.style.borderBottomColor='#000'" onblur="this.style.borderBottomColor='#c6c6c6'"/>
+    </div>
+  </div>
+  <!-- Toggles -->
+  <div style="padding:24px;border-bottom:1px solid #f0f0f0;display:flex;flex-direction:column;gap:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <span class="font-label text-[11px] uppercase tracking-[0.15em]">In Stock Only</span>
+      <div id="toggle-in-stock" onclick="toggleInStock()" style="width:40px;height:22px;border-radius:11px;background:#e2e2e2;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;">
+        <div id="toggle-in-stock-knob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <span class="font-label text-[11px] uppercase tracking-[0.15em]">On Sale</span>
+      <div id="toggle-on-sale" onclick="toggleOnSale()" style="width:40px;height:22px;border-radius:11px;background:#e2e2e2;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;">
+        <div id="toggle-on-sale-knob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+      </div>
+    </div>
+  </div>
+  <!-- Actions -->
+  <div style="padding:24px;display:flex;gap:12px;">
+    <button onclick="applyFilters()" style="flex:1;padding:12px;background:#000;color:#fff;font-family:'Work Sans',sans-serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;border:none;cursor:pointer;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">Apply</button>
+    <button onclick="clearFilters()" style="padding:12px 16px;background:transparent;color:#777;font-family:'Work Sans',sans-serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;border:1px solid #c6c6c6;cursor:pointer;" onmouseover="this.style.borderColor='#000';this.style.color='#000'" onmouseout="this.style.borderColor='#c6c6c6';this.style.color='#777'">Clear</button>
+  </div>
+</div>
 <!-- Collections Grid -->
 <section class="max-w-[1440px] mx-auto px-2 md:px-4 pt-6 pb-20">
 <style>
@@ -479,9 +519,18 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
     .carousel-dot.active {
         background: rgba(255,255,255,0.95);
     }
+    @keyframes raen-shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    .skeleton-shimmer {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: raen-shimmer 1.5s infinite;
+    }
 </style>
 
-<div class="tove-grid">
+<div id="collections-grid" class="tove-grid">
 
     <!-- Row 1: Large (Sovereign) + Medium (Bare Obsession) + Medium (Midnight Venom) -->
     <div class="tove-row-wide">
@@ -750,6 +799,8 @@ src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
 })();
 </script>
 
+<div id="pagination-controls" class="max-w-[1440px] mx-auto px-8 flex justify-center items-center gap-6 py-12 flex-wrap"></div>
+
 <!-- Atelier Carousel (Custom Component) -->
 <section class="bg-surface-container-low py-32 overflow-hidden">
 <div class="max-w-[1440px] mx-auto px-8 mb-16 flex items-end justify-between">
@@ -861,71 +912,294 @@ document.getElementById('newsletterForm').addEventListener('submit', async (e) =
 <script>window.__RAEN_GOOGLE_CLIENT_ID = '359270964372-cs9ac99f9mdscju9ll8brrt11v97g59b.apps.googleusercontent.com';</script>
 <script src="public/js/auth-modal.js"></script>
 
-<!-- Collections Dynamic Loading -->
+<!-- Collections Dynamic Engine -->
 <script>
-(async function() {
-    try {
-        // Fetch products from API — response is {products:[...]} after api.js unwraps data
-        const _productsResult = await apiGet('/products');
-        const products = (_productsResult.products || _productsResult || []);
+(function() {
+    /* ── State ───────────────────────────────────── */
+    var _filters = { category: '', minPrice: '', maxPrice: '', inStockOnly: false, onSaleOnly: false };
+    var _sort = 'featured';
+    var _page = 1;
+    var _totalPages = 1;
 
-        if (!Array.isArray(products) || products.length === 0) {
-            console.log('No products found');
-            return;
-        }
+    /* ── Helpers ─────────────────────────────────── */
+    function _fmt(n) { return Number(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
-        // Map database products to the existing hardcoded ones by slug
-        const productMap = {};
-        products.forEach(p => {
-            productMap[p.slug] = p;
-        });
-        
-        // Update all product cards with real data from database
-        document.querySelectorAll('.tove-product').forEach(card => {
-            const href = card.getAttribute('href');
-            if (!href) return;
-            
-            const slugMatch = href.match(/slug=([^&]+)/);
-            const slug = slugMatch ? slugMatch[1] : href.replace('.html', '');
-            const product = productMap[slug];
-
-            if (product) {
-                // Update price — strikethrough original + gold effective price when discounted
-                const priceEl = card.querySelector('.product-price');
-                if (priceEl) {
-                    const effectivePrice = product.salePrice ||
-                        (product.discountPercent ? product.price * (1 - product.discountPercent / 100) : null);
-                    if (effectivePrice && effectivePrice < product.price) {
-                        priceEl.innerHTML =
-                            `<span style="text-decoration:line-through;color:#999;font-size:0.85em;margin-right:6px;">€${Number(product.price).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>` +
-                            `<span style="color:#b8960c;">€${Number(effectivePrice).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>` +
-                            (product.discountPercent ? ` <span style="font-size:10px;letter-spacing:0.1em;color:#b8960c;">${product.discountPercent}% OFF</span>` : '');
-                    } else {
-                        priceEl.textContent = `€${Number(product.price).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                    }
-                }
-                
-                // Update product link to use slug
-                card.setAttribute('href', `product-detail.html?slug=${product.slug}`);
-                
-                // Update images if available from database
-                if (product.images && product.images.length > 0) {
-                    const imgContainer = card.querySelector('.tove-product-img');
-                    if (imgContainer) {
-                        // Keep existing images for now, can be updated later
-                        // imgContainer.setAttribute('data-images', JSON.stringify(product.images));
-                    }
-                }
-            }
-        });
-        
-    } catch (error) {
-        console.error('Error loading products:', error);
-        // Keep static HTML as fallback
+    /* ── Card Renderer ───────────────────────────── */
+    function _card(p) {
+        var imgs = Array.isArray(p.images) ? p.images : [];
+        var i1 = imgs[0] || 'public/images/placeholder.jpg';
+        var i2 = imgs[1] || i1;
+        var di = JSON.stringify(imgs).replace(/'/g, '&#39;');
+        var ep = p.salePrice || (p.discountPercent ? p.price * (1 - p.discountPercent / 100) : null);
+        var ph = ep && ep < p.price
+            ? '<span style="text-decoration:line-through;color:#999;font-size:0.85em;margin-right:4px;">€' + _fmt(p.price) + '</span>'
+              + '<span style="color:#b8960c;">€' + _fmt(ep) + '</span>'
+              + (p.discountPercent ? '<span style="font-size:9px;letter-spacing:0.1em;color:#b8960c;margin-left:4px;">' + p.discountPercent + '% OFF</span>' : '')
+            : '€' + _fmt(p.price);
+        var name = (p.name || '').replace(/"/g, '&quot;');
+        var cat = (p.category || '').toUpperCase();
+        return '<a href="product-detail.html?slug=' + p.slug + '" class="tove-product">'
+            + '<div class="tove-product-img" data-images=\'' + di + '\'>'
+            + '<img class="carousel-active" alt="' + name + ' by RAEN" src="' + i1 + '"/>'
+            + '<img class="carousel-inactive" alt="" src="' + i2 + '" aria-hidden="true"/>'
+            + '<div class="carousel-dots"></div>'
+            + '</div>'
+            + '<div class="tove-product-info">'
+            + '<div><div class="product-name">' + (p.name || '') + '</div>'
+            + '<div class="product-subtitle">' + cat + '</div></div>'
+            + '<span class="product-price">' + ph + '</span>'
+            + '</div></a>';
     }
+
+    /* ── Grid Renderer ───────────────────────────── */
+    function _grid(products) {
+        if (!products.length) {
+            return '<div style="text-align:center;padding:80px 20px;">'
+                + '<p class="font-label text-[11px] uppercase tracking-[0.2em]" style="color:#777;margin-bottom:20px;">No pieces match your selection</p>'
+                + '<button onclick="clearFilters()" style="font-family:\'Work Sans\',sans-serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;border-bottom:1px solid #c6c6c6;padding-bottom:2px;background:none;border-top:none;border-left:none;border-right:none;cursor:pointer;">Clear Filters</button>'
+                + '</div>';
+        }
+        var html = '', i = 0;
+        if (i < products.length) {
+            html += '<div class="tove-row-wide">';
+            for (var j = 0; j < 3 && i < products.length; j++, i++) html += _card(products[i]);
+            html += '</div>';
+        }
+        if (i < products.length) {
+            html += '<div class="tove-row-four">';
+            for (var j = 0; j < 4 && i < products.length; j++, i++) html += _card(products[i]);
+            html += '</div>';
+        }
+        if (i < products.length) {
+            html += '<div class="tove-row-wide-reverse">';
+            for (var j = 0; j < 3 && i < products.length; j++, i++) html += _card(products[i]);
+            html += '</div>';
+        }
+        while (i < products.length) {
+            html += '<div class="tove-row-wide">';
+            for (var j = 0; j < 3 && i < products.length; j++, i++) html += _card(products[i]);
+            html += '</div>';
+        }
+        return html;
+    }
+
+    /* ── Skeleton ────────────────────────────────── */
+    function _skeleton() {
+        var sk = '<div class="tove-product" style="pointer-events:none;">'
+            + '<div class="tove-product-img skeleton-shimmer"></div>'
+            + '<div class="tove-product-info">'
+            + '<div style="flex:1"><div class="skeleton-shimmer" style="height:11px;width:65%;margin-bottom:6px;"></div>'
+            + '<div class="skeleton-shimmer" style="height:10px;width:40%;"></div></div>'
+            + '<div class="skeleton-shimmer" style="height:11px;width:55px;flex-shrink:0;"></div>'
+            + '</div></div>';
+        return '<div class="tove-row-wide">' + sk + sk + sk + '</div>'
+            + '<div class="tove-row-four">' + sk + sk + sk + sk + '</div>'
+            + '<div class="tove-row-wide-reverse">' + sk + sk + sk + '</div>'
+            + '<div class="tove-row-wide">' + sk + sk + '</div>';
+    }
+
+    /* ── Carousel Init ───────────────────────────── */
+    function _initCarousels() {
+        var grid = document.getElementById('collections-grid');
+        if (!grid) return;
+        grid.querySelectorAll('.tove-product-img[data-images]').forEach(function(container) {
+            try {
+                var images = JSON.parse(container.getAttribute('data-images'));
+                var dotsEl = container.querySelector('.carousel-dots');
+                if (dotsEl) {
+                    dotsEl.innerHTML = '';
+                    images.forEach(function(_, i) {
+                        var dot = document.createElement('div');
+                        dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                        dotsEl.appendChild(dot);
+                    });
+                }
+                images.slice(2).forEach(function(src) { var img = new Image(); img.src = src; });
+            } catch(e) {}
+        });
+        grid.querySelectorAll('.tove-product').forEach(function(product) {
+            var container = product.querySelector('.tove-product-img[data-images]');
+            if (!container) return;
+            var images;
+            try { images = JSON.parse(container.getAttribute('data-images')); } catch(e) { return; }
+            if (!images || images.length < 2) return;
+            var imgA = container.querySelectorAll('img')[0];
+            var imgB = container.querySelectorAll('img')[1];
+            var dots = container.querySelectorAll('.carousel-dot');
+            var cur = 0, iv = null;
+            function show(idx) {
+                cur = idx;
+                imgB.src = images[idx]; imgB.classList.remove('carousel-inactive'); imgB.classList.add('carousel-active');
+                setTimeout(function() { imgA.src = images[idx]; imgB.classList.remove('carousel-active'); imgB.classList.add('carousel-inactive'); }, 350);
+                dots.forEach(function(d, i) { d.classList.toggle('active', i === idx); });
+            }
+            product.addEventListener('mouseenter', function() { cur = 0; iv = setInterval(function() { cur = (cur + 1) % images.length; show(cur); }, 700); });
+            product.addEventListener('mouseleave', function() {
+                clearInterval(iv); iv = null; cur = 0; imgA.src = images[0];
+                imgB.classList.remove('carousel-active'); imgB.classList.add('carousel-inactive');
+                dots.forEach(function(d, i) { d.classList.toggle('active', i === 0); });
+            });
+        });
+    }
+
+    /* ── Pagination ──────────────────────────────── */
+    function _renderPagination(pagination) {
+        var el = document.getElementById('pagination-controls');
+        if (!el) return;
+        if (!pagination || pagination.totalPages <= 1) { el.innerHTML = ''; return; }
+        var html = '';
+        if (_page > 1) html += '<button onclick="goToPage(' + (_page - 1) + ')" style="font-family:\'Work Sans\',sans-serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;background:none;border:none;border-bottom:1px solid #c6c6c6;cursor:pointer;padding-bottom:2px;color:#777;" onmouseover="this.style.borderColor=\'#000\';this.style.color=\'#000\'" onmouseout="this.style.borderColor=\'#c6c6c6\';this.style.color=\'#777\'">← Prev</button>';
+        var start = Math.max(1, _page - 2), end = Math.min(pagination.totalPages, start + 4);
+        for (var p = start; p <= end; p++) {
+            var active = p === _page;
+            html += '<button onclick="goToPage(' + p + ')" style="font-family:\'Work Sans\',sans-serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;background:none;border:none;border-bottom:1px solid ' + (active ? '#000' : 'transparent') + ';cursor:pointer;padding-bottom:2px;font-weight:' + (active ? '600' : '400') + ';color:' + (active ? '#000' : '#777') + ';">' + p + '</button>';
+        }
+        if (_page < pagination.totalPages) html += '<button onclick="goToPage(' + (_page + 1) + ')" style="font-family:\'Work Sans\',sans-serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;background:none;border:none;border-bottom:1px solid #c6c6c6;cursor:pointer;padding-bottom:2px;color:#777;" onmouseover="this.style.borderColor=\'#000\';this.style.color=\'#000\'" onmouseout="this.style.borderColor=\'#c6c6c6\';this.style.color=\'#777\'">Next →</button>';
+        el.innerHTML = html;
+    }
+
+    /* ── Filter Badge ────────────────────────────── */
+    function _badge() {
+        var n = [_filters.category, _filters.minPrice, _filters.maxPrice].filter(Boolean).length
+            + (_filters.inStockOnly ? 1 : 0) + (_filters.onSaleOnly ? 1 : 0);
+        var b = document.getElementById('filter-badge');
+        if (!b) return;
+        b.textContent = n;
+        b.style.display = n > 0 ? 'inline-flex' : 'none';
+    }
+
+    /* ── Toggle Helper ───────────────────────────── */
+    function _setToggle(trackId, knobId, on) {
+        var t = document.getElementById(trackId), k = document.getElementById(knobId);
+        if (t) t.style.background = on ? '#000' : '#e2e2e2';
+        if (k) k.style.transform = on ? 'translateX(18px)' : 'translateX(0)';
+    }
+
+    /* ── Sync filter UI with state ───────────────── */
+    function _syncUI() {
+        document.querySelectorAll('.filter-cat-btn').forEach(function(btn) {
+            var a = btn.dataset.category === _filters.category;
+            btn.style.background = a ? '#000' : 'transparent';
+            btn.style.color = a ? '#fff' : '#1a1c1c';
+            btn.style.borderColor = a ? '#000' : '#c6c6c6';
+        });
+        var mn = document.getElementById('filter-min-price'), mx = document.getElementById('filter-max-price');
+        if (mn) mn.value = _filters.minPrice;
+        if (mx) mx.value = _filters.maxPrice;
+        _setToggle('toggle-in-stock', 'toggle-in-stock-knob', _filters.inStockOnly);
+        _setToggle('toggle-on-sale', 'toggle-on-sale-knob', _filters.onSaleOnly);
+    }
+
+    /* ── Load Products ───────────────────────────── */
+    async function _load() {
+        var grid = document.getElementById('collections-grid');
+        var countEl = document.getElementById('result-count');
+        if (!grid) return;
+        grid.innerHTML = _skeleton();
+        if (countEl) countEl.textContent = '';
+        try {
+            var params = new URLSearchParams({ page: _page, limit: 12, sortBy: _sort });
+            if (_filters.category) params.set('category', _filters.category);
+            if (_filters.minPrice) params.set('minPrice', _filters.minPrice);
+            if (_filters.maxPrice) params.set('maxPrice', _filters.maxPrice);
+            if (_filters.inStockOnly) params.set('inStockOnly', 'true');
+            if (_filters.onSaleOnly) params.set('onSaleOnly', 'true');
+            var result = await apiGet('/products?' + params.toString());
+            var products = result.products || [];
+            var pagination = result.pagination || { total: products.length, totalPages: 1, page: 1 };
+            _totalPages = pagination.totalPages || 1;
+            if (countEl) { var n = pagination.total; countEl.textContent = n + ' PIECE' + (n !== 1 ? 'S' : ''); }
+            grid.innerHTML = _grid(products);
+            _initCarousels();
+            _renderPagination(pagination);
+        } catch(err) {
+            console.error('Collections load error:', err);
+            grid.innerHTML = '<div style="text-align:center;padding:80px 20px;"><p class="font-label text-[11px] uppercase tracking-[0.2em]" style="color:#777;">Failed to load. Please refresh.</p></div>';
+        }
+    }
+
+    /* ── Categories ──────────────────────────────── */
+    async function _loadCategories() {
+        try {
+            var result = await apiGet('/products/categories');
+            var cats = result.categories || [];
+            var el = document.getElementById('filter-categories');
+            if (!el || !cats.length) return;
+            var html = '<button class="filter-cat-btn" data-category="" onclick="selectCategory(this)" style="background:#000;color:#fff;border:1px solid #000;padding:7px 16px;font-family:\'Work Sans\',sans-serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;text-align:left;">All</button>';
+            cats.forEach(function(c) {
+                html += '<button class="filter-cat-btn" data-category="' + c + '" onclick="selectCategory(this)" style="background:transparent;color:#1a1c1c;border:1px solid #c6c6c6;padding:7px 16px;font-family:\'Work Sans\',sans-serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;text-align:left;">' + c.toUpperCase() + '</button>';
+            });
+            el.innerHTML = html;
+        } catch(e) { console.error('Categories error:', e); }
+    }
+
+    /* ── Public API (called from HTML) ───────────── */
+    window.openFilters = function() {
+        var ov = document.getElementById('filter-overlay'), pn = document.getElementById('filter-panel');
+        if (!ov || !pn) return;
+        ov.style.display = 'block'; pn.style.display = 'block';
+        requestAnimationFrame(function() { ov.style.opacity = '1'; pn.style.transform = 'translateX(0)'; });
+        document.body.style.overflow = 'hidden';
+        _syncUI();
+    };
+    window.closeFilters = function() {
+        var ov = document.getElementById('filter-overlay'), pn = document.getElementById('filter-panel');
+        if (!ov || !pn) return;
+        ov.style.opacity = '0'; pn.style.transform = 'translateX(-100%)';
+        setTimeout(function() { ov.style.display = 'none'; pn.style.display = 'none'; }, 300);
+        document.body.style.overflow = '';
+    };
+    window.toggleInStock = function() { _filters.inStockOnly = !_filters.inStockOnly; _setToggle('toggle-in-stock', 'toggle-in-stock-knob', _filters.inStockOnly); };
+    window.toggleOnSale = function() { _filters.onSaleOnly = !_filters.onSaleOnly; _setToggle('toggle-on-sale', 'toggle-on-sale-knob', _filters.onSaleOnly); };
+    window.selectCategory = function(btn) {
+        _filters.category = btn.dataset.category;
+        document.querySelectorAll('.filter-cat-btn').forEach(function(b) {
+            var a = b.dataset.category === _filters.category;
+            b.style.background = a ? '#000' : 'transparent'; b.style.color = a ? '#fff' : '#1a1c1c'; b.style.borderColor = a ? '#000' : '#c6c6c6';
+        });
+    };
+    window.applyFilters = function() {
+        var mn = document.getElementById('filter-min-price'), mx = document.getElementById('filter-max-price');
+        _filters.minPrice = mn ? mn.value.trim() : '';
+        _filters.maxPrice = mx ? mx.value.trim() : '';
+        _page = 1; window.closeFilters(); _badge(); _load();
+    };
+    window.clearFilters = function() {
+        _filters = { category: '', minPrice: '', maxPrice: '', inStockOnly: false, onSaleOnly: false };
+        _page = 1; window.closeFilters(); _badge(); _load();
+    };
+    window.sortChanged = function() {
+        var el = document.getElementById('sort-select'); _sort = el ? el.value : 'featured'; _page = 1; _load();
+    };
+    window.goToPage = function(p) {
+        _page = p; _load();
+        var g = document.getElementById('collections-grid');
+        if (g) window.scrollTo({ top: g.getBoundingClientRect().top + window.pageYOffset - 100, behavior: 'smooth' });
+    };
+
+    /* ── Init ────────────────────────────────────── */
+    _loadCategories();
+    _load();
 })();
 </script>
 
+<script src="public/js/cookie-consent.js"></script>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1234567890');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1234567890&ev=PageView&noscript=1"
+/></noscript>
 </body></html>
 
 

@@ -10,7 +10,8 @@ router.post(
   '/items',
   [
     body('productId').notEmpty().withMessage('Product ID is required'),
-    body('size').notEmpty().withMessage('Size is required'),
+    body('size').optional().isString(),
+    body('measurements').optional().isObject(),
     body('quantity').optional().isInt({ min: 1 }).withMessage('Quantity must be at least 1')
   ],
   validationMiddleware,

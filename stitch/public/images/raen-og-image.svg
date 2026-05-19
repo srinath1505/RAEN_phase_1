@@ -1,0 +1,25 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630'>
+  <defs>
+    <linearGradient id='bg' x1='0' y1='0' x2='1' y2='1'>
+      <stop offset='0%' stop-color='#1a1a1a'/>
+      <stop offset='100%' stop-color='#2d2d2d'/>
+    </linearGradient>
+  </defs>
+  <rect width='1200' height='630' fill='url(#bg)'/>
+  <!-- Subtle grid lines -->
+  <line x1='0' y1='315' x2='1200' y2='315' stroke='#333' stroke-width='1' opacity='0.5'/>
+  <line x1='600' y1='0' x2='600' y2='630' stroke='#333' stroke-width='1' opacity='0.5'/>
+  <!-- Gold accent bar -->
+  <rect x='0' y='0' width='1200' height='4' fill='#b8960c'/>
+  <!-- RAEN Wordmark -->
+  <text x='600' y='240' font-family='Georgia,serif' font-size='140' font-weight='300'
+        fill='#f9f9f9' text-anchor='middle' letter-spacing='80'>RAEN</text>
+  <!-- Tagline -->
+  <text x='600' y='330' font-family='Helvetica,Arial,sans-serif' font-size='18'
+        fill='#999' text-anchor='middle' letter-spacing='6'>UNAPOLOGETIC LUXURY</text>
+  <!-- URL -->
+  <text x='600' y='520' font-family='Helvetica,Arial,sans-serif' font-size='14'
+        fill='#555' text-anchor='middle' letter-spacing='4'>RAEN.DESIGN</text>
+  <!-- Bottom gold accent -->
+  <rect x='0' y='626' width='1200' height='4' fill='#b8960c'/>
+</svg>

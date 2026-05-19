@@ -114,4 +114,12 @@ router.patch(
   adminController.updateContactMessageStatus
 );
 
+// Hero Carousel
+const heroController = require('../controllers/heroController');
+router.get('/hero', heroController.adminGetSlides);
+router.post('/hero', heroController.createSlide);
+router.put('/hero/:id', heroController.updateSlide);
+router.patch('/hero/:id', heroController.updateSlide);
+router.delete('/hero/:id', heroController.deleteSlide);
+
 module.exports = router;
