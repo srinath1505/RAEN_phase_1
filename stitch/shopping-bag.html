@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html lang="en"><head>
 <meta charset="utf-8"/>
@@ -213,10 +213,7 @@
 <nav class="fixed top-0 w-full z-50 glass-nav border-none">
 <div class="max-w-[1440px] mx-auto px-8 h-20 flex items-center justify-between">
 <div class="flex items-center gap-12">
-<a class="font-headline text-2xl font-light uppercase text-primary transition-opacity hover:opacity-70" href="index.html" style="letter-spacing: 2rem;">
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="120" height="40"/>' } else { $m }
-    </a>
+<a class="font-headline text-2xl font-light uppercase text-primary transition-opacity hover:opacity-70" href="index.html" style="letter-spacing: 2rem;"><img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height: 3em; width: auto;" width="120" height="40"/></a>
 <div class="hidden md:flex gap-8">
 <a class="text-[10px] uppercase tracking-[0.15em] font-label hover:text-outline transition-colors" href="collections.html">Shop</a>
 <a class="text-[10px] uppercase tracking-[0.15em] font-label hover:text-outline transition-colors" href="collections.html">Collections</a>
@@ -253,10 +250,7 @@
 <div class="flex flex-col md:flex-row gap-8 pb-12 border-b border-outline-variant/30">
 <!-- Image Container -->
 <div class="w-full md:w-64 aspect-[3/4] overflow-hidden bg-surface-container-low group">
-
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="800" height="1000"/>' } else { $m }
-    
+<img class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700 hover:scale-105" data-alt="Fluid Silk Trousers in charcoal grey" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhbNBdNwVykgef2ixkLqvFnE7u-vao0HmT8yAAhlcSx3UZJTVDPof9PkcclQGKzAzMIg89mMqxo4E68sTdQJrLfCe1K_28RnUmZaWxKwO_zfzBRs-sSIyl38-P9xhqYkJN0egz9H5FlrJoA4eCwSYWaOBsMxqGx4mmSUGSai2MKWKzNx5cpl2tawmMdshxjtZ2cLwk_kYgLD0hl-rV15818K-m9mhkIU40I16duIn8bow5amnm4qYz4UWqZWxzKDsEm7lt7QbhsJb0"/>
 </div>
 <!-- Details -->
 <div class="flex-1 flex flex-col justify-between py-2">
@@ -304,10 +298,7 @@
 <a href="collections.html" class="text-[10px] uppercase tracking-[0.15em] font-label border-b border-primary pb-1">View the Collection</a>
 </div>
 <div class="absolute right-0 top-0 h-full w-1/2 opacity-20 pointer-events-none">
-
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="800" height="1000"/>' } else { $m }
-    
+<img class="w-full h-full object-cover" alt="Abstract shadow pattern on draped fabric" data-alt="Abstract shadow pattern on draped fabric" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJwbKYn5bFiuDWwXek8lvShY4r0Yolfu-5ld41MCobmnRZFvPtkwmT09adeb0IZyf6_-g0ve8DCn-pbSoP4-PtZlRmIVnYZBlEtk5repXqoeVnQ14F6r4kd3zw5FsTlJ9YTv_v9l59Vdl2vzNQmKz9gDCUjYPC5epl3cV4LzhD38jTNAt7EBI9MtcJtdLPeEW7Uq2RimpNa4eU-wJQ_49lyhF4f5Ab7xupFBLtUWwHU-8PEGrFlryvCE0OY7DGXoF2sjmsIJ2Ooc75"/>
 </div>
 </div>
 </div>
@@ -364,10 +355,7 @@
 <div class="max-w-[1440px] mx-auto">
 <div class="grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
 <div class="col-span-1 md:col-span-1">
-<a class="font-headline text-2xl font-light block mb-8 uppercase text-primary hover:opacity-70 transition-opacity" href="index.html" style="letter-spacing: 2rem;">
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="120" height="40"/>' } else { $m }
-    </a>
+<a class="font-headline text-2xl font-light block mb-8 uppercase text-primary hover:opacity-70 transition-opacity" href="index.html" style="letter-spacing: 2rem;"><img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height: 3em; width: auto;" width="120" height="40"/></a>
 <p class="text-sm text-on-surface-variant leading-relaxed">A contemporary fashion house dedicated to considered design, fluid silk, and the quiet authority of exceptional craft.</p>
 </div>
 <div class="flex flex-col gap-4">
@@ -480,7 +468,7 @@ document.getElementById('bagNewsletterForm').addEventListener('submit', async (e
             <div class="flex flex-col md:flex-row gap-8 pb-12 border-b border-outline-variant/30" data-item-id="${item.id}">
                 <div class="w-full md:w-64 aspect-[3/4] overflow-hidden bg-surface-container-low group cursor-pointer" onclick="window.location.href='product-detail.html?slug=${product.slug || ''}'">
                     <img class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700 hover:scale-105"
-                         src="${product.images && product.images.length width="600" height="750"/> 0 ? product.images[0] : 'public/images/placeholder.jpg'}"
+                         src="${product.images && product.images.length > 0 ? product.images[0] : 'public/images/placeholder.jpg'}"
                          alt="${product.name || 'Product'}"/>
                 </div>
                 <div class="flex-1 flex flex-col justify-between py-2">

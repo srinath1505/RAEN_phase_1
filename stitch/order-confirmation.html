@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html lang="en"><head>
 <meta charset="utf-8"/>
@@ -251,10 +251,7 @@
 <a class="text-[10px] tracking-[0.15em] uppercase font-label hover:text-outline transition-colors" href="collections.html">Shop</a>
 <a class="text-[10px] tracking-[0.15em] uppercase font-label hover:text-outline transition-colors" href="collections.html">Collections</a>
 </div>
-<a class="text-2xl font-headline tracking-tighter font-light uppercase" href="/" style="letter-spacing: 2rem;">
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="120" height="40"/>' } else { $m }
-    </a>
+<a class="text-2xl font-headline tracking-tighter font-light uppercase" href="/" style="letter-spacing: 2rem;"><img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height: 3em; width: auto;" width="120" height="40"/></a>
 <div class="flex items-center space-x-12">
 <div class="flex space-x-6">
 <a class="text-[10px] tracking-[0.15em] uppercase font-label hover:text-outline transition-colors" href="journal.html">World of Raen</a>
@@ -346,10 +343,7 @@ Demand immediate intervention whenever necessary. Our operatives await at <span 
 </main>
 <!-- Footer -->
 <footer class="bg-surface-container-low pt-32 pb-16">
-<div class="max-w-screen-xl mx-auto px-8"><div class="mb-24"><a class="font-headline text-3xl font-light block mb-8 uppercase text-primary hover:opacity-70 transition-opacity" href="index.html" style="letter-spacing: 2rem;">
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="120" height="40"/>' } else { $m }
-    </a><p class="font-body text-sm text-on-surface-variant leading-relaxed max-w-xs">Unapologetic glamour. A high-fashion house dedicated to the intoxicating power of liquid silk.</p></div>
+<div class="max-w-screen-xl mx-auto px-8"><div class="mb-24"><a class="font-headline text-3xl font-light block mb-8 uppercase text-primary hover:opacity-70 transition-opacity" href="index.html" style="letter-spacing: 2rem;"><img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height: 3em; width: auto;" width="120" height="40"/></a><p class="font-body text-sm text-on-surface-variant leading-relaxed max-w-xs">Unapologetic glamour. A high-fashion house dedicated to the intoxicating power of liquid silk.</p></div>
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-12 md:space-y-0">
 <div class="flex space-x-12">
 <a class="text-[10px] tracking-[0.15em] uppercase font-label hover:text-primary transition-colors" href="sustainability.html">Sustainability</a>
@@ -463,10 +457,9 @@ Demand immediate intervention whenever necessary. Our operatives await at <span 
             itemsHTML += `
             <div class="w-full lg:max-w-md bg-surface-container-low p-1 shadow-sm mb-8">
                 <div class="overflow-hidden bg-surface-container aspect-[3/4]">
-                    
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="600" height="750"/>' } else { $m }
-    
+                    <img class="w-full h-full object-cover object-top transition-transform duration-700 hover:scale-105 grayscale hover:grayscale-0 transition-all duration-700"
+                         alt="${productName}"
+                         src="${productImage}"/>
                 </div>
                 <div class="p-10 bg-surface-container-lowest">
                     <div>

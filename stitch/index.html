@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html lang="en"><head>
 <meta charset="utf-8"/>
@@ -1035,17 +1035,16 @@
 <nav class="fixed top-0 w-full z-50 glass-nav border-b border-outline-variant/10">
 <div class="max-w-[1800px] mx-auto px-6 lg:px-12 h-20 flex items-center justify-between">
 <div class="flex items-center gap-12">
-<a class="font-headline text-2xl tracking-[0.5em] font-light uppercase text-primary transition-opacity hover:opacity-70" href="index.html">
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="120" height="40"/>' } else { $m }
-    </a>
+<a class="font-headline text-2xl tracking-[0.5em] font-light uppercase text-primary transition-opacity hover:opacity-70" href="index.html"><img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height: 3em; width: auto;" width="120" height="40"/></a>
 <div class="hidden lg:flex items-center gap-8">
 <a class="font-label text-xs letter-spaced text-on-surface" href="collections.html">Collections</a>
 <a class="font-label text-xs letter-spaced text-on-surface" href="journal.html">Archive</a>
 </div>
 </div>
 <div class="flex items-center gap-6">
-<button class="flex items-center gap-2" aria-label="Search RAEN"><span class="material-symbols-outlined text-on-surface" aria-hidden="true">search</span></button>
+<button class="flex items-center gap-2" aria-label="Search RAEN">
+<span class="material-symbols-outlined text-on-surface" aria-hidden="true">search</span>
+</button>
 <a id="auth-nav-btn" href="#" onclick="openAuthModal();return false;" class="font-label text-xs letter-spaced text-on-surface hover:opacity-70 transition-opacity" style="text-decoration:none;">ACCOUNT</a>
 <a class="flex items-center gap-2" href="shopping-bag.html" aria-label="Shopping bag">
 <span class="material-symbols-outlined text-on-surface">shopping_bag</span>
@@ -1059,10 +1058,7 @@
 
     <!-- Slide 1 -->
     <div class="rh-slide is-active" data-slide="0" role="group" aria-label="Slide 1 of 5">
-        
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="1920" height="1080"/>' } else { $m }
-    
+        <img class="rh-slide__img" src="public/images/hero%20(1).jpeg" alt="RAEN SS26 – The Sovereign editorial" fetchpriority="high" decoding="async"/>
         <div class="rh-slide__overlay"></div>
         <div class="rh-slide__content">
             <span class="rh-slide__tag">SS26 — Women's Collection</span>
@@ -1074,10 +1070,7 @@
 
     <!-- Slide 2 -->
     <div class="rh-slide" data-slide="1" role="group" aria-label="Slide 2 of 5">
-        
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="1920" height="1080"/>' } else { $m }
-    
+        <img class="rh-slide__img" style="object-position: center top;" src="public/images/hero%20(2).jpeg" alt="RAEN – The Bare Obsession editorial" loading="lazy" decoding="async"/>
         <div class="rh-slide__overlay"></div>
         <div class="rh-slide__content">
             <span class="rh-slide__tag">Atelier Signature</span>
@@ -1089,10 +1082,7 @@
 
     <!-- Slide 3 -->
     <div class="rh-slide" data-slide="2" role="group" aria-label="Slide 3 of 5">
-        
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="1920" height="1080"/>' } else { $m }
-    
+        <img class="rh-slide__img" src="public/images/hero%20(3).jpeg" alt="RAEN – Serpentine Gown editorial" loading="lazy" decoding="async"/>
         <div class="rh-slide__overlay"></div>
         <div class="rh-slide__content">
             <span class="rh-slide__tag">Runway Archive</span>
@@ -1104,10 +1094,7 @@
 
     <!-- Slide 4 -->
     <div class="rh-slide" data-slide="3" role="group" aria-label="Slide 4 of 5">
-        
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="1920" height="1080"/>' } else { $m }
-    
+        <img class="rh-slide__img" style="object-position: center top;" src="public/images/hero%20(4).jpeg" alt="RAEN – Midnight Venom editorial" loading="lazy" decoding="async"/>
         <div class="rh-slide__overlay"></div>
         <div class="rh-slide__content">
             <span class="rh-slide__tag">High-Stakes Drop</span>
@@ -1119,10 +1106,7 @@
 
     <!-- Slide 5 -->
     <div class="rh-slide" data-slide="4" role="group" aria-label="Slide 5 of 5">
-        
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="1920" height="1080"/>' } else { $m }
-    
+        <img class="rh-slide__img" src="public/images/hero%20(5).jpeg" alt="RAEN – Crimson Vice editorial" loading="lazy" decoding="async"/>
         <div class="rh-slide__overlay"></div>
         <div class="rh-slide__content">
             <span class="rh-slide__tag">Capsule — Limited Edition</span>
@@ -1236,25 +1220,25 @@
 <div class="raen-philosophy-carousel">
 <div class="raen-philosophy-track">
 <div class="raen-philosophy-slide">
-<img alt="Our Phil 1" src="public/images/our%20phil%20(1).png" width="800" height="800"/>
+<img alt="Our Phil 1" src="public/images/our%20phil%20(1).png"/>
 </div>
 <div class="raen-philosophy-slide">
-<img alt="Our Phil 2" src="public/images/our%20phil%20(2).png" width="800" height="800"/>
+<img alt="Our Phil 2" src="public/images/our%20phil%20(2).png"/>
 </div>
 <div class="raen-philosophy-slide">
-<img alt="Our Phil 3" src="public/images/our%20phil%20(3).png" width="800" height="800"/>
+<img alt="Our Phil 3" src="public/images/our%20phil%20(3).png"/>
 </div>
 <div class="raen-philosophy-slide">
-<img alt="Our Philosophy Detail 1" src="public/images/our%20philosophy%20(1).avif" width="800" height="800"/>
+<img alt="Our Philosophy Detail 1" src="public/images/our%20philosophy%20(1).avif"/>
 </div>
 <div class="raen-philosophy-slide">
-<img alt="Our Philosophy Detail 2" src="public/images/our%20philosophy%20(2).avif" width="800" height="800"/>
+<img alt="Our Philosophy Detail 2" src="public/images/our%20philosophy%20(2).avif"/>
 </div>
 <div class="raen-philosophy-slide">
-<img alt="Our Philosophy Detail 3" src="public/images/our%20philosophy%20(3).avif" width="800" height="800"/>
+<img alt="Our Philosophy Detail 3" src="public/images/our%20philosophy%20(3).avif"/>
 </div>
 <div class="raen-philosophy-slide">
-<img alt="Our Phil 1" src="public/images/our%20phil%20(1).png" width="800" height="800"/>
+<img alt="Our Phil 1" src="public/images/our%20phil%20(1).png"/>
 </div>
 </div>
 </div>
@@ -1284,21 +1268,21 @@
             <div class="hsc-frame is-active" data-hsc="0">
                 <img class="hsc-frame__img" src="public/images/the%20mono%201%20%20.png"
                      alt="The Billionaire Silhouette — Crystal Mesh Gown"
-                     fetchpriority="high" width="960" height="1200" decoding="async"/>
+                     fetchpriority="high" decoding="async" width="960" height="1200"/>
             </div>
 
             <!-- Frame 2 -->
             <div class="hsc-frame" data-hsc="1">
                 <img class="hsc-frame__img" src="public/images/the%20mono%202.png"
                      alt="The Scandal Fringe — Jet Black Beading"
-                     loading="lazy" width="960" height="1200" decoding="async"/>
+                     loading="lazy" decoding="async" width="960" height="1200"/>
             </div>
 
             <!-- Frame 3 -->
             <div class="hsc-frame" data-hsc="2">
                 <img class="hsc-frame__img" src="public/images/the%20mono%203%20.png"
                      alt="The Serpentine Gown — Liquid Jade Silk"
-                     loading="lazy" width="960" height="1200" decoding="async"/>
+                     loading="lazy" decoding="async" width="960" height="1200"/>
             </div>
 
         </div>
@@ -1420,46 +1404,41 @@
         <!-- Frame 1 -->
         <div class="dz-frame is-active" data-dz="0">
             <span class="dz-frame__label">Editorial I — Runway 2026</span>
-            
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="800" height="800"/>' } else { $m }
-    
+            <img class="dz-frame__img" src="public/images/void%20(1).webp"
+                 alt="Danger Zone editorial I — slit-to-the-thigh evening silhouette"
+                 fetchpriority="high" decoding="async"/>
         </div>
 
         <!-- Frame 2 -->
         <div class="dz-frame" data-dz="1">
             <span class="dz-frame__label">Editorial II — Corseted Power</span>
-            
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="800" height="800"/>' } else { $m }
-    
+            <img class="dz-frame__img" src="public/images/void%20(2).png"
+                 alt="Danger Zone editorial II — corseted power look"
+                 loading="lazy" decoding="async"/>
         </div>
 
         <!-- Frame 3 -->
         <div class="dz-frame" data-dz="2">
             <span class="dz-frame__label">Editorial III — Liquid Darkness</span>
-            
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="800" height="800"/>' } else { $m }
-    
+            <img class="dz-frame__img" src="public/images/void%20(3).png"
+                 alt="Danger Zone editorial III — liquid darkness"
+                 loading="lazy" decoding="async"/>
         </div>
 
         <!-- Frame 4 -->
         <div class="dz-frame" data-dz="3">
             <span class="dz-frame__label">Editorial IV — Absolute Attention</span>
-            
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="800" height="800"/>' } else { $m }
-    
+            <img class="dz-frame__img" src="public/images/void%20(4).png"
+                 alt="Danger Zone editorial IV — absolute attention"
+                 loading="lazy" decoding="async"/>
         </div>
 
         <!-- Frame 5 -->
         <div class="dz-frame" data-dz="4">
             <span class="dz-frame__label">Editorial V — Beauty as Weapon</span>
-            
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="800" height="800"/>' } else { $m }
-    
+            <img class="dz-frame__img" src="public/images/void%20(5).png"
+                 alt="Danger Zone editorial V — beauty as a weapon"
+                 loading="lazy" decoding="async"/>
         </div>
 
     </div>
@@ -1629,6 +1608,7 @@
     } catch(e) { /* fail silently — hardcoded fallback stays */ }
 })();
 
+
 /* ── Featured products — patch slug-based links with live API data ── */
 (async function patchFeaturedProducts() {
     try {
@@ -1642,15 +1622,12 @@
             if (!m) return;
             var p = bySlug[m[1]];
             if (!p) return;
-            // Ensure href is canonical (catches slug renames)
             a.href = 'product-detail.html?slug=' + p.slug;
-            // Update any inline price display inside this link
             var priceEl = a.querySelector('.hsc-info__price, .dz-price, .product-price');
             if (priceEl) priceEl.textContent = '€' + Number(p.salePrice || p.price).toFixed(0);
         });
-    } catch(e) { /* silent — editorial layout preserved */ }
+    } catch(e) { /* silent */ }
 })();
-
 document.getElementById('indexNewsletterForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const emailInput = document.getElementById('indexNewsletterEmail');
@@ -1689,10 +1666,7 @@ document.getElementById('indexNewsletterForm').addEventListener('submit', async 
 <div class="max-w-[1800px] mx-auto px-6 lg:px-12">
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24">
 <div class="lg:col-span-1">
-<a class="font-headline text-3xl tracking-[0.5em] font-light block mb-8 uppercase text-primary hover:opacity-70 transition-opacity" href="index.html">
-        $m = $args[0].Value
-        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="120" height="40"/>' } else { $m }
-    </a>
+<a class="font-headline text-3xl tracking-[0.5em] font-light block mb-8 uppercase text-primary hover:opacity-70 transition-opacity" href="index.html"><img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height: 3em; width: auto;" width="120" height="40"/></a>
 <p class="font-body text-sm text-on-surface-variant leading-relaxed">
                         A contemporary fashion house dedicated to considered design, fluid silk, and the quiet authority of exceptional craft.
                     </p>

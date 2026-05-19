@@ -936,6 +936,7 @@ function toggleAccordion(btn) {
                 if (productNode) {
                     productNode['@id'] = `https://raen.design/product-detail.html?slug=${slug}`;
                     productNode.name = product.name;
+                    productNode.sku = product.slug;
                     productNode.description = product.description || '';
                     productNode.image = (product.images && product.images[0])
                         ? (product.images[0].startsWith('http') ? product.images[0] : `https://raen.design/${product.images[0]}`)
