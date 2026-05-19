@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 
 <html class="light" lang="en"><head>
 <meta charset="utf-8"/>
@@ -14,7 +14,7 @@
 <meta property="og:url" content="https://raen.design/collections.html"/>
 <meta property="og:title" content="RAEN Collections | Weaponized Glamour & Liquid Silk"/>
 <meta property="og:description" content="Explore RAEN collections: The Atelier Sculpt, Objects of Intent, and Ready-to-Wear—devastating silhouettes in silk, dark wool, and premium textiles. Unapologetic luxury."/>
-<meta property="og:image" content="https://raen.design/images/raen-collections.jpg"/>
+<meta property="og:image" content="https://raen.design/public/images/raen-og-image.jpg"/>
 <meta property="og:site_name" content="RAEN"/>
 
 <!-- Twitter Card -->
@@ -283,11 +283,15 @@
 </script>
 </head>
 <body class="bg-surface text-on-surface font-body selection:bg-primary selection:text-on-primary">
+<a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-primary focus:text-on-primary focus:px-4 focus:py-2 focus:rounded focus:font-label focus:text-xs focus:tracking-widest focus:uppercase" style="text-decoration:none;">Skip to main content</a>
 <!-- TopNavBar -->
 <nav class="fixed top-0 w-full z-50 glass-nav border-b border-outline-variant/10">
 <div class="max-w-[1440px] mx-auto px-8 h-20 flex items-center justify-between">
 <div class="flex items-center gap-12">
-<a class="font-headline text-3xl tracking-[0.8em] font-light uppercase" href="index.html"><img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height: 3em; width: auto;" /></a>
+<a class="font-headline text-3xl tracking-[0.8em] font-light uppercase" href="index.html">
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="120" height="40"/>' } else { $m }
+    </a>
 <div class="hidden md:flex gap-8">
 <a class="font-label text-xs uppercase tracking-[0.2em] hover:opacity-50 transition-opacity" href="collections.html">Collections</a>
 <a class="font-label text-xs uppercase tracking-[0.2em] hover:opacity-50 transition-opacity" href="journal.html">Archive</a>
@@ -304,7 +308,7 @@
 </div>
 </div>
 </nav>
-<main class="pt-20">
+<main id="main-content" class="pt-20">
 <!-- Hero Section -->
 <header class="relative h-[60vh] flex items-end overflow-hidden bg-surface-container-low">
 <div class="absolute inset-0 z-0 after:content-[''] after:absolute after:inset-0 after:bg-surface/20">
@@ -532,189 +536,11 @@
 
 <div id="collections-grid" class="tove-grid">
 
-    <!-- Row 1: Large (Sovereign) + Medium (Bare Obsession) + Medium (Midnight Venom) -->
-    <div class="tove-row-wide">
-        <a href="product-detail.html?slug=the-sovereign" class="tove-product">
-            <div class="tove-product-img" data-images='["public/images/burgundy%20rhinestone/1%20(1).avif","public/images/burgundy%20rhinestone/1%20(2).avif","public/images/burgundy%20rhinestone/1%20(3).avif","public/images/burgundy%20rhinestone/1%20(4).avif","public/images/burgundy%20rhinestone/1%20(5).avif"]'>
-                <img class="carousel-active" alt="The Sovereign — Burgundy Crystal Gown by RAEN" src="public/images/burgundy%20rhinestone/1%20(1).avif"/>
-                <img class="carousel-inactive" alt="" src="public/images/burgundy%20rhinestone/1%20(2).avif" aria-hidden="true"/>
-                <div class="carousel-dots"></div>
-            </div>
-            <div class="tove-product-info">
-                <div>
-                    <div class="product-name">The Sovereign</div>
-                    <div class="product-subtitle">Burgundy Crystal Gown</div>
-                </div>
-                <span class="product-price">$4,800</span>
-            </div>
-        </a>
-        <a href="product-detail.html?slug=bare-obsession" class="tove-product">
-            <div class="tove-product-img" data-images='["public/images/nude%20rhinestone/1%20(1).avif","public/images/nude%20rhinestone/1%20(2).avif","public/images/nude%20rhinestone/1%20(3).avif","public/images/nude%20rhinestone/1%20(4).avif","public/images/nude%20rhinestone/1%20(5).avif"]'>
-                <img class="carousel-active" alt="Bare Obsession — Nude Crystal Dress by RAEN" src="public/images/nude%20rhinestone/1%20(1).avif"/>
-                <img class="carousel-inactive" alt="" src="public/images/nude%20rhinestone/1%20(2).avif" aria-hidden="true"/>
-                <div class="carousel-dots"></div>
-            </div>
-            <div class="tove-product-info">
-                <div>
-                    <div class="product-name">Bare Obsession</div>
-                    <div class="product-subtitle">Nude Crystal Dress</div>
-                </div>
-                <span class="product-price">$3,900</span>
-            </div>
-        </a>
-        <a href="product-detail.html?slug=midnight-venom" class="tove-product">
-            <div class="tove-product-img" data-images='["public/images/black%20lace/1%20(1).avif","public/images/black%20lace/1%20(2).avif","public/images/black%20lace/1%20(3).avif","public/images/black%20lace/1%20(4).avif","public/images/black%20lace/1%20(5).avif"]'>
-                <img class="carousel-active" alt="Midnight Venom — Black Lace Dress by RAEN" src="public/images/black%20lace/1%20(1).avif"/>
-                <img class="carousel-inactive" alt="" src="public/images/black%20lace/1%20(2).avif" aria-hidden="true"/>
-                <div class="carousel-dots"></div>
-            </div>
-            <div class="tove-product-info">
-                <div>
-                    <div class="product-name">Midnight Venom</div>
-                    <div class="product-subtitle">Black Lace Bodycon</div>
-                </div>
-                <span class="product-price">$2,400</span>
-            </div>
-        </a>
-    </div>
-
-    <!-- Row 2: 4 equal columns -->
-    <div class="tove-row-four">
-        <a href="product-detail.html?slug=velvet-scandal" class="tove-product">
-            <div class="tove-product-img" data-images='["public/images/brown%20lace/1%20(1).avif","public/images/brown%20lace/1%20(2).avif","public/images/brown%20lace/1%20(3).avif","public/images/brown%20lace/1%20(4).avif","public/images/brown%20lace/1%20(5).avif"]'>
-                <img class="carousel-active" alt="Velvet Scandal — Brown Lace Sheath by RAEN" src="public/images/brown%20lace/1%20(1).avif"/>
-                <img class="carousel-inactive" alt="" src="public/images/brown%20lace/1%20(2).avif" aria-hidden="true"/>
-                <div class="carousel-dots"></div>
-            </div>
-            <div class="tove-product-info">
-                <div>
-                    <div class="product-name">Velvet Scandal</div>
-                    <div class="product-subtitle">Brown Lace Sheath</div>
-                </div>
-                <span class="product-price">$2,600</span>
-            </div>
-        </a>
-        <a href="product-detail.html?slug=the-provocateur" class="tove-product">
-            <div class="tove-product-img" data-images='["public/images/maroon%20halter/1%20(1).avif","public/images/maroon%20halter/1%20(2).avif","public/images/maroon%20halter/1%20(3).avif","public/images/maroon%20halter/1%20(4).avif","public/images/maroon%20halter/1%20(5).avif"]'>
-                <img class="carousel-active" alt="The Provocateur — Maroon Halter Dress by RAEN" src="public/images/maroon%20halter/1%20(1).avif"/>
-                <img class="carousel-inactive" alt="" src="public/images/maroon%20halter/1%20(2).avif" aria-hidden="true"/>
-                <div class="carousel-dots"></div>
-            </div>
-            <div class="tove-product-info">
-                <div>
-                    <div class="product-name">The Provocateur</div>
-                    <div class="product-subtitle">Maroon Halter Dress</div>
-                </div>
-                <span class="product-price">$2,200</span>
-            </div>
-        </a>
-        <a href="product-detail.html?slug=crimson-vice" class="tove-product">
-            <div class="tove-product-img" data-images='["public/images/maroon%20sequin/1%20(1).avif","public/images/maroon%20sequin/1%20(2).avif","public/images/maroon%20sequin/1%20(3).avif","public/images/maroon%20sequin/1%20(4).avif","public/images/maroon%20sequin/1%20(5).avif"]'>
-                <img class="carousel-active" alt="Crimson Vice — Maroon Sequin Gown by RAEN" src="public/images/maroon%20sequin/1%20(1).avif"/>
-                <img class="carousel-inactive" alt="" src="public/images/maroon%20sequin/1%20(2).avif" aria-hidden="true"/>
-                <div class="carousel-dots"></div>
-            </div>
-            <div class="tove-product-info">
-                <div>
-                    <div class="product-name">Crimson Vice</div>
-                    <div class="product-subtitle">Maroon Sequin Gown</div>
-                </div>
-                <span class="product-price">$5,200</span>
-            </div>
-        </a>
-        <a href="product-detail.html?slug=serpentine" class="tove-product">
-            <div class="tove-product-img" data-images='["public/images/olive%20halter%20neck/1(1).avif","public/images/olive%20halter%20neck/1(2).avif","public/images/olive%20halter%20neck/1(3).avif","public/images/olive%20halter%20neck/1(4).avif","public/images/olive%20halter%20neck/1(5).avif"]'>
-                <img class="carousel-active" alt="Serpentine — Olive Halter Neck Dress by RAEN" src="public/images/olive%20halter%20neck/1(1).avif"/>
-                <img class="carousel-inactive" alt="" src="public/images/olive%20halter%20neck/1(2).avif" aria-hidden="true"/>
-                <div class="carousel-dots"></div>
-            </div>
-            <div class="tove-product-info">
-                <div>
-                    <div class="product-name">Serpentine</div>
-                    <div class="product-subtitle">Olive Halter Neck</div>
-                </div>
-                <span class="product-price">$2,800</span>
-            </div>
-        </a>
-    </div>
-
-    <!-- Row 3: Mirrored — Medium + Medium + Large -->
-    <div class="tove-row-wide-reverse">
-        <a href="product-detail.html?slug=poison-kiss" class="tove-product">
-            <div class="tove-product-img" data-images='["public/images/teal%20sequin/1%20(1).avif","public/images/teal%20sequin/1%20(2).avif","public/images/teal%20sequin/1%20(3).avif","public/images/teal%20sequin/1%20(4).avif","public/images/teal%20sequin/1%20(5).avif"]'>
-                <img class="carousel-active" alt="Poison Kiss — Teal Sequin Dress by RAEN" src="public/images/teal%20sequin/1%20(1).avif"/>
-                <img class="carousel-inactive" alt="" src="public/images/teal%20sequin/1%20(2).avif" aria-hidden="true"/>
-                <div class="carousel-dots"></div>
-            </div>
-            <div class="tove-product-info">
-                <div>
-                    <div class="product-name">Poison Kiss</div>
-                    <div class="product-subtitle">Teal Sequin Dress</div>
-                </div>
-                <span class="product-price">$3,400</span>
-            </div>
-        </a>
-        <a href="product-detail.html?slug=emerald-sin" class="tove-product">
-            <div class="tove-product-img" data-images='["public/images/teal%20wrap/1%20(1).avif","public/images/teal%20wrap/1%20(2).avif","public/images/teal%20wrap/1%20(3).avif","public/images/teal%20wrap/1%20(4).avif","public/images/teal%20wrap/1%20(5).avif"]'>
-                <img class="carousel-active" alt="Emerald Sin — Teal Wrap Dress by RAEN" src="public/images/teal%20wrap/1%20(1).avif"/>
-                <img class="carousel-inactive" alt="" src="public/images/teal%20wrap/1%20(2).avif" aria-hidden="true"/>
-                <div class="carousel-dots"></div>
-            </div>
-            <div class="tove-product-info">
-                <div>
-                    <div class="product-name">Emerald Sin</div>
-                    <div class="product-subtitle">Teal Wrap Dress</div>
-                </div>
-                <span class="product-price">$2,900</span>
-            </div>
-        </a>
-        <a href="product-detail.html?slug=the-ivory-weapon" class="tove-product">
-            <div class="tove-product-img" data-images='["public/images/white%20pearl/1%20(1).avif","public/images/white%20pearl/1%20(2).avif","public/images/white%20pearl/1%20(3).avif","public/images/white%20pearl/1%20(4).avif","public/images/white%20pearl/1%20(5).avif"]'>
-                <img class="carousel-active" alt="The Ivory Weapon — White Pearl Gown by RAEN" src="public/images/white%20pearl/1%20(1).avif"/>
-                <img class="carousel-inactive" alt="" src="public/images/white%20pearl/1%20(2).avif" aria-hidden="true"/>
-                <div class="carousel-dots"></div>
-            </div>
-            <div class="tove-product-info">
-                <div>
-                    <div class="product-name">The Ivory Weapon</div>
-                    <div class="product-subtitle">White Pearl Gown</div>
-                </div>
-                <span class="product-price">$4,200</span>
-            </div>
-        </a>
-    </div>
-
-    <!-- Row 4: Taupe Wrap + Black Pearl -->
-    <div class="tove-row-wide">
-        <a href="product-detail.html?slug=taupe-wrap" class="tove-product">
-            <div class="tove-product-img" data-images='["public/images/taupe%20wrap/taupe%20(1).avif","public/images/taupe%20wrap/taupe%20(2).avif","public/images/taupe%20wrap/taupe%20(3).avif","public/images/taupe%20wrap/taupe%20(4).avif","public/images/taupe%20wrap/taupe%20(5).avif"]'>
-                <img class="carousel-active" alt="The Taupe Wrap — Taupe Silk Wrap by RAEN" src="public/images/taupe%20wrap/taupe%20(1).avif"/>
-                <img class="carousel-inactive" alt="" src="public/images/taupe%20wrap/taupe%20(2).avif" aria-hidden="true"/>
-                <div class="carousel-dots"></div>
-            </div>
-            <div class="tove-product-info">
-                <div>
-                    <div class="product-name">The Taupe Wrap</div>
-                    <div class="product-subtitle">Taupe Silk Wrap</div>
-                </div>
-                <span class="product-price">$2,800</span>
-            </div>
-        </a>
-        <a href="product-detail.html?slug=black-pearl" class="tove-product">
-            <div class="tove-product-img" data-images='["public/images/black%20pearl/pearl%20(1).avif","public/images/black%20pearl/pearl%20(2).avif","public/images/black%20pearl/pearl%20(3).avif","public/images/black%20pearl/pearl%20(4).avif","public/images/black%20pearl/pearl%20(5).avif"]'>
-                <img class="carousel-active" alt="Black Pearl — Black Pearl Dress by RAEN" src="public/images/black%20pearl/pearl%20(1).avif"/>
-                <img class="carousel-inactive" alt="" src="public/images/black%20pearl/pearl%20(2).avif" aria-hidden="true"/>
-                <div class="carousel-dots"></div>
-            </div>
-            <div class="tove-product-info">
-                <div>
-                    <div class="product-name">Black Pearl</div>
-                    <div class="product-subtitle">Black Pearl Dress</div>
-                </div>
-                <span class="product-price">$3,600</span>
-            </div>
-        </a>
-    </div>
+  <div id="cg-skeleton" style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;padding:24px 0;">
+    <div class="skeleton-shimmer" style="height:480px;background:#f0f0f0;"></div>
+    <div class="skeleton-shimmer" style="height:480px;background:#f0f0f0;"></div>
+    <div class="skeleton-shimmer" style="height:480px;background:#f0f0f0;"></div>
+  </div>
 
 </div>
 </section>
@@ -810,7 +636,10 @@
 <div class="flex gap-12 overflow-x-auto px-8 no-scrollbar pb-12">
 <div class="flex-none w-[80vw] md:w-[45vw] relative">
 <div class="aspect-video bg-surface-container-lowest overflow-hidden">
-<img alt="Pure Provocation — RAEN Atelier sketch and design process" class="w-full h-full object-cover object-top" data-alt="Minimalist design studio with architectural models" src="public/images/pp1.avif"/>
+
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="800" height="1000"/>' } else { $m }
+    
 </div>
 <div class="mt-8">
 <h4 class="font-headline text-2xl">01. Pure Provocation</h4>
@@ -819,7 +648,10 @@
 </div>
 <div class="flex-none w-[80vw] md:w-[45vw] relative">
 <div class="aspect-video bg-surface-container-lowest overflow-hidden">
-<img alt="Liquid Execution — RAEN silk tailoring" class="w-full h-full object-cover object-top" data-alt="Draped grey fabric showing intricate folds" src="public/images/liquid%20executiom.avif"/>
+
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="800" height="1000"/>' } else { $m }
+    
 </div>
 <div class="mt-8">
 <h4 class="font-headline text-2xl">02. Liquid Execution</h4>
@@ -871,7 +703,10 @@ document.getElementById('newsletterForm').addEventListener('submit', async (e) =
 <div class="max-w-[1440px] mx-auto px-8">
 <div class="grid grid-cols-2 md:grid-cols-4 gap-12 mb-24">
 <div class="col-span-2">
-<a class="font-headline text-3xl tracking-[0.8em] font-light uppercase block mb-8" href="index.html"><img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height: 3em; width: auto;" /></a>
+<a class="font-headline text-3xl tracking-[0.8em] font-light uppercase block mb-8" href="index.html">
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="120" height="40"/>' } else { $m }
+    </a>
 <p class="font-body text-sm text-outline max-w-xs leading-relaxed">
                         Unapologetic glamour. A high-fashion house dedicated to the intoxicating power of liquid silk and devastating cuts.
                     </p>
@@ -943,8 +778,8 @@ document.getElementById('newsletterForm').addEventListener('submit', async (e) =
             : '';
         return '<a href="product-detail.html?slug=' + p.slug + '" class="tove-product">'
             + '<div class="tove-product-img" data-images=\'' + di + '\'>'
-            + '<img class="carousel-active" alt="' + name + ' by RAEN" src="' + i1 + '"/>'
-            + '<img class="carousel-inactive" alt="" src="' + i2 + '" aria-hidden="true"/>'
+            + '<img class="carousel-active" loading="lazy" alt="' + name + ' by RAEN" src="' + i1 + '"/>'
+            + '<img class="carousel-inactive" loading="lazy" alt="" src="' + i2 + '" aria-hidden="true"/>'
             + '<div class="carousel-dots"></div>'
             + oosBadge
             + '</div>'

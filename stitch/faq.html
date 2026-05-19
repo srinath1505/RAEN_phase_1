@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 
 <html lang="en"><head>
 <meta charset="utf-8"/>
@@ -290,22 +290,26 @@
 </script>
 </head>
 <body class="bg-surface selection:bg-primary-container selection:text-on-primary">
+<a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-primary focus:text-on-primary focus:px-4 focus:py-2 focus:rounded focus:font-label focus:text-xs focus:tracking-widest focus:uppercase" style="text-decoration:none;">Skip to main content</a>
 <nav class="fixed top-0 w-full z-50 glass-nav border-b border-outline-variant/10">
 <div class="max-w-[1800px] mx-auto px-6 lg:px-12 h-20 flex items-center justify-between">
 <div class="flex items-center gap-12">
-<a class="font-headline text-2xl tracking-[0.5em] font-light uppercase text-primary transition-opacity hover:opacity-70" href="index.html"><img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height: 3em; width: auto;" /></a>
+<a class="font-headline text-2xl tracking-[0.5em] font-light uppercase text-primary transition-opacity hover:opacity-70" href="index.html">
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="120" height="40"/>' } else { $m }
+    </a>
 <div class="hidden lg:flex items-center gap-8">
 <a class="font-label text-xs letter-spaced text-on-surface" href="collections.html">Collections</a>
 <a class="font-label text-xs letter-spaced text-on-surface" href="journal.html">Archive</a>
 </div>
 </div>
 <div class="flex items-center gap-6">
-<button class="flex items-center gap-2"><span class="material-symbols-outlined text-on-surface">search</span></button>
+<button class="flex items-center gap-2" aria-label="Search RAEN"><span class="material-symbols-outlined text-on-surface" aria-hidden="true">search</span></button>
 <a class="flex items-center gap-2" href="shopping-bag.html" aria-label="Shopping bag"><span class="material-symbols-outlined text-on-surface">shopping_bag</span></a>
 </div>
 </div>
 </nav>
-<main class="pt-32 pb-32">
+<main id="main-content" class="pt-32 pb-32">
 <div class="max-w-[1800px] mx-auto px-6 lg:px-12">
 <div class="max-w-4xl mx-auto">
 <h1 class="text-6xl md:text-8xl font-headline text-primary mb-8">Frequently Asked Questions</h1>
@@ -351,7 +355,10 @@
 <div class="max-w-[1800px] mx-auto px-6 lg:px-12">
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24">
 <div class="lg:col-span-1">
-<a class="font-headline text-3xl tracking-[0.5em] font-light block mb-8 uppercase text-primary hover:opacity-70 transition-opacity" href="index.html"><img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height: 3em; width: auto;" /></a>
+<a class="font-headline text-3xl tracking-[0.5em] font-light block mb-8 uppercase text-primary hover:opacity-70 transition-opacity" href="index.html">
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="120" height="40"/>' } else { $m }
+    </a>
 <p class="font-body text-sm text-on-surface-variant leading-relaxed">A contemporary fashion house dedicated to considered design, fluid silk, and the quiet authority of exceptional craft.</p>
 </div>
 <div>

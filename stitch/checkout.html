@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 
 <html lang="en"><head>
 <meta charset="utf-8"/>
@@ -236,11 +236,15 @@
 </script>
 </head>
 <body class="bg-surface text-on-surface font-body selection:bg-primary selection:text-white">
+<a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-primary focus:text-on-primary focus:px-4 focus:py-2 focus:rounded focus:font-label focus:text-xs focus:tracking-widest focus:uppercase" style="text-decoration:none;">Skip to main content</a>
 <!-- TopNavBar (Rendered from JSON) -->
 <nav class="fixed top-0 w-full z-50 bg-surface/70 backdrop-blur-xl border-none">
 <div class="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
 <div class="flex items-center gap-12">
-<a class="font-headline text-2xl font-light uppercase text-primary transition-opacity hover:opacity-70" href="index.html" style="letter-spacing: 2rem;"><img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height: 3em; width: auto;" /></a>
+<a class="font-headline text-2xl font-light uppercase text-primary transition-opacity hover:opacity-70" href="index.html" style="letter-spacing: 2rem;">
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="120" height="40"/>' } else { $m }
+    </a>
 <div class="hidden md:flex gap-8">
 <a class="text-[10px] uppercase tracking-[0.15em] font-label hover:opacity-50 transition-opacity" href="collections.html">Shop</a>
 <a class="text-[10px] uppercase tracking-[0.15em] font-label hover:opacity-50 transition-opacity" href="collections.html">Collections</a>
@@ -250,14 +254,14 @@
 <div class="flex items-center gap-6">
 <button class="p-2"><span class="material-symbols-outlined text-[20px]">search</span></button>
 <a id="auth-nav-btn" href="#" onclick="openAuthModal();return false;" class="text-[10px] uppercase tracking-[0.15em] font-label hover:opacity-50 transition-opacity" style="text-decoration:none;">ACCOUNT</a>
-<button class="p-2 relative">
+<button class="p-2 relative" aria-label="Shopping bag">
 <span class="material-symbols-outlined text-[20px]">shopping_bag</span>
 <span class="absolute top-1 right-1 w-1.5 h-1.5 bg-primary rounded-full"></span>
 </button>
 </div>
 </div>
 </nav>
-<main class="pt-32 pb-24 px-8 max-w-7xl mx-auto">
+<main id="main-content" class="pt-32 pb-24 px-8 max-w-7xl mx-auto">
 <h1 class="sr-only">Checkout</h1>
 <!-- Breadcrumbs (Linear Process Protocol: SideNav hidden) -->
 <div class="mb-16">
@@ -433,7 +437,10 @@ Secure Acquisition
 <footer class="bg-surface border-t border-outline-variant py-16 px-8">
 <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-10">
 <div class="space-y-4">
-<a class="font-headline text-3xl font-light block mb-8 uppercase text-primary hover:opacity-70 transition-opacity" href="index.html" style="letter-spacing: 2rem;"><img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height: 3em; width: auto;" /></a>
+<a class="font-headline text-3xl font-light block mb-8 uppercase text-primary hover:opacity-70 transition-opacity" href="index.html" style="letter-spacing: 2rem;">
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="120" height="40"/>' } else { $m }
+    </a>
 <p class="text-[10px] font-label text-outline tracking-widest">© 2024 RAEN. TOTAL DOMINATION.</p>
 </div>
 <div class="flex flex-wrap gap-8">
@@ -499,7 +506,7 @@ Secure Acquisition
             <div class="flex gap-6">
                 <div class="w-24 aspect-[3/4] bg-surface-container overflow-hidden">
                     <img alt="${product.name || 'Product'}" class="w-full h-full object-cover grayscale hover:scale-105 transition-transform duration-700"
-                         src="${product.images && product.images.length > 0 ? product.images[0] : 'public/images/placeholder.jpg'}"/>
+                         src="${product.images && product.images.length width="600" height="750"/> 0 ? product.images[0] : 'public/images/placeholder.jpg'}"/>
                 </div>
                 <div class="flex-1 flex flex-col justify-between py-1">
                     <div>

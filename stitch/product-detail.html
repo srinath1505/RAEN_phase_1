@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 
 <html lang="en"><head>
 <meta charset="utf-8"/>
@@ -14,7 +14,7 @@
 <meta property="og:url" content="https://raen.design/product-detail.html"/>
 <meta property="og:title" content="The Devastating Silk Column | RAEN"/>
 <meta property="og:description" content="A masterclass in seduction. Heavyweight liquid silk engineered to command absolute attention."/>
-<meta property="og:image" content="https://raen.design/images/product-sculpted-silk.jpg"/>
+<meta property="og:image" content="https://raen.design/public/images/raen-og-image.jpg"/>
 <meta property="og:site_name" content="RAEN"/>
 <meta property="product:price:amount" content="1450"/>
 <meta property="product:price:currency" content="EUR"/>
@@ -24,7 +24,7 @@
 <meta name="twitter:site" content="@RaenDesign"/>
 <meta name="twitter:title" content="The Devastating Silk Column | RAEN Architectural Dress"/>
 <meta name="twitter:description" content="Own the room in the Devastating Silk Column by RAEN. A masterclass in seduction, crafted in double-faced Italian silk and dangerous precision."/>
-<meta name="twitter:image" content="https://raen.design/images/product-sculpted-silk.jpg"/>
+<meta name="twitter:image" content="https://raen.design/public/images/raen-og-image.jpg"/>
 
 <!-- JSON-LD Product Schema — injected dynamically after API call -->
 <script id="product-json-ld" type="application/ld+json">
@@ -334,11 +334,15 @@
 </script>
 </head>
 <body class="bg-surface text-on-surface font-body selection:bg-primary selection:text-on-primary">
+<a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-primary focus:text-on-primary focus:px-4 focus:py-2 focus:rounded focus:font-label focus:text-xs focus:tracking-widest focus:uppercase" style="text-decoration:none;">Skip to main content</a>
 <!-- TopNavBar -->
 <nav class="fixed top-0 w-full z-50 glass-nav border-b border-outline-variant/10">
 <div class="max-w-[1800px] mx-auto px-6 h-20 flex items-center justify-between">
 <div class="flex items-center gap-12">
-<a class="font-headline text-2xl tracking-[0.5em] font-light uppercase" href="index.html"><img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height: 3em; width: auto;" /></a>
+<a class="font-headline text-2xl tracking-[0.5em] font-light uppercase" href="index.html">
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="120" height="40"/>' } else { $m }
+    </a>
 <div class="hidden md:flex items-center gap-8">
 <a class="font-label text-xs tracking-[0.2em] hover:opacity-60 transition-opacity" href="collections.html">Collections</a>
 <a class="font-label text-xs tracking-[0.2em] hover:opacity-60 transition-opacity" href="journal.html">Archive</a>
@@ -355,20 +359,29 @@
 </div>
 </div>
 </nav>
-<main class="pt-20">
+<main id="main-content" class="pt-20">
 <!-- Hero Editorial Section -->
 <section class="grid grid-cols-1 lg:grid-cols-12 min-h-screen">
 <!-- Left: Asymmetric Imagery -->
 <div class="lg:col-span-7 bg-surface-container-low p-6 lg:p-12 flex flex-col gap-12">
 <div class="w-full aspect-[4/5] bg-surface overflow-hidden">
-<img class="w-full h-full object-cover" alt="High-end fashion garment detail showing draped silk texture" data-alt="High-end fashion garment detail showing draped silk texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCH8foYrKGYJm13e8MJucU8op4URiEFTEIbD-vMmyWlb1NpdPPGOxVE_oNBArPrnZjh2dG5TcpuzDbaNajNY1clAk8ML2nsKzkd-Gl7qysM8nMj5BnqZSzRxgYOXW0Lf-dubMZkKCv-pK5Lb4tphujrjuiqwyuiKZ4ItRWqvvl7ifE2NSAtJQqcXRZ7W5XpTGsnXM6qn-5XyKsr_YlE0aiqmif2dPqsKix-YWZRysivOKWfxdqT2WOt_fbzAz4Q9VpVjhHL759JqpyR"/>
+
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="800" height="1000"/>' } else { $m }
+    
 </div>
 <div class="grid grid-cols-2 gap-6">
 <div class="aspect-square bg-surface overflow-hidden">
-<img class="w-full h-full object-cover" alt="Close up of fabric weave and craftsmanship" data-alt="Close up of fabric weave and craftsmanship" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaraX7KL6ycfAawlcCWRlg2lj3CAe3GhF__UaSb9r_LalLOBg-m_uWv1g9pwTpO5tqFng_PN2QxWqE8IZ_XrdRP0rlm8c61dD9v_XZQsrVSKEra18KyyjS97HxqF2RHuld3nZk7muIqBmcru-RlyuZI9xY74iqIW5uMxQwDn-CfURLEHNq32NyY25dpPXpso7X-Zaue2SYO8L4AsglWoXmSmeRHz9vgoEeWVlTBvMthOej5s7IMT2rbI8RV-PwF4Ka5rx-f-cR3lpD"/>
+
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="800" height="1000"/>' } else { $m }
+    
 </div>
 <div class="aspect-square bg-surface overflow-hidden mt-12">
-<img class="w-full h-full object-cover" alt="Detail of garment form and structural stitching" data-alt="Detail of garment form and structural stitching" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBztVtN3kExrGTcUjkgnczxllybLWjrYs7U2YnxMQTx5ZZuT5u0eZDOop8MnwEzVjalTY8697e79hLh1DK7wUwGkKDouDSwja7Tz2XO05uP6Z1ySwvzkrrWsa0UkwXI1t-BANuVhrgvj_kjnOW1nLLqUhUAIPDyWzY2owd6ngZSztKAH70TuMjJ23ak6CzZ0ga7ALY5VVJRTGhQ844FXuMwA_Vc15KHBTNfLbbnpJNXLZKoBtPxgh7mz6S0gFl7LLYZkN2KKVWV4lJw"/>
+
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="800" height="1000"/>' } else { $m }
+    
 </div>
 </div>
 </div>
@@ -503,12 +516,18 @@ function toggleAccordion(btn) {
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 items-end">
 <div class="lg:col-span-2">
 <div class="w-full aspect-video bg-surface-container-highest overflow-hidden">
-<img class="w-full h-full object-cover" alt="Editorial full body shot of the garment in movement" data-alt="Editorial full body shot of the garment in movement" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGEvcdCMuIfyImW5UCkD5Y--09LLU1jO-cyo9i0kurC_QHKDu21xmHgbO6aDn7qBzH8raNo6GvLRllXg2FHSxM3Mi4Hfr622gP6A1MWOWoNlSwQbTMpPwpQ6LLOE93MsDBPyVyyjX-dS3dryEq6aaUvkaEUe2oLfi4ld1L2F_q3QjiuH8HBe3UTdqXHye8o3NUJaiccif-nnrPHEwoteMZY-Xp1yhRmhBquVDP5ZKLq_OLvArTEDa-wibqZbe0XVD3fiLhNo-2UCg-"/>
+
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="800" height="1000"/>' } else { $m }
+    
 </div>
 </div>
 <div class="space-y-12">
 <div class="aspect-[3/4] bg-surface-container-low overflow-hidden">
-<img class="w-full h-full object-cover" alt="Abstract detail of fabric highlights and shadows" data-alt="Abstract detail of fabric highlights and shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuByA1RVPfcWkjdKMvdhagax5fbapUVIB0_7xdYNAgBNg42SdnqegaVdCcg93aOTlTT-cn3TZLwlzHyWc_oaqeYtj-qAHmUTKxwXhRj7Gdja1YarB5ytaQMwDzppsAeT9Bt3aQhrEtP4Xgbq5aUIEhZbS1oGm7SPUm2pzNockFweSY1_LGqCkraF2g32g3lyKvyqNBlcQMC3O4YuNKd7-UgHtfQVHIG76axeR0jcaCMEpgiGsYEtZkchBLFmVWnuFu-Hkgg6U6sYNYY"/>
+
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="800" height="1000"/>' } else { $m }
+    
 </div>
 <div class="pr-12">
 <h3 class="font-headline text-2xl mb-4">Intoxicating Touch</h3>
@@ -531,28 +550,40 @@ function toggleAccordion(btn) {
 
 <a href="product-detail.html?slug=the-sovereign" class="min-w-[300px] lg:min-w-[450px] snap-start group cursor-pointer block">
 <div class="aspect-[4/5] bg-surface-container-lowest overflow-hidden mb-6 p-4">
-<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="The Sovereign" src="public/images/burgundy%20rhinestone/1%20(1).avif"/>
+
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="600" height="750"/>' } else { $m }
+    
 </div>
 <span class="font-label text-[10px] tracking-[0.3em] uppercase text-outline">Atelier</span>
 <h4 class="font-headline text-xl mt-1">The Sovereign</h4>
 </a>
 <a href="product-detail.html?slug=crimson-vice" class="min-w-[300px] lg:min-w-[450px] snap-start group cursor-pointer block">
 <div class="aspect-[4/5] bg-surface-container-lowest overflow-hidden mb-6 p-4">
-<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="Crimson Vice" src="public/images/maroon%20sequin/1%20(1).avif"/>
+
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="600" height="750"/>' } else { $m }
+    
 </div>
 <span class="font-label text-[10px] tracking-[0.3em] uppercase text-outline">Statement Piece</span>
 <h4 class="font-headline text-xl mt-1">Crimson Vice</h4>
 </a>
 <a href="product-detail.html?slug=the-ivory-weapon" class="min-w-[300px] lg:min-w-[450px] snap-start group cursor-pointer block">
 <div class="aspect-[4/5] bg-surface-container-lowest overflow-hidden mb-6 p-4">
-<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="The Ivory Weapon" src="public/images/white%20pearl/1%20(1).avif"/>
+
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="600" height="750"/>' } else { $m }
+    
 </div>
 <span class="font-label text-[10px] tracking-[0.3em] uppercase text-outline">Atelier</span>
 <h4 class="font-headline text-xl mt-1">The Ivory Weapon</h4>
 </a>
 <a href="product-detail.html?slug=serpentine" class="min-w-[300px] lg:min-w-[450px] snap-start group cursor-pointer block">
 <div class="aspect-[4/5] bg-surface-container-lowest overflow-hidden mb-6 p-4">
-<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="Serpentine" src="public/images/olive%20halter%20neck/1(1).avif"/>
+
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="600" height="750"/>' } else { $m }
+    
 </div>
 <span class="font-label text-[10px] tracking-[0.3em] uppercase text-outline">Atelier</span>
 <h4 class="font-headline text-xl mt-1">Serpentine</h4>
@@ -562,28 +593,40 @@ function toggleAccordion(btn) {
 
 <a href="product-detail.html?slug=the-sovereign" class="min-w-[300px] lg:min-w-[450px] snap-start group cursor-pointer block">
 <div class="aspect-[4/5] bg-surface-container-lowest overflow-hidden mb-6 p-4">
-<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="The Sovereign" src="public/images/burgundy%20rhinestone/1%20(1).avif"/>
+
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="600" height="750"/>' } else { $m }
+    
 </div>
 <span class="font-label text-[10px] tracking-[0.3em] uppercase text-outline">Atelier</span>
 <h4 class="font-headline text-xl mt-1">The Sovereign</h4>
 </a>
 <a href="product-detail.html?slug=crimson-vice" class="min-w-[300px] lg:min-w-[450px] snap-start group cursor-pointer block">
 <div class="aspect-[4/5] bg-surface-container-lowest overflow-hidden mb-6 p-4">
-<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="Crimson Vice" src="public/images/maroon%20sequin/1%20(1).avif"/>
+
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="600" height="750"/>' } else { $m }
+    
 </div>
 <span class="font-label text-[10px] tracking-[0.3em] uppercase text-outline">Statement Piece</span>
 <h4 class="font-headline text-xl mt-1">Crimson Vice</h4>
 </a>
 <a href="product-detail.html?slug=the-ivory-weapon" class="min-w-[300px] lg:min-w-[450px] snap-start group cursor-pointer block">
 <div class="aspect-[4/5] bg-surface-container-lowest overflow-hidden mb-6 p-4">
-<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="The Ivory Weapon" src="public/images/white%20pearl/1%20(1).avif"/>
+
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="600" height="750"/>' } else { $m }
+    
 </div>
 <span class="font-label text-[10px] tracking-[0.3em] uppercase text-outline">Atelier</span>
 <h4 class="font-headline text-xl mt-1">The Ivory Weapon</h4>
 </a>
 <a href="product-detail.html?slug=serpentine" class="min-w-[300px] lg:min-w-[450px] snap-start group cursor-pointer block">
 <div class="aspect-[4/5] bg-surface-container-lowest overflow-hidden mb-6 p-4">
-<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="Serpentine" src="public/images/olive%20halter%20neck/1(1).avif"/>
+
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="600" height="750"/>' } else { $m }
+    
 </div>
 <span class="font-label text-[10px] tracking-[0.3em] uppercase text-outline">Atelier</span>
 <h4 class="font-headline text-xl mt-1">Serpentine</h4>
@@ -596,7 +639,10 @@ function toggleAccordion(btn) {
 <footer class="bg-surface border-t border-outline-variant/20 pt-24 pb-12 px-6 lg:px-12">
 <div class="max-w-[1800px] mx-auto grid grid-cols-1 lg:grid-cols-4 gap-12 mb-24">
 <div class="lg:col-span-1">
-<a class="font-headline text-3xl tracking-[0.5em] font-light block mb-8 uppercase" href="index.html"><img src="public/images/logo.png" alt="RAEN Logo" class="inline-block" style="height: 3em; width: auto;" /></a>
+<a class="font-headline text-3xl tracking-[0.5em] font-light block mb-8 uppercase" href="index.html">
+        $m = $args[0].Value
+        if ($m -notmatch '\bwidth=') { $m -replace '/>', 'width="120" height="40"/>' } else { $m }
+    </a>
 <p class="text-xs text-on-surface-variant font-label tracking-widest leading-loose">
                     Defining the intersection of raw power and unadulterated luxury since 2024. Hand-finished for the exclusive few.
                 </p>
@@ -952,6 +998,18 @@ function toggleAccordion(btn) {
                         const last = breadcrumb.itemListElement[breadcrumb.itemListElement.length - 1];
                         if (last) last.name = product.name;
                     }
+                    // Inject specifications as additionalProperty for GEO + rich results
+                    if (product.specifications) {
+                        const sp = product.specifications;
+                        const props = [];
+                        if (sp.fabric)       props.push({ '@type': 'PropertyValue', name: 'Fabric',       value: sp.fabric });
+                        if (sp.weight)       props.push({ '@type': 'PropertyValue', name: 'Weight',       value: sp.weight });
+                        if (sp.lining)       props.push({ '@type': 'PropertyValue', name: 'Lining',       value: sp.lining });
+                        if (sp.care)         props.push({ '@type': 'PropertyValue', name: 'Care',         value: sp.care });
+                        if (sp.origin)       props.push({ '@type': 'PropertyValue', name: 'Origin',       value: sp.origin });
+                        if (sp.construction) props.push({ '@type': 'PropertyValue', name: 'Construction', value: sp.construction });
+                        if (props.length) productNode.additionalProperty = props;
+                    }
                 }
                 jsonLdEl.textContent = JSON.stringify(schema, null, 2);
             } catch(e) { /* JSON-LD update failed silently */ }
@@ -1020,31 +1078,31 @@ function toggleAccordion(btn) {
             if (fabricDescEl) fabricDescEl.textContent = override.fabricDesc;
         }
         
-        // Populate Specifications accordion
-        const specContent = document.getElementById('spec-content');
+        // Populate Specifications accordion from product.specifications JSON field
+        const s = product.specifications || {};
         const fabricContent = document.getElementById('spec-fabric-content');
         const originContent = document.getElementById('spec-origin-content');
-        if (product.specifications && specContent) {
-            const s = product.specifications;
+        const specContent   = document.getElementById('spec-content');
+
+        if (fabricContent) {
+            const fabricText = s.fabric || '100% Italian silk. Dry clean only.';
+            fabricContent.innerHTML = '<p class="text-xs text-on-surface-variant leading-relaxed">' + fabricText + '</p>';
+        }
+        if (originContent) {
+            const originText = s.origin || 'Hand-finished at the RAEN Atelier. Heritage craftsmanship, ethically sourced materials.';
+            originContent.innerHTML = '<p class="text-xs text-on-surface-variant leading-relaxed">' + originText + '</p>';
+        }
+        if (specContent) {
             const rows = [
-                s.fabric && { label: 'Fabric', val: s.fabric },
-                s.weight && { label: 'Weight', val: s.weight },
-                s.lining && { label: 'Lining', val: s.lining },
-                s.care && { label: 'Care', val: s.care },
-                s.origin && { label: 'Country of Origin', val: s.origin },
-                s.construction && { label: 'Construction', val: s.construction }
-            ].filter(Boolean);
-            if (rows.length > 0) {
-                specContent.innerHTML = '<dl class="space-y-3">' + rows.map(function(r) {
-                    return '<div class="flex gap-4"><dt class="font-label text-[9px] uppercase tracking-[0.12em] text-outline w-28 flex-shrink-0 pt-0.5">' + r.label + '</dt><dd class="text-xs text-on-surface-variant leading-relaxed">' + r.val + '</dd></div>';
-                }).join('') + '</dl>';
-            }
-        }
-        if (product.description && fabricContent) {
-            fabricContent.innerHTML = '<p class="text-xs text-on-surface-variant leading-relaxed">' + product.description + '</p>';
-        }
-        if (product.category && originContent) {
-            originContent.innerHTML = '<p class="text-xs text-on-surface-variant leading-relaxed">Crafted in the RAEN atelier. Category: ' + product.category + '.</p>';
+                { label: 'Weight',       val: s.weight       || 'N/A' },
+                { label: 'Lining',       val: s.lining       || 'Fully lined' },
+                { label: 'Care',         val: s.care         || 'Dry clean only' },
+                { label: 'Origin',       val: s.origin       || 'Italy' },
+                { label: 'Construction', val: s.construction || 'Hand-finished' }
+            ];
+            specContent.innerHTML = '<dl class="space-y-2">' + rows.map(function(r) {
+                return '<div class="flex gap-4"><dt class="text-xs font-label uppercase tracking-widest text-outline w-32 shrink-0">' + r.label + '</dt><dd class="text-xs text-on-surface-variant">' + r.val + '</dd></div>';
+            }).join('') + '</dl>';
         }
 
         // Pre-fill saved measurements from account if user is logged in

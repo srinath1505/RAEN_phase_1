@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
@@ -38,6 +38,7 @@ tailwind.config = {
 </style>
 </head>
 <body class="bg-surface text-on-surface font-body min-h-screen flex flex-col">
+<a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-primary focus:text-on-primary focus:px-4 focus:py-2 focus:rounded focus:font-label focus:text-xs focus:tracking-widest focus:uppercase" style="text-decoration:none;">Skip to main content</a>
 
 <!-- Navigation -->
 <nav class="fixed top-0 w-full z-50 glass-nav border-b border-outline-variant/10">
@@ -60,7 +61,7 @@ tailwind.config = {
 </nav>
 
 <!-- 404 Content -->
-<main class="flex-1 flex items-center justify-center pt-20">
+<main id="main-content" class="flex-1 flex items-center justify-center pt-20">
     <div class="max-w-[1440px] mx-auto px-8 py-40 text-center w-full">
 
         <!-- Large editorial 404 number -->
