@@ -122,9 +122,14 @@ app.use('/api/hero', heroRoutes);
 // Serve static frontend in production — after API routes so /api/* takes precedence
 if (config.nodeEnv === 'production') {
   app.use(express.static(path.join(__dirname, '../../stitch')));
+  // Unknown non-API routes → branded 404 page
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api/')) return next();
+    res.status(404).sendFile(path.join(__dirname, '../../stitch/404.html'));
+  });
 }
 
-// 404 handler
+// API 404 handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,

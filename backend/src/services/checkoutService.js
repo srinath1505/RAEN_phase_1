@@ -23,14 +23,14 @@ class CheckoutService {
       throw new Error('Cart is empty');
     }
     
-    // Validate stock for all items
+    // Validate stock — skip CUSTOM items (made-to-order, no inventory record)
     for (const item of cart.items) {
+      if (item.size === 'CUSTOM') continue;
       const stockCheck = await productService.checkStock(
         item.productId,
         item.size,
         item.quantity
       );
-      
       if (!stockCheck.available) {
         throw new Error(`${item.product.name} (${item.size}): ${stockCheck.message}`);
       }
